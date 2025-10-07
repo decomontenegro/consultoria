@@ -1,0 +1,116 @@
+{
+  "industries": [
+    {
+      "id": "fintech",
+      "name": "Fintech & Financial Services",
+      "description": "Banking, payments, insurance, investment platforms",
+      "aiOpportunities": [
+        "Automated compliance monitoring",
+        "Fraud detection with AI",
+        "Customer service chatbots",
+        "Risk assessment automation",
+        "Trading algorithms optimization"
+      ],
+      "voiceCodingFit": "high",
+      "reasoning": "High code velocity requirements, frequent regulatory changes demand rapid adaptation"
+    },
+    {
+      "id": "healthcare",
+      "name": "Healthcare & Life Sciences",
+      "description": "Hospitals, clinics, medical devices, pharmaceuticals",
+      "aiOpportunities": [
+        "Medical imaging analysis",
+        "Patient data management",
+        "Clinical decision support",
+        "Drug discovery acceleration",
+        "Administrative workflow automation"
+      ],
+      "voiceCodingFit": "medium",
+      "reasoning": "High quality/compliance requirements, benefits from documentation automation"
+    },
+    {
+      "id": "retail",
+      "name": "Retail & E-commerce",
+      "description": "Online stores, marketplaces, omnichannel retail",
+      "aiOpportunities": [
+        "Personalized recommendations",
+        "Inventory optimization",
+        "Dynamic pricing",
+        "Customer service automation",
+        "Supply chain optimization"
+      ],
+      "voiceCodingFit": "high",
+      "reasoning": "Fast-paced feature development, seasonal peaks demand rapid scaling"
+    },
+    {
+      "id": "manufacturing",
+      "name": "Manufacturing & Industry 4.0",
+      "description": "Industrial automation, IoT, smart factories",
+      "aiOpportunities": [
+        "Predictive maintenance",
+        "Quality control automation",
+        "Supply chain optimization",
+        "Process optimization",
+        "Safety monitoring"
+      ],
+      "voiceCodingFit": "medium",
+      "reasoning": "Complex systems benefit from AI-assisted debugging and documentation"
+    },
+    {
+      "id": "logistics",
+      "name": "Logistics & Transportation",
+      "description": "Shipping, delivery, fleet management",
+      "aiOpportunities": [
+        "Route optimization",
+        "Demand forecasting",
+        "Warehouse automation",
+        "Fleet management",
+        "Delivery prediction"
+      ],
+      "voiceCodingFit": "high",
+      "reasoning": "Real-time optimization requirements benefit from rapid code iteration"
+    },
+    {
+      "id": "saas",
+      "name": "SaaS & Tech Platforms",
+      "description": "Software companies, cloud platforms, developer tools",
+      "aiOpportunities": [
+        "Product feature automation",
+        "Customer success AI",
+        "Code generation tools",
+        "DevOps automation",
+        "Analytics enhancement"
+      ],
+      "voiceCodingFit": "very-high",
+      "reasoning": "Natural fit - tech-forward culture, early adopters, high dev density"
+    },
+    {
+      "id": "education",
+      "name": "Education & EdTech",
+      "description": "Online learning, universities, training platforms",
+      "aiOpportunities": [
+        "Personalized learning paths",
+        "Automated grading",
+        "Content generation",
+        "Student support chatbots",
+        "Learning analytics"
+      ],
+      "voiceCodingFit": "medium",
+      "reasoning": "Content creation benefits, but slower adoption cycles"
+    },
+    {
+      "id": "energy",
+      "name": "Energy & Utilities",
+      "description": "Oil & gas, renewable energy, utilities",
+      "aiOpportunities": [
+        "Grid optimization",
+        "Predictive maintenance",
+        "Energy consumption forecasting",
+        "Safety monitoring",
+        "Resource allocation"
+      ],
+      "voiceCodingFit": "low-medium",
+      "reasoning": "Critical systems require careful validation, slower adoption but high value when proven"
+    }
+  ]
+}
