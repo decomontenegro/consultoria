@@ -27,6 +27,7 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
+  const [discussedTopics, setDiscussedTopics] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MIN_QUESTIONS_BEFORE_EXIT = 3; // Minimum questions before showing "Generate Report" option
@@ -72,6 +73,37 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
       }
     ]);
     setPhase('conversation');
+  };
+
+  // Detect topics from conversation
+  const detectTopicFromConversation = (userMessage: string, aiResponse: string) => {
+    const topicKeywords = {
+      'quality-impact': ['qualidade', 'bugs', 'problemas', 'defeitos', 'erros', 'falhas'],
+      'speed-innovation': ['velocidade', 'lento', 'rápido', 'time-to-market', 'agilidade', 'entrega', 'deploy'],
+      'ai-barriers': ['AI', 'inteligência artificial', 'automação', 'ferramentas', 'adoção', 'copilot'],
+      'roi-expectations': ['ROI', 'retorno', 'investimento', 'custo', 'benefício', 'orçamento', 'valor'],
+      'team-capacity': ['time', 'equipe', 'capacidade', 'produtividade', 'pessoas', 'desenvolvedores'],
+      'strategic-risks': ['risco', 'competitivo', 'mercado', 'concorrentes', 'estratégia', 'competição'],
+    };
+
+    const topicLabels: Record<string, string> = {
+      'quality-impact': 'Impacto de Problemas de Qualidade',
+      'speed-innovation': 'Velocidade de Inovação',
+      'ai-barriers': 'Barreiras para Adoção de AI',
+      'roi-expectations': 'ROI e Investimento',
+      'team-capacity': 'Capacidade do Time',
+      'strategic-risks': 'Riscos Estratégicos',
+    };
+
+    const conversationText = (userMessage + ' ' + aiResponse).toLowerCase();
+
+    Object.entries(topicKeywords).forEach(([topicId, keywords]) => {
+      const matched = keywords.some(keyword => conversationText.includes(keyword.toLowerCase()));
+
+      if (matched && !discussedTopics.includes(topicLabels[topicId])) {
+        setDiscussedTopics(prev => [...prev, topicLabels[topicId]]);
+      }
+    });
   };
 
   // Send message to API
@@ -138,6 +170,11 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
             }
           }
         }
+      }
+
+      // Detect topics from conversation
+      if (assistantMessage) {
+        detectTopicFromConversation(textToSend, assistantMessage);
       }
 
       setQuestionCount(prev => prev + 1);
@@ -293,6 +330,37 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
         {(phase === 'conversation' || phase === 'ready-to-finish') && (
           <div className="card-dark p-6 min-h-[500px] flex flex-col">
 
+            {/* Progress Indicator */}
+            {phase === 'conversation' && (
+              <div className="mb-6 p-4 bg-tech-gray-900/50 border border-tech-gray-800 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-tech-gray-300">
+                    Progresso da Consulta
+                  </span>
+                  <span className="text-xs text-tech-gray-400">
+                    {messages.filter(m => m.role === 'user').length}/3+ perguntas respondidas
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-tech-gray-800 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-neon-green to-neon-cyan h-2.5 rounded-full transition-all duration-500 ease-out"
+                    style={{
+                      width: `${Math.min((messages.filter(m => m.role === 'user').length / 3) * 100, 100)}%`
+                    }}
+                  />
+                </div>
+
+                {messages.filter(m => m.role === 'user').length >= 3 && (
+                  <p className="mt-3 text-xs text-neon-green flex items-center gap-1">
+                    <span className="inline-block w-2 h-2 bg-neon-green rounded-full animate-pulse"></span>
+                    Você já pode finalizar a consulta quando quiser
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto space-y-4 mb-6">
               {messages.map((msg, idx) => (
@@ -338,24 +406,57 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
 
               {/* Show "Generate Report" option after minimum questions */}
               {phase === 'ready-to-finish' && (
-                <div className="bg-neon-green/10 border border-neon-green/30 rounded-lg p-4">
-                  <p className="text-sm text-tech-gray-300 mb-3">
-                    ✨ Já coletei informações valiosas! Você pode:
-                  </p>
+                <div className="mb-6 p-6 bg-gradient-to-br from-neon-cyan/10 to-neon-green/10 border border-neon-cyan/30 rounded-xl">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-neon-cyan/20 rounded-full flex items-center justify-center">
+                      <span className="text-neon-cyan text-xl">✓</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-neon-cyan mb-2">
+                        Ótimo progresso! Já coletei informações valiosas.
+                      </h4>
+                      <p className="text-sm text-tech-gray-300">
+                        Você já respondeu {messages.filter(m => m.role === 'user').length} perguntas e
+                        exploramos {discussedTopics.length} tópico{discussedTopics.length !== 1 ? 's' : ''} importantes.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Topics Discussed */}
+                  {discussedTopics.length > 0 && (
+                    <div className="mb-4 p-3 bg-tech-gray-900/50 rounded-lg">
+                      <h5 className="text-xs font-semibold text-tech-gray-400 mb-2 uppercase tracking-wide">
+                        Tópicos Discutidos:
+                      </h5>
+                      <ul className="space-y-1.5">
+                        {discussedTopics.map((topic, idx) => (
+                          <li key={idx} className="text-sm text-tech-gray-200 flex items-center gap-2">
+                            <span className="text-neon-green text-xs">✓</span>
+                            {topic}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   <div className="flex gap-3">
                     <button
                       onClick={handleGenerateReport}
-                      className="btn-primary flex-1"
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-neon-green to-neon-cyan text-background-dark font-semibold rounded-lg hover:shadow-neon-green transition-all"
                     >
                       Gerar Relatório Agora
                     </button>
                     <button
                       onClick={() => setPhase('conversation')}
-                      className="btn-secondary flex-1"
+                      className="px-4 py-3 border-2 border-neon-cyan/30 text-neon-cyan font-semibold rounded-lg hover:bg-neon-cyan/10 transition-all"
                     >
                       Continuar Conversando
                     </button>
                   </div>
+
+                  <p className="mt-3 text-xs text-center text-tech-gray-500">
+                    Você pode explorar outros tópicos ou finalizar aqui. Você está no controle.
+                  </p>
                 </div>
               )}
 

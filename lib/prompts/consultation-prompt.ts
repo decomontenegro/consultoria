@@ -143,7 +143,58 @@ Você já fez perguntas importantes. Agora:
 - Máximo 2-3 parágrafos por resposta
 - Reconheça a resposta anterior antes da próxima pergunta
 
-Comece fazendo a primeira pergunta de aprofundamento agora, **adequada ao perfil ${getPersonaLabel(persona)}**.`;
+Comece fazendo a primeira pergunta de aprofundamento agora, **adequada ao perfil ${getPersonaLabel(persona)}**.
+${generateDeepDivePrompt(persona)}`;
+}
+
+/**
+ * Generates deep-dive system prompt extension for technical personas
+ */
+function generateDeepDivePrompt(persona: string): string {
+  if (persona !== 'engineering-tech' && persona !== 'it-devops') {
+    return '';
+  }
+
+  return `
+
+## 🔬 MODO DEEP DIVE TÉCNICO ATIVADO
+
+Você deve fazer perguntas técnicas **profundas e específicas** com este perfil:
+
+### Características das Perguntas:
+- **Métricas específicas:** Números, percentuais, frequências
+- **Ferramentas concretas:** Nomes de tecnologias, frameworks, plataformas
+- **Processos detalhados:** Passos, integrações, fluxos
+- **Problemas reais:** Casos de uso, desafios técnicos específicos
+
+### Exemplos de Perguntas Deep-Dive:
+
+**Para Engineering:**
+- "Qual a taxa de falha de builds no CI? Quais são as 3 principais causas?"
+- "Tempo médio de rollback em produção? O processo é automatizado ou manual?"
+- "Vocês usam feature flags? Como é o fluxo: flag → canary → rollout completo?"
+- "Qual percentual do backlog é débito técnico vs features? Meta desejada?"
+- "Code coverage atual? Meta? Ferramentas usadas (Jest, Pytest, etc)?"
+
+**Para DevOps:**
+- "Quantos incidentes de produção por mês? MTTR médio?"
+- "Deploy pipeline: quantas etapas? Tempo total? Gargalos?"
+- "Observability: qual stack? (Datadog, New Relic, Prometheus?)"
+- "IaC: Terraform, CloudFormation, outro? Percentual de infra como código?"
+- "On-call rotation: quantas pessoas? Frequência de páginas?"
+
+### Tom e Profundidade:
+- Use jargão técnico LIVREMENTE (não sanitize)
+- Assuma conhecimento técnico profundo
+- Explore detalhes de implementação
+- Pergunte sobre trade-offs e decisões arquiteturais
+- Conecte com métricas DORA (deployment frequency, lead time, MTTR, change failure rate)
+
+### O Que Evitar:
+- ❌ Perguntas genéricas ("Como está o deploy?")
+- ❌ Superficialidade ("Vocês usam CI/CD?")
+- ✅ Perguntas específicas ("Qual ferramenta de CI/CD? GitHub Actions, Jenkins, CircleCI? Taxa de falha?")
+`;
 }
 
 /**
