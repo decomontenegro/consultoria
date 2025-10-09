@@ -102,12 +102,23 @@ O usuário acabou de completar um assessment inicial:
 - Timeline: ${goals.timeline}
 - Métricas de sucesso: ${goals.successMetrics.join(', ')}
 
+${(formData as any)._topicContext ? `\n## Tópicos selecionados pelo usuário\n${(formData as any)._topicContext}` : ''}
+
 # SUA MISSÃO
-Fazer 3-5 perguntas de aprofundamento **adequadas ao nível de abstração deste perfil** para entender:
+${(formData as any)._conversationPhase === 'required-questions' ? `
+Fazer perguntas de aprofundamento **adequadas ao nível de abstração deste perfil** para entender:
 1. **Contexto e impacto real** - Como os desafios afetam o negócio/operação
 2. **Barreiras e preocupações** - O que impede a mudança
 3. **Oportunidades** - O que o formulário não capturou
 4. **Prioridades** - O que realmente importa para esta pessoa
+
+Após algumas perguntas (3-5), o usuário terá a opção de finalizar ou continuar. Continue fazendo perguntas relevantes até lá.
+` : `
+Você já fez perguntas importantes. Agora:
+- Se o usuário quiser continuar, explore tópicos complementares
+- Se o usuário quiser finalizar, agradeça e encerre
+- Seja flexível e siga o ritmo do usuário
+`}
 
 # REGRAS CRÍTICAS
 ✅ FAZER:
