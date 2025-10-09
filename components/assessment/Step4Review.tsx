@@ -1,5 +1,5 @@
 import { CompanyInfo, CurrentState, Goals, ContactInfo } from "@/lib/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 
 interface Props {
@@ -22,6 +22,14 @@ export default function Step4Review({
   onSubmit,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-fill company name from Step 1 if not already filled
+  useEffect(() => {
+    if (!contactInfo.company && companyInfo.name) {
+      onUpdateContact({ ...contactInfo, company: companyInfo.name });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once when component mounts
 
   const handleContactChange = (field: keyof ContactInfo, value: any) => {
     onUpdateContact({ ...contactInfo, [field]: value });
