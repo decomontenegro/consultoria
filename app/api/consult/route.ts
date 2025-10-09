@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateConsultationSystemPrompt } from '@/lib/prompts/consultation-prompt';
-import { AssessmentData } from '@/lib/types';
+import { AssessmentData, UserPersona } from '@/lib/types';
 
 // Types for API
 interface Message {
@@ -12,6 +12,64 @@ interface Message {
 interface ConsultRequestBody {
   messages: Message[];
   assessmentData: AssessmentData;
+}
+
+// Jargon validation: terms to avoid and their replacements by persona
+const jargonReplacements: Record<UserPersona, Record<string, string>> = {
+  'board-executive': {
+    'débito técnico': 'limitações do sistema',
+    'deploy pipeline': 'processo de lançamento',
+    'code coverage': 'cobertura de qualidade',
+    'ci/cd': 'automação de entregas',
+    'refactoring': 'modernização do código',
+    'merge conflicts': 'problemas de integração',
+    'technical debt': 'limitações técnicas acumuladas',
+  },
+  'finance-ops': {
+    'merge conflicts': 'conflitos no processo',
+    'refactoring': 'reestruturação',
+    'technical debt': 'passivo técnico',
+    'ci/cd': 'automação de processos',
+  },
+  'product-business': {
+    'ci/cd': 'automação de lançamentos',
+    'code review': 'revisão de qualidade',
+    'test coverage': 'cobertura de testes de qualidade',
+  },
+  'engineering-tech': {}, // Can use technical jargon freely
+  'it-devops': {}, // Can use technical jargon freely
+};
+
+/**
+ * Validates and sanitizes Claude's response to remove inappropriate jargon
+ * for the given persona
+ */
+function validateAndSanitizeResponse(text: string, persona: UserPersona): string {
+  const replacements = jargonReplacements[persona];
+
+  // If persona can use technical jargon freely, return as-is
+  if (!replacements || Object.keys(replacements).length === 0) {
+    return text;
+  }
+
+  let sanitized = text;
+  let violationsFound: string[] = [];
+
+  // Check and replace forbidden jargon
+  Object.entries(replacements).forEach(([jargon, replacement]) => {
+    const regex = new RegExp(jargon, 'gi');
+    if (regex.test(sanitized)) {
+      violationsFound.push(jargon);
+      sanitized = sanitized.replace(regex, replacement);
+    }
+  });
+
+  // Log violations for monitoring (in production, send to analytics)
+  if (violationsFound.length > 0) {
+    console.warn(`⚠️  Jargon detected and replaced for ${persona}:`, violationsFound);
+  }
+
+  return sanitized;
 }
 
 // Initialize Anthropic client
@@ -63,14 +121,28 @@ export async function POST(req: NextRequest) {
       stream: true,
     });
 
-    // Create readable stream for client
+    // Create readable stream for client with jargon validation
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {
         try {
+          let accumulatedText = ''; // Buffer for validation
+
           for await (const event of stream) {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-              const text = event.delta.text;
+              let text = event.delta.text;
+
+              // Accumulate text for better validation context
+              accumulatedText += text;
+
+              // Apply jargon validation and sanitization
+              const sanitized = validateAndSanitizeResponse(text, assessmentData.persona);
+
+              // If text was changed, log it
+              if (sanitized !== text) {
+                text = sanitized;
+              }
+
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
             }
 
