@@ -11,8 +11,8 @@ import { CaseStudy } from '@/lib/types';
  * Get all case studies (merged from all sources)
  */
 export function getAllCaseStudies(): CaseStudy[] {
-  const part1 = caseStudiesData.caseStudies as CaseStudy[];
-  const part2 = caseStudiesDataPart2.caseStudies as CaseStudy[];
+  const part1 = caseStudiesData.caseStudies as unknown as CaseStudy[];
+  const part2 = caseStudiesDataPart2.caseStudies as unknown as CaseStudy[];
   return [...part1, ...part2];
 }
 

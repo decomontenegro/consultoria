@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,7 +30,7 @@ import Step3GoalsNonTech from "@/components/assessment/Step3GoalsNonTech";
 import Step4Review from "@/components/assessment/Step4Review";
 import Step5AIConsult from "@/components/assessment/Step5AIConsult";
 
-export default function AssessmentPage() {
+function AssessmentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0); // Start at 0 for persona selection
@@ -68,8 +68,12 @@ export default function AssessmentPage() {
         // Don't pre-fill contact info for privacy
 
         if (data.nonTechData) {
-          setNonTechCurrentState(data.nonTechData.currentState);
-          setNonTechGoals(data.nonTechData.goals);
+          if (data.nonTechData.currentState) {
+            setNonTechCurrentState(data.nonTechData.currentState);
+          }
+          if (data.nonTechData.goals) {
+            setNonTechGoals(data.nonTechData.goals);
+          }
         }
       }
     }
@@ -106,6 +110,14 @@ export default function AssessmentPage() {
     const assessmentData: AssessmentData = {
       persona: persona as UserPersona,
       companyInfo: companyInfo as CompanyInfo,
+      aiScope: {
+        engineering: true,
+        customerService: false,
+        sales: false,
+        marketing: false,
+        operations: false,
+        meetingIntelligence: false,
+      },
       currentState: finalCurrentState,
       goals: finalGoals,
       contactInfo: contactInfo as ContactInfo,
@@ -319,5 +331,13 @@ export default function AssessmentPage() {
         </p>
       </footer>
     </div>
+  );
+}
+
+export default function AssessmentPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background-dark flex items-center justify-center"><p className="text-white">Carregando...</p></div>}>
+      <AssessmentPageContent />
+    </Suspense>
   );
 }

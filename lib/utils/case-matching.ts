@@ -45,7 +45,8 @@ function calculateSimilarity(
 
   // Company Size Match (20% weight)
   const sizeWeight = 20;
-  if (companyInfo.size === caseStudy.size) {
+  const normalizedSize = companyInfo.size.charAt(0).toUpperCase() + companyInfo.size.slice(1);
+  if (normalizedSize === caseStudy.size) {
     score += sizeWeight;
     reasons.push(`Mesmo porte: ${caseStudy.size}`);
   } else if (caseStudy.size === 'Mixed') {
