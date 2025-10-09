@@ -88,9 +88,17 @@ export default function ReportPage() {
       <header className="nav-dark print:hidden relative z-10">
         <div className="container-professional py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-gradient-neon">
-              CulturaBuilder
-            </Link>
+            <div className="flex items-center gap-6">
+              <Link href="/" className="text-2xl font-bold text-gradient-neon">
+                CulturaBuilder
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-sm text-tech-gray-400 hover:text-neon-green transition-colors flex items-center gap-1"
+              >
+                ← Meus Reports
+              </Link>
+            </div>
             <button
               onClick={() => window.print()}
               className="btn-secondary text-sm"
@@ -401,13 +409,19 @@ export default function ReportPage() {
               ))}
             </div>
 
-            <div className="mt-6 text-center">
+            <div className="mt-8 flex gap-3 justify-center flex-wrap">
               <Link
-                href="/"
-                className="text-neon-green hover:text-neon-cyan transition-colors text-sm inline-flex items-center gap-2"
+                href="/dashboard"
+                className="btn-secondary text-sm inline-flex items-center gap-2"
               >
-                Ver todos os cases
-                <ArrowRight className="w-4 h-4" />
+                ← Dashboard
+              </Link>
+              <Link
+                href={`/assessment?mode=duplicate&from=${report.id}`}
+                className="btn-ghost text-sm inline-flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Criar Variação deste Assessment
               </Link>
             </div>
           </div>

@@ -59,9 +59,9 @@ export default function Home() {
               <Link href="/assessment" className="btn-primary text-lg">
                 Iniciar Assessment Grátis
               </Link>
-              <button className="btn-outline-neon text-lg">
+              <Link href="/sample" className="btn-outline-neon text-lg">
                 Ver Relatório Exemplo
-              </button>
+              </Link>
             </div>
 
             {/* Stats */}

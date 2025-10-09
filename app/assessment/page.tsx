@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CompanyInfo,
@@ -13,7 +13,7 @@ import {
   NonTechCurrentState,
   NonTechGoals
 } from "@/lib/types";
-import { generateReport, saveReport } from "@/lib/services/report-service";
+import { generateReport, saveReport, getReport } from "@/lib/services/report-service";
 import {
   isTechnicalPersona,
   mapNonTechCurrentState,
@@ -31,12 +31,14 @@ import Step4Review from "@/components/assessment/Step4Review";
 
 export default function AssessmentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0); // Start at 0 for persona selection
   const [persona, setPersona] = useState<UserPersona | null>(null);
   const [companyInfo, setCompanyInfo] = useState<Partial<CompanyInfo>>({});
   const [currentState, setCurrentState] = useState<Partial<CurrentState>>({});
   const [goals, setGoals] = useState<Partial<Goals>>({});
   const [contactInfo, setContactInfo] = useState<Partial<ContactInfo>>({});
+  const [isDuplicateMode, setIsDuplicateMode] = useState(false);
 
   // Non-technical data states
   const [nonTechCurrentState, setNonTechCurrentState] = useState<Partial<NonTechCurrentState>>({});
@@ -44,6 +46,32 @@ export default function AssessmentPage() {
 
   const totalSteps = 5; // Added persona selection step
   const isTechPersona = persona ? isTechnicalPersona(persona) : true;
+
+  // Load data from previous report if in duplicate mode
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    const fromReportId = searchParams.get('from');
+
+    if (mode === 'duplicate' && fromReportId) {
+      const sourceReport = getReport(fromReportId);
+      if (sourceReport) {
+        setIsDuplicateMode(true);
+        const data = sourceReport.assessmentData;
+
+        // Pre-fill all fields
+        setPersona(data.persona);
+        setCompanyInfo(data.companyInfo);
+        setCurrentState(data.currentState);
+        setGoals(data.goals);
+        // Don't pre-fill contact info for privacy
+
+        if (data.nonTechData) {
+          setNonTechCurrentState(data.nonTechData.currentState);
+          setNonTechGoals(data.nonTechData.goals);
+        }
+      }
+    }
+  }, [searchParams]);
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -112,6 +140,17 @@ export default function AssessmentPage() {
           </div>
         </div>
       </header>
+
+      {/* Duplicate Mode Banner */}
+      {isDuplicateMode && (
+        <div className="bg-neon-cyan/10 border-b border-neon-cyan/30 backdrop-blur-sm">
+          <div className="container-professional py-3">
+            <p className="text-sm text-neon-cyan text-center">
+              ✨ <strong>Modo Variação:</strong> Você está criando uma variação do assessment "{companyInfo.name}". Modifique os campos desejados e gere um novo relatório para comparar cenários.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="bg-background-card/30 backdrop-blur-sm border-b border-tech-gray-800">

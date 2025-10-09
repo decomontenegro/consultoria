@@ -223,26 +223,6 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
           ))}
         </div>
       </div>
-
-      {/* Call to Action */}
-      {isMockData && (
-        <div className="mt-8 p-6 bg-gradient-to-r from-neon-green/5 to-cyan-500/5 border border-neon-green/20 rounded-lg">
-          <h4 className="text-lg font-semibold text-tech-gray-100 mb-2">
-            Quer valores personalizados para sua empresa?
-          </h4>
-          <p className="text-sm text-tech-gray-300 mb-4">
-            Complete o assessment multi-departamental para obter uma análise precisa
-            baseada nos seus números reais de Customer Service, Sales, Marketing, e mais.
-          </p>
-          <a
-            href="/assessment"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-neon-green text-background-dark font-semibold rounded-lg hover:bg-neon-green/90 transition-all"
-          >
-            <span>Fazer Assessment Completo</span>
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
-      )}
     </div>
   );
 }
