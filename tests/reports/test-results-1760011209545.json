@@ -1,0 +1,21 @@
+[
+  {
+    "testId": "T22-it-devops-pessimista",
+    "persona": "it-devops",
+    "scenarioType": "pessimista",
+    "success": false,
+    "metrics": {
+      "topicsSuggested": 0,
+      "topicsAppropriate": false,
+      "questionsAsked": 0,
+      "questionsAppropriate": 0,
+      "questionnaireFlow": false,
+      "jargonViolations": [],
+      "abstractionLevel": ""
+    },
+    "issues": [
+      "Test failed with error: page.click: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"IT/DevOps\")')\u001b[22m\n"
+    ],
+    "timestamp": "2025-10-09T11:59:39.523Z"
+  }
+]

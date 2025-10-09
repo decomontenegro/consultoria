@@ -56,66 +56,142 @@ test.describe('AI Consultation - Persona Study (25 scenarios)', () => {
 
         // Navigate to assessment
         await page.goto('http://localhost:3000/assessment');
+        await page.waitForLoadState('networkidle');
 
         // STEP 0: Select Persona
-        await page.click(`button:has-text("${getPersonaLabel(scenario.persona)}")`);
-        await page.click('text=Continuar');
+        const personaLabel = getPersonaLabel(scenario.persona);
+        await page.waitForSelector(`button:has-text("${personaLabel}")`, { timeout: 10000 });
+        await page.click(`button:has-text("${personaLabel}")`);
+        await page.click('button:has-text("Continuar")');
+        await page.waitForLoadState('networkidle');
 
         // STEP 1: Company Info
+        await page.waitForSelector('input[placeholder*="Acme"]', { timeout: 5000 });
         await page.fill('input[placeholder*="Acme"]', scenario.companyInfo.name);
-        await page.selectOption('select', scenario.companyInfo.industry);
-        await page.click(`button:has-text("${capitalizeFirst(scenario.companyInfo.size)}")`);
-        await page.selectOption('select:has-text("range")', scenario.companyInfo.revenue);
-        await page.click('text=Continuar');
 
-        // STEP 2: Current State
-        await page.fill('input[placeholder*="25"]', String(scenario.currentState.devTeamSize));
-        await page.selectOption('select:has-text("frequência")', scenario.currentState.deploymentFrequency);
-        await page.fill('input[placeholder*="14"]', String(scenario.currentState.avgCycleTime));
+        // Select industry (first select element)
+        const industrySelect = page.locator('select').first();
+        await industrySelect.selectOption(scenario.companyInfo.industry);
 
-        // Select AI tools usage
-        const aiToolsLabels: Record<string, string> = {
-          'none': 'Nenhum',
-          'exploring': 'Explorando',
-          'piloting': 'Pilotando',
-          'production': 'Em Produção',
-          'mature': 'Maduro',
-        };
-        await page.click(`button:has-text("${aiToolsLabels[scenario.currentState.aiToolsUsage]}")`);
+        // Click company size button
+        const sizeButton = page.locator(`button:has-text("${capitalizeFirst(scenario.companyInfo.size)}")`);
+        await sizeButton.click();
 
-        // Select pain points
-        for (const painPoint of scenario.currentState.painPoints.slice(0, 2)) {
-          await page.click(`button:has-text("${painPoint}")`);
+        // Select revenue range (second select element)
+        const revenueSelect = page.locator('select').nth(1);
+        await revenueSelect.selectOption(scenario.companyInfo.revenue);
+
+        await page.click('button:has-text("Continuar")');
+        await page.waitForLoadState('networkidle');
+
+        // STEP 2: Current State (different for technical vs non-technical personas)
+        const isTechnical = scenario.persona === 'engineering-tech' || scenario.persona === 'it-devops';
+
+        if (isTechnical) {
+          // Technical version - uses inputs
+          await page.waitForSelector('input[placeholder*="25"]', { timeout: 5000 });
+          await page.fill('input[placeholder*="25"]', String(scenario.currentState.devTeamSize));
+
+          const deploymentSelect = page.locator('select').first();
+          await deploymentSelect.selectOption(scenario.currentState.deploymentFrequency);
+
+          await page.fill('input[placeholder*="14"]', String(scenario.currentState.avgCycleTime));
+
+          const aiToolsLabels: Record<string, string> = {
+            'none': 'Nenhum',
+            'exploring': 'Explorando',
+            'piloting': 'Pilotando',
+            'production': 'Em Produção',
+            'mature': 'Maduro',
+          };
+          await page.click(`button:has-text("${aiToolsLabels[scenario.currentState.aiToolsUsage]}")`);
+
+          for (const painPoint of scenario.currentState.painPoints.slice(0, 2)) {
+            await page.click(`button:has-text("${painPoint}")`);
+          }
+        } else {
+          // Non-technical version - uses radio buttons
+          await page.waitForSelector('text=Velocidade de Entrega ao Mercado', { timeout: 5000 });
+
+          // Click "Moderado" for each section (safe middle option)
+          const moderateButtons = page.locator('button:has-text("Moderado")');
+          const count = await moderateButtons.count();
+          for (let i = 0; i < Math.min(count, 5); i++) {
+            await moderateButtons.nth(i).click();
+          }
+
+          // Select 2 business challenges
+          await page.click('button:has-text("Pressão competitiva crescente")');
+          await page.click('button:has-text("Dificuldade em inovar rapidamente")');
         }
-        await page.click('text=Continuar');
 
-        // STEP 3: Goals
-        for (const goal of scenario.goals.primaryGoals.slice(0, 2)) {
-          await page.click(`button:has-text("${goal}")`);
+        await page.click('button:has-text("Continuar")');
+        await page.waitForLoadState('networkidle');
+
+        // STEP 3: Goals (different for technical vs non-technical)
+        await page.waitForTimeout(1000); // Wait for page to fully load
+
+        if (isTechnical) {
+          // Technical version
+          await page.waitForSelector('button:has-text("Aumentar")', { timeout: 5000 });
+
+          for (const goal of scenario.goals.primaryGoals.slice(0, 2)) {
+            await page.click(`button:has-text("${goal}")`);
+          }
+
+          const timelineLabels: Record<string, string> = {
+            '3-months': '3 Meses',
+            '6-months': '6 Meses',
+            '12-months': '12 Meses',
+            '18-months': '18 Meses',
+          };
+          await page.click(`button:has-text("${timelineLabels[scenario.goals.timeline]}")`);
+
+          const budgetSelect = page.locator('select').first();
+          await budgetSelect.selectOption(scenario.goals.budgetRange);
+
+          for (const metric of scenario.goals.successMetrics.slice(0, 3)) {
+            await page.click(`button:has-text("${metric}")`);
+          }
+        } else {
+          // Non-technical version - uses business goals
+          await page.waitForSelector('button:has-text("Crescimento de receita")', { timeout: 5000 });
+
+          // Select 2 business goals
+          await page.click('button:has-text("Crescimento de receita")');
+          await page.click('button:has-text("Vantagem competitiva sustentável")');
+
+          const timelineLabels: Record<string, string> = {
+            '3-months': '3 Meses',
+            '6-months': '6 Meses',
+            '12-months': '12 Meses',
+            '18-months': '18 Meses',
+          };
+          await page.click(`button:has-text("${timelineLabels[scenario.goals.timeline]}")`);
+
+          const budgetSelect = page.locator('select').first();
+          await budgetSelect.selectOption(scenario.goals.budgetRange);
+
+          // Select strategic priority
+          await page.click('button:has-text("Alta")');
+
+          // Select 2 business metrics
+          await page.click('button:has-text("Aumento de receita anual")');
+          await page.click('button:has-text("Market share")');
         }
 
-        const timelineLabels: Record<string, string> = {
-          '3-months': '3 Meses',
-          '6-months': '6 Meses',
-          '12-months': '12 Meses',
-          '18-months': '18 Meses',
-        };
-        await page.click(`button:has-text("${timelineLabels[scenario.goals.timeline]}")`);
-
-        await page.selectOption('select', scenario.goals.budgetRange);
-
-        // Select success metrics
-        for (const metric of scenario.goals.successMetrics.slice(0, 3)) {
-          await page.click(`button:has-text("${metric}")`);
-        }
-        await page.click('text=Continuar');
+        await page.click('button:has-text("Continuar")');
+        await page.waitForLoadState('networkidle');
 
         // STEP 4: Review & Contact
+        await page.waitForSelector('input[placeholder*="João"]', { timeout: 5000 });
         await page.fill('input[placeholder*="João"]', scenario.contactInfo.fullName);
         await page.fill('input[placeholder*="CTO"]', scenario.contactInfo.title);
         await page.fill('input[placeholder*="@"]', scenario.contactInfo.email);
         await page.check('input[type="checkbox"]');
-        await page.click('text=Continuar'); // Goes to Step 5
+
+        await page.click('button:has-text("Continuar")');
+        await page.waitForLoadState('networkidle');
 
         // STEP 5: AI Consultation - Topic Selection
         await page.waitForSelector('text=Selecione os Tópicos', { timeout: 5000 });
@@ -223,11 +299,11 @@ test.describe('AI Consultation - Persona Study (25 scenarios)', () => {
 // Helper functions
 function getPersonaLabel(persona: string): string {
   const labels: Record<string, string> = {
-    'board-executive': 'Board Member',
-    'finance-ops': 'Finance',
-    'product-business': 'Product',
-    'engineering-tech': 'Engineering',
-    'it-devops': 'IT/DevOps',
+    'board-executive': 'Board Member / C-Level Executive',
+    'finance-ops': 'Finance / Operations Executive',
+    'product-business': 'Product / Business Leader',
+    'engineering-tech': 'Engineering / Tech Leader',
+    'it-devops': 'IT / DevOps Manager',
   };
   return labels[persona] || persona;
 }
