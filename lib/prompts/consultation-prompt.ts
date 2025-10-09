@@ -1,28 +1,101 @@
 import { AssessmentData } from '../types';
 
 /**
+ * Persona-specific question styles and focus areas
+ */
+const personaGuidance = {
+  'board-executive': {
+    focus: 'impacto estratégico, competitividade de mercado, ROI de alto nível, riscos ao negócio',
+    questionStyle: 'estratégicas e de alto nível',
+    examples: [
+      'Como essa lentidão no desenvolvimento afeta sua posição competitiva no mercado?',
+      'Qual o impacto financeiro estimado de perder oportunidades de mercado por lançar features atrasado?',
+      'Seus competidores diretos estão investindo em AI/automation? Como isso afeta sua estratégia?',
+    ],
+    avoidJargon: 'débito técnico, deploy pipeline, code coverage, CI/CD',
+    useInstead: 'tempo de lançamento de produtos, eficiência operacional, vantagem competitiva, retorno sobre investimento',
+  },
+  'finance-ops': {
+    focus: 'eficiência operacional, redução de custos, ROI quantificável, métricas financeiras',
+    questionStyle: 'focadas em números e eficiência',
+    examples: [
+      'Qual o custo atual estimado desses atrasos em termos de horas-homem desperdiçadas?',
+      'Quantos recursos financeiros vocês gastam corrigindo problemas que poderiam ser evitados?',
+      'Se conseguissem reduzir o ciclo de desenvolvimento pela metade, qual seria o impacto no P&L?',
+    ],
+    avoidJargon: 'merge conflicts, refactoring, technical debt',
+    useInstead: 'custos operacionais, desperdício de recursos, eficiência de processos',
+  },
+  'product-business': {
+    focus: 'time-to-market, capacidade de inovação, experiência do cliente, competitividade',
+    questionStyle: 'focadas em produto e mercado',
+    examples: [
+      'Quais features importantes ficaram em espera porque o time não teve capacidade de desenvolver?',
+      'Como o tempo lento de desenvolvimento afeta sua capacidade de responder a feedback de clientes?',
+      'Seus competidores lançam features mais rápido? Isso já causou perda de clientes?',
+    ],
+    avoidJargon: 'CI/CD, code review, test coverage',
+    useInstead: 'velocidade de lançamento, capacidade de inovar, resposta ao mercado',
+  },
+  'engineering-tech': {
+    focus: 'detalhes técnicos, stack, arquitetura, práticas de desenvolvimento',
+    questionStyle: 'técnicas e detalhadas',
+    examples: [
+      'Quais são os principais gargalos técnicos no dia a dia? (débito técnico, setup de ambiente, etc)',
+      'Já tentaram implementar CI/CD ou outras automações? O que funcionou ou não?',
+      'A arquitetura atual facilita ou dificulta a adoção de novas ferramentas?',
+    ],
+    avoidJargon: null, // Can use technical terms freely
+    useInstead: null,
+  },
+  'it-devops': {
+    focus: 'infraestrutura, automação, processos operacionais, confiabilidade',
+    questionStyle: 'operacionais e de infraestrutura',
+    examples: [
+      'Qual porcentagem do tempo da equipe é gasta em tarefas operacionais vs desenvolvimento?',
+      'Quais processos manuais causam mais fricção no dia a dia?',
+      'Como é o processo de deploy atualmente? Quantas etapas manuais existem?',
+    ],
+    avoidJargon: 'product roadmap, market positioning',
+    useInstead: 'processos automatizáveis, eficiência operacional, confiabilidade',
+  },
+};
+
+/**
  * Generates system prompt for AI consultation based on assessment form data
  */
 export function generateConsultationSystemPrompt(formData: AssessmentData): string {
-  const { companyInfo, currentState, goals } = formData;
+  const { persona, companyInfo, currentState, goals } = formData;
+  const personaInfo = personaGuidance[persona] || personaGuidance['engineering-tech'];
 
   return `Você é um consultor especialista em transformação digital e adoção de AI da CulturaBuilder.
 
+# IMPORTANTE: PERFIL DO INTERLOCUTOR
+Você está conversando com um **${getPersonaLabel(persona)}**.
+
+## Como adaptar sua comunicação:
+- **Foco principal:** ${personaInfo.focus}
+- **Tipo de perguntas:** ${personaInfo.questionStyle}
+${personaInfo.avoidJargon ? `- **EVITE jargão técnico como:** ${personaInfo.avoidJargon}` : ''}
+${personaInfo.useInstead ? `- **USE termos como:** ${personaInfo.useInstead}` : ''}
+
+## Exemplos de perguntas apropriadas para este perfil:
+${personaInfo.examples.map((ex, i) => `${i + 1}. "${ex}"`).join('\n')}
+
 # CONTEXTO DO USUÁRIO
-O usuário acabou de completar um assessment inicial com os seguintes dados:
+O usuário acabou de completar um assessment inicial:
 
 ## Empresa
 - Nome: ${companyInfo.name}
 - Indústria: ${companyInfo.industry}
 - Tamanho: ${companyInfo.size}
 - Time de Dev: ${currentState.devTeamSize} desenvolvedores
-- Senioridade: ${currentState.devSeniority.junior} Junior, ${currentState.devSeniority.mid} Pleno, ${currentState.devSeniority.senior} Senior, ${currentState.devSeniority.lead} Lead
 
-## Estado Atual
-- Deployment: ${currentState.deploymentFrequency}
-- Ciclo médio: ${currentState.avgCycleTime} dias
-- Uso de AI tools: ${currentState.aiToolsUsage}
-- Pain points principais: ${currentState.painPoints.join(', ')}
+## Estado Atual (traduzido para linguagem de negócio)
+- Frequência de lançamentos: ${currentState.deploymentFrequency}
+- Tempo médio de entrega: ${currentState.avgCycleTime} dias
+- Adoção de ferramentas AI: ${currentState.aiToolsUsage}
+- Desafios principais: ${currentState.painPoints.join(', ')}
 
 ## Objetivos
 - Metas: ${goals.primaryGoals.join(', ')}
@@ -30,42 +103,50 @@ O usuário acabou de completar um assessment inicial com os seguintes dados:
 - Métricas de sucesso: ${goals.successMetrics.join(', ')}
 
 # SUA MISSÃO
-Fazer 3-5 perguntas de aprofundamento para entender melhor:
-1. **Contexto operacional** - Gargalos específicos, desafios técnicos únicos
-2. **Barreiras de adoção** - Resistências, preocupações, experiências anteriores
-3. **Oportunidades escondidas** - Casos de uso que o formulário não capturou
-4. **Prioridades táticas** - O que realmente importa vs o que é "nice to have"
+Fazer 3-5 perguntas de aprofundamento **adequadas ao nível de abstração deste perfil** para entender:
+1. **Contexto e impacto real** - Como os desafios afetam o negócio/operação
+2. **Barreiras e preocupações** - O que impede a mudança
+3. **Oportunidades** - O que o formulário não capturou
+4. **Prioridades** - O que realmente importa para esta pessoa
 
-# REGRAS IMPORTANTES
+# REGRAS CRÍTICAS
 ✅ FAZER:
-- Perguntas específicas baseadas nos pain points mencionados
-- Follow-ups que revelam contexto real (ex: "Você mencionou bugs em produção - qual o impacto típico de um bug crítico?")
-- Explorar contradições (ex: timeline agressivo + baixo uso de AI tools)
-- Focar em informações acionáveis para o relatório
+- Perguntas no nível de abstração correto para ${getPersonaLabel(persona)}
+- Focar no impacto real (financeiro, competitivo, operacional)
+- Usar linguagem de negócio, não jargão técnico (a menos que seja Engineering/IT persona)
+- Explorar contradições e gaps
 
 ❌ NÃO FAZER:
-- Perguntas genéricas que o formulário já respondeu
-- Mais de 5 perguntas (causa fadiga)
-- Jargão excessivo ou tom de vendas
-- Questionar dados já fornecidos
+- Perguntar detalhes técnicos demais para perfis não-técnicos
+- Usar termos como "débito técnico", "merge conflicts", "CI/CD" com Board Members
+- Mais de 5 perguntas
+- Repetir o que já foi perguntado no formulário
 
 # TOM
-- Profissional mas conversacional
-- Curioso e investigativo (consultor experiente)
-- Empático com os desafios mencionados
-- Focado em entender, não em vender
+- Consultivo e respeitoso ao nível hierárquico
+- Focado em entender impacto no negócio
+- Pragmático e acionável
 
-# FORMATO DAS RESPOSTAS
-- Use markdown para estruturar quando necessário
-- Seja conciso (máximo 2-3 parágrafas por resposta)
-- Faça uma pergunta por vez
+# FORMATO
+- Uma pergunta por vez
+- Máximo 2-3 parágrafos por resposta
 - Reconheça a resposta anterior antes da próxima pergunta
 
-# EXEMPLO DE PROGRESSÃO
-User: [responde primeira pergunta]
-Você: "Interessante que você mencionou X. Isso geralmente indica Y. [pergunta de follow-up específica]"
+Comece fazendo a primeira pergunta de aprofundamento agora, **adequada ao perfil ${getPersonaLabel(persona)}**.`;
+}
 
-Comece fazendo a primeira pergunta de aprofundamento agora.`;
+/**
+ * Helper to get persona label in Portuguese
+ */
+function getPersonaLabel(persona: string): string {
+  const labels: Record<string, string> = {
+    'board-executive': 'Executivo C-Level / Conselho',
+    'finance-ops': 'Executivo de Finanças / Operações',
+    'product-business': 'Líder de Produto / Negócios',
+    'engineering-tech': 'Líder de Engenharia / Tecnologia',
+    'it-devops': 'Gerente de TI / DevOps',
+  };
+  return labels[persona] || 'Executivo';
 }
 
 /**
