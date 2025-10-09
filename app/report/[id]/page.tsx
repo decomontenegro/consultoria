@@ -12,6 +12,7 @@ import PossibilitiesMatrix from "@/components/report/PossibilitiesMatrix";
 import EnterpriseROISection from "@/components/report/EnterpriseROISection";
 import CostOfInaction from "@/components/report/CostOfInaction";
 import RiskMatrixSection from "@/components/report/RiskMatrixSection";
+import AIInsightsSection from "@/components/report/AIInsightsSection";
 import { hasRealDepartmentData } from "@/lib/utils/mock-department-data";
 import { Check, ArrowRight, ExternalLink } from "lucide-react";
 
@@ -158,7 +159,12 @@ export default function ReportPage() {
             </div>
           </div>
 
-          {/* Cost of Inaction Analysis - NEW */}
+          {/* AI Insights Section - Shows if user completed AI consultation */}
+          {report.aiInsights && report.aiInsights.length > 0 && (
+            <AIInsightsSection insights={report.aiInsights} />
+          )}
+
+          {/* Cost of Inaction Analysis */}
           <CostOfInaction costOfInaction={report.costOfInaction} />
 
           {/* Risk Matrix - NEW */}

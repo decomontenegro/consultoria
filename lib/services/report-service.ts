@@ -24,7 +24,7 @@ function generateReportId(): string {
 /**
  * Generate complete assessment report
  */
-export function generateReport(assessmentData: AssessmentData): Report {
+export function generateReport(assessmentData: AssessmentData, aiInsights?: string[]): Report {
   const reportId = generateReportId();
 
   // Calculate ROI (Engineering-focused)
@@ -82,10 +82,11 @@ export function generateReport(assessmentData: AssessmentData): Report {
     roi,
     enterpriseROI, // Add enterprise ROI to report
     benchmarks,
-    costOfInaction, // NEW
-    riskMatrix, // NEW
+    costOfInaction,
+    riskMatrix,
     recommendations,
     roadmap,
+    aiInsights, // AI consultation insights (optional)
     generatedAt: new Date(),
   };
 

@@ -217,10 +217,11 @@ export interface Report {
   roi: ROICalculation;
   enterpriseROI?: EnterpriseROI; // Multi-departmental ROI if applicable
   benchmarks: BenchmarkComparison[];
-  costOfInaction: CostOfInactionAnalysis; // NEW
-  riskMatrix: RiskMatrix; // NEW
+  costOfInaction: CostOfInactionAnalysis;
+  riskMatrix: RiskMatrix;
   recommendations: string[];
   roadmap: RoadmapPhase[];
+  aiInsights?: string[]; // Insights from AI consultation (optional)
   generatedAt: Date;
 }
 

@@ -28,6 +28,7 @@ import Step2CurrentStateNonTech from "@/components/assessment/Step2CurrentStateN
 import Step3Goals from "@/components/assessment/Step3Goals";
 import Step3GoalsNonTech from "@/components/assessment/Step3GoalsNonTech";
 import Step4Review from "@/components/assessment/Step4Review";
+import Step5AIConsult from "@/components/assessment/Step5AIConsult";
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -39,12 +40,13 @@ export default function AssessmentPage() {
   const [goals, setGoals] = useState<Partial<Goals>>({});
   const [contactInfo, setContactInfo] = useState<Partial<ContactInfo>>({});
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
+  const [aiInsights, setAiInsights] = useState<string[]>([]);
 
   // Non-technical data states
   const [nonTechCurrentState, setNonTechCurrentState] = useState<Partial<NonTechCurrentState>>({});
   const [nonTechGoals, setNonTechGoals] = useState<Partial<NonTechGoals>>({});
 
-  const totalSteps = 5; // Added persona selection step
+  const totalSteps = 6; // Persona + Company + State + Goals + Review + AI Consult
   const isTechPersona = persona ? isTechnicalPersona(persona) : true;
 
   // Load data from previous report if in duplicate mode
@@ -115,8 +117,8 @@ export default function AssessmentPage() {
       } : undefined,
     };
 
-    // Generate complete report
-    const report = generateReport(assessmentData);
+    // Generate complete report (with AI insights if available)
+    const report = generateReport(assessmentData, aiInsights.length > 0 ? aiInsights : undefined);
 
     // Save report (localStorage for now, can be API later)
     saveReport(report);
@@ -173,17 +175,18 @@ export default function AssessmentPage() {
           </div>
 
           {/* Step labels */}
-          <div className="grid grid-cols-5 gap-4 mt-4">
+          <div className="grid grid-cols-6 gap-2 mt-4">
             {[
               "Sobre Você",
               "Company Info",
               "Estado Atual",
               "Objetivos",
-              "Review & Submit",
+              "Review",
+              "Consulta AI",
             ].map((label, index) => (
               <div
                 key={index}
-                className={`text-center text-sm transition-colors ${
+                className={`text-center text-xs lg:text-sm transition-colors ${
                   currentStep === index
                     ? "text-neon-green font-semibold"
                     : currentStep > index
@@ -266,7 +269,7 @@ export default function AssessmentPage() {
             </div>
           )}
 
-          {/* Step 4: Review & Submit */}
+          {/* Step 4: Review & Contact */}
           {currentStep === 4 && (
             <div className="animate-slide-up">
               <Step4Review
@@ -279,7 +282,30 @@ export default function AssessmentPage() {
                 contactInfo={contactInfo}
                 onUpdateContact={setContactInfo}
                 onBack={prevStep}
-                onSubmit={handleSubmit}
+                onSubmit={nextStep}
+              />
+            </div>
+          )}
+
+          {/* Step 5: AI Consultation (Optional) */}
+          {currentStep === 5 && (
+            <div className="animate-slide-up">
+              <Step5AIConsult
+                data={{
+                  persona: persona as UserPersona,
+                  companyInfo: companyInfo as CompanyInfo,
+                  currentState: isTechPersona ? currentState as CurrentState : mapNonTechCurrentState(
+                    nonTechCurrentState as NonTechCurrentState,
+                    companyInfo.size as 'startup' | 'scaleup' | 'enterprise'
+                  ),
+                  goals: isTechPersona ? goals as Goals : mapNonTechGoals(nonTechGoals as NonTechGoals),
+                  contactInfo: contactInfo as ContactInfo,
+                }}
+                onSkip={handleSubmit}
+                onComplete={(insights) => {
+                  setAiInsights(insights);
+                  handleSubmit();
+                }}
               />
             </div>
           )}
