@@ -6,6 +6,12 @@
 
 import benchmarks from '@/data/benchmarks.json';
 import { AssessmentData, ROICalculation } from '@/lib/types';
+import {
+  calculateDataQuality,
+  getConfidenceLevel,
+  calculateUncertaintyRange,
+  generateAssumptions
+} from './confidence-calculator';
 
 interface TeamCost {
   totalAnnualSalary: number;
@@ -150,30 +156,38 @@ function calculateIRR(investment: number, annualSavings: number): number {
 }
 
 /**
- * Main ROI calculation function
+ * Main ROI calculation function (with confidence tracking)
  */
 export function calculateROI(assessment: AssessmentData): ROICalculation {
-  // Step 1: Calculate team costs
+  // Step 1: Calculate data quality and confidence
+  const dataQuality = calculateDataQuality(assessment);
+  const confidenceLevel = getConfidenceLevel(dataQuality);
+  const assumptions = generateAssumptions(assessment);
+
+  // Step 2: Calculate team costs
   const teamCost = calculateTeamCost(assessment);
 
-  // Step 2: Calculate benefits (annual savings)
+  // Step 3: Calculate benefits (annual savings)
   const productivityGain = calculateProductivityGain(assessment, teamCost);
   const qualityImprovement = calculateQualityImprovement(assessment, teamCost);
   const fasterTimeToMarket = calculateTimeToMarketValue(assessment, teamCost);
 
   const totalAnnualSavings = productivityGain + qualityImprovement + fasterTimeToMarket;
 
-  // Step 3: Calculate investment costs
+  // Step 4: Calculate investment costs
   const trainingCost = calculateTrainingCost(assessment, teamCost);
   const productivityLossDuringTraining = trainingCost * 0.30; // 30% is productivity loss
   const totalInvestment = trainingCost;
 
-  // Step 4: Calculate payback period
+  // Step 5: Calculate payback period
   const paybackPeriodMonths = (totalInvestment / (totalAnnualSavings / 12));
 
-  // Step 5: Calculate NPV and IRR
+  // Step 6: Calculate NPV and IRR
   const threeYearNPV = calculateNPV(totalInvestment, totalAnnualSavings, 3);
   const irr = calculateIRR(totalInvestment, totalAnnualSavings);
+
+  // Step 7: Calculate uncertainty range based on confidence
+  const uncertaintyRange = calculateUncertaintyRange(Math.round(threeYearNPV), confidenceLevel);
 
   return {
     investment: {
@@ -190,6 +204,11 @@ export function calculateROI(assessment: AssessmentData): ROICalculation {
     paybackPeriodMonths: Math.round(paybackPeriodMonths * 10) / 10, // Round to 1 decimal
     threeYearNPV: Math.round(threeYearNPV),
     irr: Math.round(irr * 10) / 10, // Round to 1 decimal
+    // Confidence tracking
+    confidenceLevel,
+    dataQuality,
+    assumptions,
+    uncertaintyRange,
   };
 }
 

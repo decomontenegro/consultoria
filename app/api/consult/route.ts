@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateConsultationSystemPrompt } from '@/lib/prompts/consultation-prompt';
+import { generateSpecialistSystemPrompt, SpecialistType } from '@/lib/prompts/specialist-prompts';
 import { AssessmentData, UserPersona } from '@/lib/types';
 
 // Types for API
@@ -12,6 +13,7 @@ interface Message {
 interface ConsultRequestBody {
   messages: Message[];
   assessmentData: AssessmentData;
+  specialistType?: SpecialistType; // Optional: for multi-specialist consultations
 }
 
 // Jargon validation: terms to avoid and their replacements by persona
@@ -89,7 +91,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body: ConsultRequestBody = await req.json();
-    const { messages, assessmentData } = body;
+    const { messages, assessmentData, specialistType } = body;
 
     // Validate input
     if (!messages || !Array.isArray(messages)) {
@@ -106,8 +108,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate system prompt based on assessment data
-    const systemPrompt = generateConsultationSystemPrompt(assessmentData);
+    // Generate system prompt based on specialist type or default consultation
+    const systemPrompt = specialistType
+      ? generateSpecialistSystemPrompt(specialistType, assessmentData as AssessmentData)
+      : generateConsultationSystemPrompt(assessmentData);
 
     // Call Anthropic API with streaming
     const stream = await anthropic.messages.create({

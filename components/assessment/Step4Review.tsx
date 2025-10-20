@@ -1,8 +1,11 @@
-import { CompanyInfo, CurrentState, Goals, ContactInfo } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { CompanyInfo, CurrentState, Goals, ContactInfo, UserPersona } from "@/lib/types";
+import { useState, useEffect, useMemo } from "react";
 import { ArrowRight } from "lucide-react";
+import { calculateTriageScore } from "@/lib/triage-engine";
+import TriageResultComponent from "./TriageResult";
 
 interface Props {
+  persona: UserPersona;
   companyInfo: Partial<CompanyInfo>;
   currentState: Partial<CurrentState>;
   goals: Partial<Goals>;
@@ -13,6 +16,7 @@ interface Props {
 }
 
 export default function Step4Review({
+  persona,
   companyInfo,
   currentState,
   goals,
@@ -22,6 +26,14 @@ export default function Step4Review({
   onSubmit,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Calculate Triage Score
+  const triageResult = useMemo(() => {
+    if (!persona || !companyInfo || !currentState || !goals) {
+      return null;
+    }
+    return calculateTriageScore(persona, companyInfo, currentState, goals);
+  }, [persona, companyInfo, currentState, goals]);
 
   // Auto-fill company name from Step 1 if not already filled
   useEffect(() => {
@@ -57,14 +69,22 @@ export default function Step4Review({
   };
 
   return (
-    <div className="card-professional p-8">
-      <h2 className="text-3xl font-bold text-tech-gray-100 mb-2 font-display">
-        <span className="text-gradient-neon">04.</span> Revisão & Informações de Contato
-      </h2>
-      <p className="text-tech-gray-400 mb-8">
-        Revise suas respostas e forneça informações de contato para receber seu
-        Relatório de Prontidão AI personalizado.
-      </p>
+    <div className="space-y-8">
+      {/* Triage Score Display */}
+      {triageResult && (
+        <div className="animate-slide-up">
+          <TriageResultComponent result={triageResult} showDetails={true} />
+        </div>
+      )}
+
+      <div className="card-professional p-8">
+        <h2 className="text-3xl font-bold text-tech-gray-100 mb-2 font-display">
+          <span className="text-gradient-neon">04.</span> Revisão & Informações de Contato
+        </h2>
+        <p className="text-tech-gray-400 mb-8">
+          Revise suas respostas e forneça informações de contato para receber seu
+          Relatório de Prontidão AI personalizado.
+        </p>
 
       {/* Summary of Assessment */}
       <div className="space-y-6 mb-8 p-6 bg-background-card/30 backdrop-blur-sm rounded-lg border border-tech-gray-800">
@@ -289,11 +309,12 @@ export default function Step4Review({
             "Gerando Relatório..."
           ) : (
             <span className="flex items-center gap-2">
-              Gerar Meu Relatório
+              Continuar para Consulta AI
               <ArrowRight className="w-4 h-4" />
             </span>
           )}
         </button>
+      </div>
       </div>
     </div>
   );

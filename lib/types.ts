@@ -2,6 +2,11 @@
  * Type definitions for CulturaBuilder Assessment Platform
  */
 
+// Helper type for deeply nested partial objects
+export type DeepPartial<T> = T extends object
+  ? { [P in keyof T]?: DeepPartial<T[P]> }
+  : T;
+
 export interface CompanyInfo {
   name: string;
   industry: string;
@@ -154,6 +159,15 @@ export interface AssessmentData {
   };
 }
 
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+
+export interface DataQuality {
+  completeness: number; // 0-100% - percentage of data fields provided
+  specificity: number; // 0-100% - how specific/detailed the data is
+  missingCriticalData: string[]; // List of critical missing fields
+  dataSource: 'self-reported' | 'integrated' | 'estimated'; // How data was obtained
+}
+
 export interface ROICalculation {
   investment: {
     trainingCost: number;
@@ -169,6 +183,16 @@ export interface ROICalculation {
   paybackPeriodMonths: number;
   threeYearNPV: number;
   irr: number;
+  // Confidence tracking
+  confidenceLevel: ConfidenceLevel;
+  dataQuality: DataQuality;
+  assumptions: string[]; // Key assumptions made in calculations
+  uncertaintyRange: {
+    // Conservative and optimistic scenarios
+    conservativeNPV: number;
+    optimisticNPV: number;
+    mostLikelyNPV: number; // Same as threeYearNPV
+  };
 }
 
 // ============================================
@@ -310,4 +334,73 @@ export interface RiskMatrix {
   riskLevel: 'low' | 'moderate' | 'high' | 'critical';
   risks: Risk[];
   summary: string;
+}
+
+// ============================================
+// AI-FIRST ASSESSMENT JOURNEY
+// ============================================
+
+/**
+ * Assessment modes for AI-first journey
+ */
+export type AssessmentMode =
+  | 'express'  // 5-7 min: Essential questions only, quick report
+  | 'guided'   // 10-15 min: Smart form with relevant fields only
+  | 'deep';    // 20-30 min: Full multi-specialist consultation
+
+/**
+ * Urgency level detected by AI
+ */
+export type UrgencyLevel = 'low' | 'medium' | 'high' | 'critical';
+
+/**
+ * Complexity assessment
+ */
+export type ComplexityLevel = 'simple' | 'moderate' | 'complex';
+
+/**
+ * Conversation message for AI routing
+ */
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
+}
+
+/**
+ * Result from AI router analysis
+ */
+export interface AIRouterResult {
+  // Detected characteristics
+  detectedPersona: UserPersona | null;
+  personaConfidence: number; // 0-1
+
+  urgencyLevel: UrgencyLevel;
+  complexityLevel: ComplexityLevel;
+
+  // Recommendation
+  recommendedMode: AssessmentMode;
+  reasoning: string;
+
+  // Partial data collected during routing conversation
+  partialData: {
+    companyInfo?: Partial<CompanyInfo>;
+    painPoints?: string[];
+    mainGoal?: string;
+    budget?: string;
+  };
+
+  // Alternative modes available
+  alternativeModes: AssessmentMode[];
+}
+
+/**
+ * AI Router conversation state
+ */
+export interface AIRouterState {
+  messages: ConversationMessage[];
+  questionsAsked: number;
+  maxQuestions: number;
+  isComplete: boolean;
+  result: AIRouterResult | null;
 }

@@ -13,6 +13,7 @@ import EnterpriseROISection from "@/components/report/EnterpriseROISection";
 import CostOfInaction from "@/components/report/CostOfInaction";
 import RiskMatrixSection from "@/components/report/RiskMatrixSection";
 import AIInsightsSection from "@/components/report/AIInsightsSection";
+import ConfidenceIndicator, { ConfidenceBadge } from "@/components/report/ConfidenceIndicator";
 import { hasRealDepartmentData } from "@/lib/utils/mock-department-data";
 import { Check, ArrowRight, ExternalLink } from "lucide-react";
 
@@ -116,10 +117,21 @@ export default function ReportPage() {
           {/* Executive Summary */}
           <div className="card-glow p-10 mb-12">
             <div className="mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold font-display mb-4 leading-tight">
-                <span className="text-tech-gray-100">Relatório de </span>
-                <span className="text-gradient-neon">Prontidão para IA</span>
-              </h1>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h1 className="text-4xl md:text-5xl font-bold font-display leading-tight">
+                  <span className="text-tech-gray-100">Relatório de </span>
+                  <span className="text-gradient-neon">Prontidão para IA</span>
+                </h1>
+                {/* Confidence Badge */}
+                {roi.confidenceLevel && roi.dataQuality && (
+                  <div className="flex-shrink-0 mt-2">
+                    <ConfidenceBadge
+                      confidenceLevel={roi.confidenceLevel}
+                      dataQuality={roi.dataQuality}
+                    />
+                  </div>
+                )}
+              </div>
               <p className="text-lg text-tech-gray-400">
                 {assessmentData.companyInfo.name} •{" "}
                 {new Date(report.generatedAt).toLocaleDateString("pt-BR", {
@@ -158,6 +170,18 @@ export default function ReportPage() {
               </div>
             </div>
           </div>
+
+          {/* Confidence Indicator Section - NEW */}
+          {roi.confidenceLevel && roi.dataQuality && roi.uncertaintyRange && roi.assumptions && (
+            <div className="mb-12">
+              <ConfidenceIndicator
+                confidenceLevel={roi.confidenceLevel}
+                dataQuality={roi.dataQuality}
+                uncertaintyRange={roi.uncertaintyRange}
+                assumptions={roi.assumptions}
+              />
+            </div>
+          )}
 
           {/* AI Insights Section - Shows if user completed AI consultation */}
           {report.aiInsights && report.aiInsights.length > 0 && (

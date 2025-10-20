@@ -24,7 +24,7 @@ interface MockDepartmentData {
  * Generate mock department data based on company size
  */
 export function generateMockDepartmentData(
-  companySize: 'startup' | 'scaleup' | 'enterprise',
+  companySize: 'startup' | 'scaleup' | 'enterprise' | string | undefined,
   industry: string
 ): MockDepartmentData {
   // Size-based multipliers
@@ -34,7 +34,13 @@ export function generateMockDepartmentData(
     enterprise: { team: 10, volume: 20, cost: 2 },
   };
 
-  const multiplier = sizeMultipliers[companySize];
+  // Normalize and validate companySize
+  const normalizedSize = (companySize as string)?.toLowerCase() || 'scaleup';
+  const validSize = ['startup', 'scaleup', 'enterprise'].includes(normalizedSize)
+    ? (normalizedSize as 'startup' | 'scaleup' | 'enterprise')
+    : 'scaleup'; // Default to scaleup if invalid
+
+  const multiplier = sizeMultipliers[validSize];
 
   // Customer Service mock data
   const customerService: CustomerServiceState = {
@@ -43,52 +49,52 @@ export function generateMockDepartmentData(
     avgFirstResponseTime: 240, // 4 hours (conservative baseline)
     firstContactResolution: 45, // 45% resolution rate
     costPerInteraction: 4.5, // R$ 4.50 per interaction (conservative)
-    channelsSupported: companySize === 'startup'
+    channelsSupported: validSize === 'startup'
       ? ['email', 'chat']
-      : companySize === 'scaleup'
+      : validSize === 'scaleup'
       ? ['email', 'chat', 'phone']
       : ['email', 'chat', 'phone', 'social'],
-    automationLevel: companySize === 'enterprise' ? 'moderate' : 'basic',
+    automationLevel: validSize === 'enterprise' ? 'moderate' : 'basic',
   };
 
   // Sales mock data
   const sales: SalesState = {
     salesTeamSize: Math.round(8 * multiplier.team),
-    avgSalesCycle: companySize === 'enterprise' ? 90 : companySize === 'scaleup' ? 45 : 30,
+    avgSalesCycle: validSize === 'enterprise' ? 90 : validSize === 'scaleup' ? 45 : 30,
     leadConversionRate: 15, // 15% conversion rate
     avgLeadsPerRep: Math.round(50 * multiplier.volume / multiplier.team),
     timeOnAdminTasks: 35, // 35% of time on admin
-    crmUsage: companySize === 'enterprise' ? 'advanced' : companySize === 'scaleup' ? 'basic' : 'none',
-    avgDealSize: companySize === 'enterprise' ? 150000 : companySize === 'scaleup' ? 50000 : 15000,
+    crmUsage: validSize === 'enterprise' ? 'advanced' : validSize === 'scaleup' ? 'basic' : 'none',
+    avgDealSize: validSize === 'enterprise' ? 150000 : validSize === 'scaleup' ? 50000 : 15000,
   };
 
   // Marketing mock data
   const marketing: MarketingState = {
     marketingTeamSize: Math.round(4 * multiplier.team),
-    campaignsPerMonth: companySize === 'enterprise' ? 12 : companySize === 'scaleup' ? 6 : 3,
+    campaignsPerMonth: validSize === 'enterprise' ? 12 : validSize === 'scaleup' ? 6 : 3,
     contentCreationHours: Math.round(20 * multiplier.team),
-    cac: companySize === 'enterprise' ? 800 : companySize === 'scaleup' ? 400 : 200,
+    cac: validSize === 'enterprise' ? 800 : validSize === 'scaleup' ? 400 : 200,
     leadGenerationRate: Math.round(200 * multiplier.volume),
-    automationUsage: companySize === 'enterprise' ? 'moderate' : companySize === 'scaleup' ? 'basic' : 'none',
+    automationUsage: validSize === 'enterprise' ? 'moderate' : validSize === 'scaleup' ? 'basic' : 'none',
   };
 
   // Meeting Intelligence & Governance mock data
   const meetingIntelligence: MeetingGovernanceState = {
-    executiveTeamSize: companySize === 'enterprise' ? 8 : companySize === 'scaleup' ? 4 : 2,
-    avgMeetingHoursPerWeek: companySize === 'enterprise' ? 15 : companySize === 'scaleup' ? 10 : 8,
-    strategicMeetingsPerMonth: companySize === 'enterprise' ? 12 : companySize === 'scaleup' ? 8 : 4,
+    executiveTeamSize: validSize === 'enterprise' ? 8 : validSize === 'scaleup' ? 4 : 2,
+    avgMeetingHoursPerWeek: validSize === 'enterprise' ? 15 : validSize === 'scaleup' ? 10 : 8,
+    strategicMeetingsPerMonth: validSize === 'enterprise' ? 12 : validSize === 'scaleup' ? 8 : 4,
     minutesPreparationTime: 30, // 30 minutes per meeting
-    decisionTrackingProcess: companySize === 'enterprise' ? 'manual' : 'none',
-    complianceAuditNeeds: companySize === 'enterprise',
+    decisionTrackingProcess: validSize === 'enterprise' ? 'manual' : 'none',
+    complianceAuditNeeds: validSize === 'enterprise',
   };
 
   // Operations mock data
   const operations: OperationsState = {
     opsTeamSize: Math.round(6 * multiplier.team),
-    manualProcessesIdentified: companySize === 'enterprise' ? 15 : companySize === 'scaleup' ? 8 : 5,
-    avgApprovalTime: companySize === 'enterprise' ? 48 : companySize === 'scaleup' ? 24 : 12,
+    manualProcessesIdentified: validSize === 'enterprise' ? 15 : validSize === 'scaleup' ? 8 : 5,
+    avgApprovalTime: validSize === 'enterprise' ? 48 : validSize === 'scaleup' ? 24 : 12,
     documentProcessingVolume: Math.round(300 * multiplier.volume),
-    processAutomationLevel: companySize === 'enterprise' ? 'basic' : 'none',
+    processAutomationLevel: validSize === 'enterprise' ? 'basic' : 'none',
   };
 
   return {

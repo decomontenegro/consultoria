@@ -2,6 +2,7 @@ import Link from "next/link";
 import CulturaBuilderLogo from "@/components/CulturaBuilderLogo";
 import CulturaBuilderLogoVideo from "@/components/CulturaBuilderLogoVideo";
 import CaseStudiesSection from "@/components/CaseStudiesSection";
+import { InteractiveRobotSpline } from "@/components/ui/interactive-3d-robot";
 
 export default function Home() {
   return (
@@ -123,11 +124,34 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Interactive 3D Robot Section */}
+            <div className="mt-16 -mb-40">
+              <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-visible rounded-2xl z-0">
+                {/* 3D Robot */}
+                <InteractiveRobotSpline
+                  scene="https://prod.spline.design/PyzDhpQ9E5f1E3MT/scene.splinecode"
+                  className="absolute inset-0"
+                />
+
+                {/* Text Overlay */}
+                <div className="absolute inset-0 z-10 pt-12 md:pt-20 lg:pt-32 px-4 md:px-8 pointer-events-none">
+                  <div className="text-center text-white drop-shadow-2xl w-full max-w-4xl mx-auto">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold font-display mb-4">
+                      <span className="text-gradient-neon">Conheça o c.A.I.o</span>
+                    </h2>
+                    <p className="text-base md:text-lg lg:text-xl text-tech-gray-200 drop-shadow-lg max-w-2xl mx-auto mb-12">
+                      Agente conversional do culturabuilder
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Trust Indicators - Partners */}
-        <div className="border-t border-tech-gray-800 bg-background-card/30 backdrop-blur-sm">
+        <div className="relative z-10 border-t border-tech-gray-800 bg-gray-900">
           <div className="container-professional py-12">
             <p className="text-center text-sm text-tech-gray-500 mb-8">
               Metodologia baseada em pesquisas verificadas:

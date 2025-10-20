@@ -94,6 +94,47 @@ export function generateReport(assessmentData: AssessmentData, aiInsights?: stri
 }
 
 /**
+ * Send webhook notification to admin
+ */
+async function sendWebhookNotification(report: Report): Promise<void> {
+  try {
+    const payload = {
+      reportId: report.id,
+      companyName: report.assessmentData.companyInfo.name,
+      contactEmail: report.assessmentData.contactInfo?.email || 'Não fornecido',
+      contactName: report.assessmentData.contactInfo?.name || 'Não fornecido',
+      industry: report.assessmentData.companyInfo.industry,
+      teamSize: report.assessmentData.companyInfo.size,
+      persona: report.assessmentData.persona,
+      createdAt: report.generatedAt,
+      summary: {
+        paybackMonths: report.roi.paybackPeriodMonths,
+        threeYearNPV: report.roi.threeYearNPV,
+        annualROI: report.roi.irr,
+      },
+      fullReportData: report, // Send complete data for admin backup
+    };
+
+    const response = await fetch('/api/webhook/report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      console.log('✅ Admin notification sent');
+    } else {
+      console.warn('⚠️  Admin notification failed (non-blocking)');
+    }
+  } catch (error) {
+    // Don't throw - webhook failure shouldn't break report generation
+    console.warn('⚠️  Webhook notification error (non-blocking):', error);
+  }
+}
+
+/**
  * Save report (client-side storage for now)
  */
 export function saveReport(report: Report): void {
@@ -103,6 +144,12 @@ export function saveReport(report: Report): void {
     const reports = getAllReports();
     reports[report.id] = report;
     localStorage.setItem('culturabuilder_reports', JSON.stringify(reports));
+
+    // Send webhook notification to admin (non-blocking)
+    sendWebhookNotification(report).catch(err => {
+      console.warn('Webhook notification failed (non-critical):', err);
+    });
+
   } catch (error) {
     console.error('Error saving report:', error);
   }

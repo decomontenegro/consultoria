@@ -16,6 +16,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
     "@radix-ui/react-slot": "^1.2.3",
+    "@splinetool/react-spline": "^4.1.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "class-variance-authority": "^0.7.1",
