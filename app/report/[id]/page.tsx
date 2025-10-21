@@ -14,6 +14,7 @@ import CostOfInaction from "@/components/report/CostOfInaction";
 import RiskMatrixSection from "@/components/report/RiskMatrixSection";
 import AIInsightsSection from "@/components/report/AIInsightsSection";
 import ConfidenceIndicator, { ConfidenceBadge } from "@/components/report/ConfidenceIndicator";
+import ExportButtons from "@/components/export/ExportButtons";
 import { hasRealDepartmentData } from "@/lib/utils/mock-department-data";
 import { Check, ArrowRight, ExternalLink } from "lucide-react";
 
@@ -101,12 +102,7 @@ export default function ReportPage() {
                 ← Meus Reports
               </Link>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="btn-secondary text-sm"
-            >
-              Baixar PDF
-            </button>
+            <ExportButtons report={report} compact={true} />
           </div>
         </div>
       </header>
