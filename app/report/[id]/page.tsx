@@ -21,20 +21,41 @@ export default function ReportPage() {
 
   useEffect(() => {
     const reportId = params.id as string;
+
+    // Try to load from local service first
     const loadedReport = getReport(reportId);
 
-    if (!loadedReport) {
-      router.push("/");
-      return;
+    if (loadedReport) {
+      setReport(loadedReport);
+
+      // Load benchmark comparison (if available)
+      const comparison = getBenchmarkComparison(reportId);
+      setBenchmarkComparison(comparison);
+
+      setLoading(false);
+    } else {
+      // If not found locally, try to load from imported reports API
+      fetch(`/api/imported-reports/${reportId}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success && result.report) {
+            setReport(result.report);
+
+            // Load benchmark comparison (if available)
+            const comparison = getBenchmarkComparison(reportId);
+            setBenchmarkComparison(comparison);
+
+            setLoading(false);
+          } else {
+            // Report not found in either location
+            router.push("/");
+          }
+        })
+        .catch(err => {
+          console.error('Error loading imported report:', err);
+          router.push("/");
+        });
     }
-
-    setReport(loadedReport);
-
-    // Load benchmark comparison (if available)
-    const comparison = getBenchmarkComparison(reportId);
-    setBenchmarkComparison(comparison);
-
-    setLoading(false);
   }, [params.id, router]);
 
   if (loading || !report) {

@@ -1,0 +1,127 @@
+{
+  "analyzedAt": "2025-10-24T12:52:59.970Z",
+  "totalDepartments": 16,
+  "companies": [
+    {
+      "company": "Hospital Casa",
+      "count": 8,
+      "departments": [
+        "nutrition",
+        "hospitality",
+        "it",
+        "surgical",
+        "pharmacy",
+        "scheduling",
+        "purchasing",
+        "commercial"
+      ]
+    },
+    {
+      "company": "Klini Saúde",
+      "count": 3,
+      "departments": [
+        "medical",
+        "postsales",
+        "regulation"
+      ]
+    }
+  ],
+  "departments": [
+    {
+      "company": "Hospital Casa",
+      "department": "nutrition",
+      "responsible": "Nutrição (Controle e Planejamento)",
+      "timestamp": "2025-10-16T14:01:17.524Z"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "medical",
+      "responsible": "Área Médica",
+      "timestamp": "2025-10-17T10:45:13.749Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "hospitality",
+      "responsible": "Hotelaria (Controle e Planejamento)",
+      "timestamp": "2025-10-17T11:07:15.979Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "it",
+      "responsible": "TI (Infra, Suporte)",
+      "timestamp": "2025-10-17T12:33:19.054Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "surgical",
+      "responsible": "Central Cirúrgica",
+      "timestamp": "2025-10-17T16:07:46.356Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "pharmacy",
+      "responsible": "Farmácia (Controle Estoque, Dispensação, Validade)",
+      "timestamp": "2025-10-20T18:35:14.844Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "scheduling",
+      "responsible": "Agendamento Cirúrgico (Telefone, WhatsApp, Email)",
+      "timestamp": "2025-10-21T15:14:28.638Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "surgical",
+      "responsible": "Central Cirúrgica",
+      "timestamp": "2025-10-21T15:14:28.638Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "purchasing",
+      "responsible": "Compras (Cotação, Follow up)",
+      "timestamp": "2025-10-23T15:59:32.929Z"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "medical",
+      "responsible": "Área Médica",
+      "timestamp": "2025-10-23T20:02:43.253Z"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "medical",
+      "responsible": "Área Médica",
+      "timestamp": "2025-10-23T20:55:37.120Z"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "postsales",
+      "responsible": "Pós-Vendas",
+      "timestamp": "2025-10-23T22:21:36.318Z"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "postsales",
+      "responsible": "Pós-Vendas",
+      "timestamp": "2025-10-23T22:21:52.821Z"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "regulation",
+      "responsible": "Regulação",
+      "timestamp": "2025-10-24T11:00:26.822Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "commercial",
+      "responsible": "Comercial (Negociação com as Operadoras)",
+      "timestamp": "2025-10-24T11:13:39.694Z"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "commercial",
+      "responsible": "Comercial (Negociação com as Operadoras)",
+      "timestamp": "2025-10-24T11:13:50.913Z"
+    }
+  ]
+}

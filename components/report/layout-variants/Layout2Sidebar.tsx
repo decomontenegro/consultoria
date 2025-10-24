@@ -56,17 +56,17 @@ const navSections: NavSection[] = [
   { id: 'confidence', label: 'Confiança', icon: Shield },
   { id: 'benchmark', label: 'Benchmark', icon: TrendingUp },
   { id: 'four-pillar', label: 'ROI 4 Pilares', icon: Grid3x3 },
-  { id: 'ai-insights', label: 'Insights AI', icon: Target },
+  { id: 'ai-insights', label: 'Insights de IA', icon: Target },
   { id: 'cost-inaction', label: 'Custo de Inação', icon: DollarSign },
   { id: 'risk-matrix', label: 'Matriz de Risco', icon: Shield },
-  { id: 'transformation', label: 'Prontidão', icon: TrendingUp },
+  { id: 'transformation', label: 'Prontidão para IA', icon: TrendingUp },
   { id: 'possibilities', label: 'Possibilidades', icon: Grid3x3 },
-  { id: 'enterprise-roi', label: 'ROI Enterprise', icon: Briefcase },
-  { id: 'engineering-roi', label: 'ROI Engineering', icon: Code },
-  { id: 'industry-bench', label: 'Benchmarks', icon: TrendingUp },
-  { id: 'case-studies', label: 'Cases', icon: CheckSquare },
+  { id: 'enterprise-roi', label: 'ROI Empresarial', icon: Briefcase },
+  { id: 'engineering-roi', label: 'ROI de Engenharia', icon: Code },
+  { id: 'industry-bench', label: 'Benchmarks da Indústria', icon: TrendingUp },
+  { id: 'case-studies', label: 'Casos de Sucesso', icon: CheckSquare },
   { id: 'recommendations', label: 'Recomendações', icon: Target },
-  { id: 'roadmap', label: 'Roadmap', icon: Rocket }
+  { id: 'roadmap', label: 'Roteiro de Implementação', icon: Rocket }
 ];
 
 export default function Layout2Sidebar({ report, benchmarkComparison }: Layout2SidebarProps) {

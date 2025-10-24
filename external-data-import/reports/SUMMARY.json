@@ -1,0 +1,133 @@
+{
+  "generatedAt": "2025-10-24T12:52:59.971Z",
+  "totalCompanies": 2,
+  "totalDepartments": 16,
+  "companies": [
+    {
+      "name": "Hospital Casa",
+      "departments": [
+        {
+          "name": "nutrition",
+          "responsible": "Nutrição (Controle e Planejamento)",
+          "teamSize": "goodUse",
+          "aiUsage": "MxM e mv 200 e mv soul",
+          "businessImpact": "none"
+        },
+        {
+          "name": "hospitality",
+          "responsible": "Hotelaria (Controle e Planejamento)",
+          "teamSize": "fullUse",
+          "aiUsage": "ERP, MV 200, MV SOUL, MXM, BI,\nEXCEL",
+          "businessImpact": "none"
+        },
+        {
+          "name": "it",
+          "responsible": "TI (Infra, Suporte)",
+          "teamSize": "goodUse",
+          "aiUsage": "ERP´s MV (soul e mv2000), vivace (pacs), alterdata, bioslab, bionexo, opmenexo, glpi, metabase, powerBI, airflow, trello, clickup, mxm, zero glosa, digsac, sistema ERP RHC (desenvolvimento próprio com diversos módulos de gestão), solvis, solidies, kairos, defenser, zabbix, pacote office, medicalpay, Docker, contactboard (central flux call center), lansweeper, sgg (sesmt), vnc",
+          "businessImpact": "some"
+        },
+        {
+          "name": "surgical",
+          "responsible": "Central Cirúrgica",
+          "teamSize": "someUse",
+          "aiUsage": "ERP, Planilha, Google Forms, MV, Google Drive",
+          "businessImpact": "none"
+        },
+        {
+          "name": "pharmacy",
+          "responsible": "Farmácia (Controle Estoque, Dispensação, Validade)",
+          "teamSize": "someUse",
+          "aiUsage": "MV2000, SoulMv, painéis de Power BI, ERP interno, GLPI, planilhas de Excel e Bionexo (Compras).",
+          "businessImpact": "none"
+        },
+        {
+          "name": "scheduling",
+          "responsible": "Agendamento Cirúrgico (Telefone, WhatsApp, Email)",
+          "teamSize": "someUse",
+          "aiUsage": "ERP, MV Soul, MV2000, Google Drive, Google Forms",
+          "businessImpact": "none"
+        },
+        {
+          "name": "surgical",
+          "responsible": "Central Cirúrgica",
+          "teamSize": "someUse",
+          "aiUsage": "ERP, Google Drive, Google Forms, Planilhas",
+          "businessImpact": "none"
+        },
+        {
+          "name": "purchasing",
+          "responsible": "Compras (Cotação, Follow up)",
+          "teamSize": "goodUse",
+          "aiUsage": "Google Drive, MV, Tazy, Bionexo",
+          "businessImpact": "basic"
+        },
+        {
+          "name": "commercial",
+          "responsible": "Comercial (Negociação com as Operadoras)",
+          "teamSize": "goodUse",
+          "aiUsage": "MV, BI, Planilhas, GLPI, Compare",
+          "businessImpact": "basic"
+        },
+        {
+          "name": "commercial",
+          "responsible": "Comercial (Negociação com as Operadoras)",
+          "teamSize": "goodUse",
+          "aiUsage": "MV, BI, Planilhas, GLPI, Compare",
+          "businessImpact": "basic"
+        }
+      ]
+    },
+    {
+      "name": "Klini Saúde",
+      "departments": [
+        {
+          "name": "medical",
+          "responsible": "Área Médica",
+          "teamSize": "littleUse",
+          "aiUsage": "wewew",
+          "businessImpact": "basic"
+        },
+        {
+          "name": "medical",
+          "responsible": "Área Médica",
+          "teamSize": "littleUse",
+          "aiUsage": "tste",
+          "businessImpact": "some"
+        },
+        {
+          "name": "medical",
+          "responsible": "Área Médica",
+          "teamSize": "littleUse",
+          "aiUsage": "tsts",
+          "businessImpact": "basic"
+        },
+        {
+          "name": "postsales",
+          "responsible": "Pós-Vendas",
+          "teamSize": "someUse",
+          "aiUsage": "Pós-Vendas / Retenção e Cobrança\n\nSistema interno da Operadora - Tasy\nPlanilhas Excel (controle de contratos, controle de inadimplência, cancelamentos, indicadores e carteiras).\nHuggy (atendimento WhatsApp).\nDocusign (assinaturas digitais).\nPower BI (de forma limitada para indicadores).",
+          "businessImpact": "none"
+        },
+        {
+          "name": "postsales",
+          "responsible": "Pós-Vendas",
+          "teamSize": "someUse",
+          "aiUsage": "Pós-Vendas / Retenção e Cobrança\n\nSistema interno da Operadora - Tasy\nPlanilhas Excel (controle de contratos, controle de inadimplência, cancelamentos, indicadores e carteiras).\nHuggy (atendimento WhatsApp).\nDocusign (assinaturas digitais).\nPower BI (de forma limitada para indicadores).",
+          "businessImpact": "none"
+        },
+        {
+          "name": "regulation",
+          "responsible": "Regulação",
+          "teamSize": "someUse",
+          "aiUsage": "Tasy\nOpmenexo",
+          "businessImpact": "none"
+        }
+      ]
+    }
+  ],
+  "reportLocations": {
+    "individual": "external-data-import/reports/individual/",
+    "consolidated": "external-data-import/reports/consolidated/"
+  }
+}

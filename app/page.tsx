@@ -26,6 +26,9 @@ export default function Home() {
               <Link href="/assessment" className="text-tech-gray-300 hover:text-neon-green transition-colors">
                 Start Assessment
               </Link>
+              <Link href="/imported-reports" className="text-tech-gray-300 hover:text-neon-cyan transition-colors">
+                Relatórios CSV
+              </Link>
               <Link href="https://culturabuilder.com" target="_blank" className="text-tech-gray-300 hover:text-neon-cyan transition-colors">
                 Comunidade
               </Link>

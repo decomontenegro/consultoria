@@ -1,0 +1,513 @@
+{
+  "id": "1761310379972-or5z5jn",
+  "assessmentData": {
+    "persona": "cto",
+    "companyInfo": {
+      "name": "Hospital Casa (Consolidado)",
+      "industry": "healthcare",
+      "size": "enterprise",
+      "revenue": "not-disclosed",
+      "country": "BR"
+    },
+    "aiScope": {
+      "engineering": true,
+      "product": false,
+      "operations": true,
+      "sales": true,
+      "marketing": false,
+      "support": false,
+      "other": true
+    },
+    "currentState": {
+      "devTeamSize": 100,
+      "devSeniority": {
+        "junior": 30,
+        "mid": 40,
+        "senior": 20,
+        "lead": 10
+      },
+      "currentTools": [
+        "other"
+      ],
+      "deploymentFrequency": "weekly",
+      "avgCycleTime": 10,
+      "bugRate": 3,
+      "aiToolsUsage": "none",
+      "painPoints": [
+        "other",
+        "slow-process",
+        "excel-overload",
+        "integration-issues"
+      ]
+    },
+    "goals": {
+      "primaryGoals": [
+        "reduce-costs",
+        "improve-efficiency",
+        "scale-operations"
+      ],
+      "timeline": "12-months",
+      "budgetRange": "50k+",
+      "successMetrics": [
+        "productivity",
+        "time-to-market",
+        "cost-reduction",
+        "quality"
+      ]
+    },
+    "contactInfo": {
+      "fullName": "Gestão Consolidada",
+      "title": "Consolidado de Todas as Áreas",
+      "email": "gestao@hospitalcasa.com",
+      "company": "Hospital Casa",
+      "agreeToContact": true
+    },
+    "submittedAt": "2025-10-24T11:13:50.913Z",
+    "metadata": {
+      "source": "csv-import-aggregated",
+      "departments": [
+        "nutrition",
+        "hospitality",
+        "it",
+        "surgical",
+        "pharmacy",
+        "scheduling",
+        "surgical",
+        "purchasing",
+        "commercial",
+        "commercial"
+      ],
+      "totalDepartments": 10
+    }
+  },
+  "roi": {
+    "investment": {
+      "trainingCost": 116461.53846153847,
+      "productivityLossDuringTraining": 34938.46153846154,
+      "total": 116461.53846153847
+    },
+    "annualSavings": {
+      "productivityGain": 2880000,
+      "qualityImprovement": 2160000,
+      "fasterTimeToMarket": 864000,
+      "total": 5904000
+    },
+    "paybackPeriodMonths": 0.2,
+    "threeYearNPV": 14565913,
+    "irr": 5069.5,
+    "confidenceLevel": "high",
+    "dataQuality": {
+      "completeness": 100,
+      "specificity": 100,
+      "missingCriticalData": [],
+      "dataSource": "self-reported"
+    },
+    "assumptions": [
+      "Estimativas baseadas em benchmarks verificados (McKinsey, Forrester, DORA)",
+      "Premissas conservadoras: 25% ganho de produtividade (vs 35-45% reportado)",
+      "Cálculo baseado em time de 100 desenvolvedores",
+      "Mix de senioridade: 30% sênior/lead - impacta velocidade de adoção",
+      "Assumido tempo de ramp-up de 3-6 meses para ferramentas AI (time inexperiente)"
+    ],
+    "uncertaintyRange": {
+      "conservativeNPV": 12381026,
+      "optimisticNPV": 16750800,
+      "mostLikelyNPV": 14565913
+    },
+    "fourPillarROI": {
+      "efficiency": {
+        "productivityIncrease": 30,
+        "timeToMarketReduction": 25,
+        "annualValue": 3956000,
+        "keyMetrics": [
+          "30% productivity increase",
+          "25% faster time-to-market",
+          "3456k saved in labor costs"
+        ]
+      },
+      "revenue": {
+        "fasterProductLaunches": 3,
+        "customerAcquisitionGain": 8,
+        "marketShareGain": 2,
+        "annualValue": 400000,
+        "keyMetrics": [
+          "+3 additional product launches/year",
+          "8% increase in customer acquisition",
+          "2% potential market share gain",
+          "R$ 400k additional revenue"
+        ]
+      },
+      "risk": {
+        "codeQualityImprovement": 30,
+        "bugReduction": 40,
+        "securityImprovements": [
+          "Automated security scanning",
+          "Vulnerability detection",
+          "Code pattern analysis"
+        ],
+        "annualValue": 7400000,
+        "keyMetrics": [
+          "30% code quality improvement",
+          "40% fewer production bugs",
+          "1440 bugs avoided annually",
+          "R$ 7400k saved on incidents"
+        ]
+      },
+      "agility": {
+        "deploymentFrequencyIncrease": 50,
+        "experimentVelocity": 8,
+        "innovationCapacity": 25,
+        "annualValue": 300000,
+        "keyMetrics": [
+          "50% increase in deployment frequency",
+          "+8 additional A/B tests per quarter",
+          "25% more features per sprint",
+          "R$ 300k value from market responsiveness"
+        ]
+      },
+      "totalValue": {
+        "efficiency": 3956000,
+        "revenue": 400000,
+        "risk": 7400000,
+        "agility": 300000,
+        "combined": 12056000
+      }
+    }
+  },
+  "enterpriseROI": {
+    "engineering": {
+      "department": "Engineering",
+      "investment": 50000,
+      "annualSavings": 200000,
+      "paybackMonths": 3,
+      "threeYearNPV": 447370,
+      "keyMetrics": [
+        "25-35% produtividade dev increase",
+        "30% redução em bugs",
+        "15% faster time-to-market"
+      ],
+      "enabled": true
+    },
+    "totalEnterprise": {
+      "totalInvestment": 288200,
+      "totalAnnualSavings": 151144480,
+      "avgPaybackMonths": 1.4,
+      "totalThreeYearNPV": 375585751,
+      "enterpriseIRR": 52444.3
+    },
+    "customerService": {
+      "department": "Customer Service",
+      "investment": 40000,
+      "annualSavings": 367200,
+      "paybackMonths": 1.3,
+      "threeYearNPV": 873172,
+      "keyMetrics": [
+        "Redução de 68% no custo por interação",
+        "First Response Time: 360min → 4min",
+        "95% das interações automatizadas",
+        "ROI de 3.5x no primeiro ano"
+      ],
+      "enabled": true
+    },
+    "sales": {
+      "department": "Sales & CRM",
+      "investment": 96000,
+      "annualSavings": 11880000,
+      "paybackMonths": 0.1,
+      "threeYearNPV": 29447802,
+      "keyMetrics": [
+        "29% aumento em revenue",
+        "34% boost em produtividade de vendas",
+        "30% melhoria em conversão de leads",
+        "83% mais chance de exceder metas"
+      ],
+      "enabled": true
+    },
+    "marketing": {
+      "department": "Marketing",
+      "investment": 24000,
+      "annualSavings": 136128000,
+      "paybackMonths": 6,
+      "threeYearNPV": 338506188,
+      "keyMetrics": [
+        "ROI de 5.44x em 3 anos",
+        "351% aumento em leads qualificados",
+        "6h/semana economizadas por marketer",
+        "Payback em 6 meses"
+      ],
+      "enabled": true
+    },
+    "meetingIntelligence": {
+      "department": "Meeting Intelligence & Governance",
+      "investment": 3200,
+      "annualSavings": 979280,
+      "paybackMonths": 0,
+      "threeYearNPV": 2432124,
+      "keyMetrics": [
+        "2.2h/semana economizadas por executivo",
+        "33% mais produtivo durante uso de AI",
+        "85% redução em review times",
+        "Audit trail automático para compliance"
+      ],
+      "enabled": true
+    },
+    "operations": {
+      "department": "Operations",
+      "investment": 75000,
+      "annualSavings": 1590000,
+      "paybackMonths": 0.6,
+      "threeYearNPV": 3879095,
+      "keyMetrics": [
+        "25% redução em labor costs",
+        "20-30% ganhos de produtividade",
+        "15 processos automatizados",
+        "50% melhoria em velocidade de processos"
+      ],
+      "enabled": true
+    }
+  },
+  "benchmarks": [
+    {
+      "metric": "Deployment Frequency",
+      "yourValue": 4,
+      "industryAvg": 4,
+      "topPerformer": 4,
+      "percentile": 95,
+      "unit": "per month"
+    },
+    {
+      "metric": "Average Cycle Time",
+      "yourValue": 10,
+      "industryAvg": 14,
+      "topPerformer": 5,
+      "percentile": 73,
+      "unit": "days"
+    },
+    {
+      "metric": "AI Tools Maturity",
+      "yourValue": 0,
+      "industryAvg": 40,
+      "topPerformer": 100,
+      "percentile": 0,
+      "unit": "maturity score"
+    },
+    {
+      "metric": "Bug Density",
+      "yourValue": 3,
+      "industryAvg": 15,
+      "topPerformer": 7,
+      "percentile": 95,
+      "unit": "per 1000 LOC"
+    }
+  ],
+  "costOfInaction": {
+    "totalAnnualCost": 14385000,
+    "totalThreeYearCost": 44220000,
+    "opportunityCostVsCompetitors": 55275000,
+    "costs": [
+      {
+        "category": "Perda de Produtividade",
+        "annualCost": 4500000,
+        "threeYearCost": 13500000,
+        "description": "Seus concorrentes que usam AI são ~25% mais produtivos. Isso significa que sua equipe está efetivamente trabalhando com 25% menos capacidade vs. competidores AI-enabled.",
+        "icon": "productivity"
+      },
+      {
+        "category": "Atraso em Time-to-Market",
+        "annualCost": 6000000,
+        "threeYearCost": 18000000,
+        "description": "Lançamentos atrasados significam oportunidades perdidas. Empresas AI-first lançam features 40% mais rápido, capturando market share enquanto você ainda está desenvolvendo.",
+        "icon": "clock"
+      },
+      {
+        "category": "Débito Técnico & Qualidade",
+        "annualCost": 1575000,
+        "threeYearCost": 5040000,
+        "description": "Cada mês sem AI, seu tech debt cresce. Times com AI reduzem bugs em 30-40% e gastam menos tempo em manutenção, liberando capacidade para inovação.",
+        "icon": "bug"
+      },
+      {
+        "category": "Atração & Retenção de Talentos",
+        "annualCost": 810000,
+        "threeYearCost": 2430000,
+        "description": "Desenvolvedores top-tier querem trabalhar com tecnologia de ponta. Empresas sem AI moderno têm 40% mais dificuldade em atrair e reter talentos, resultando em maior turnover.",
+        "icon": "users"
+      },
+      {
+        "category": "Desvantagem Competitiva",
+        "annualCost": 1500000,
+        "threeYearCost": 5250000,
+        "description": "Enquanto você espera, competidores AI-enabled ganham vantagens estruturais. Empresas que adotam AI primeiro capturam 25-30% mais market share nos primeiros 3 anos.",
+        "icon": "trending-down"
+      }
+    ],
+    "summary": "Não agir tem um custo real. Em 3 anos, o custo de inação pode chegar a R$ 44.220.000, sem contar a vantagem estrutural que competidores AI-enabled ganharão. Cada trimestre de espera amplia o gap competitivo."
+  },
+  "riskMatrix": {
+    "overallRiskScore": 62.5,
+    "riskLevel": "high",
+    "risks": [
+      {
+        "id": "tech-legacy-tools",
+        "category": "technology",
+        "title": "Ferramentas de Desenvolvimento Defasadas",
+        "description": "Time trabalhando sem ferramentas AI modernas enquanto competidores aumentam produtividade em 25-40%.",
+        "impact": "high",
+        "probability": "high",
+        "timeframe": "immediate",
+        "mitigationStrategy": "Implementar piloto com GitHub Copilot ou Cursor em 2-4 semanas. Começar com 20% do time (early adopters) e expandir baseado em métricas.",
+        "relatedToAssessment": [
+          "currentTools",
+          "aiToolsUsage"
+        ]
+      },
+      {
+        "id": "tech-long-cycles",
+        "category": "technology",
+        "title": "Ciclos de Desenvolvimento Longos",
+        "description": "Cycle time de 10 dias está acima do benchmark de elite (<1 dia). Indica gargalos em code review, testing ou aprovações.",
+        "impact": "medium",
+        "probability": "high",
+        "timeframe": "short-term",
+        "mitigationStrategy": "Implementar AI-assisted code review, automated testing e continuous integration para reduzir cycle time em 50-70%.",
+        "relatedToAssessment": [
+          "avgCycleTime"
+        ]
+      }
+    ],
+    "summary": "Riscos significativos identificados que podem impactar competitividade. 1 riscos de alto impacto requerem atenção prioritária."
+  },
+  "recommendations": [
+    "Implement phased rollout with champions program for large team",
+    "Start with pilot team of 5-10 developers to prove ROI before full rollout"
+  ],
+  "roadmap": [
+    {
+      "name": "Phase 1: Strategic Planning",
+      "duration": "6 weeks",
+      "objectives": [
+        "Address AI skepticism through education and demos",
+        "Executive alignment on AI transformation goals",
+        "Detailed current-state analysis and gap assessment",
+        "Build business case with stakeholder buy-in",
+        "Design target operating model for AI-augmented development"
+      ],
+      "expectedResults": "Approved transformation roadmap with executive sponsorship"
+    },
+    {
+      "name": "Phase 2: Foundation Building",
+      "duration": "10 weeks",
+      "objectives": [
+        "Train core champions team (15-20% of developers)",
+        "Set up AI development infrastructure",
+        "Establish baseline metrics and dashboards",
+        "Create internal best practice documentation"
+      ],
+      "expectedResults": "Champion team achieving 35% productivity gains"
+    },
+    {
+      "name": "Phase 3: Departmental Rollout",
+      "duration": "16 weeks",
+      "objectives": [
+        "Train 60% of development organization",
+        "Implement AI-powered code quality gates",
+        "Deploy automated documentation and testing",
+        "Optimize processes based on pilot learnings"
+      ],
+      "expectedResults": "25-30% productivity improvement across trained teams"
+    },
+    {
+      "name": "Phase 4: Enterprise Scale & Optimization",
+      "duration": "16 weeks",
+      "objectives": [
+        "Complete training for 100% of developers",
+        "Advanced AI workflows (agents, custom models)",
+        "Cross-functional integration (Product, QA, DevOps)",
+        "Continuous improvement and knowledge sharing"
+      ],
+      "expectedResults": "30-35% sustained productivity gains, 50% faster cycle time"
+    }
+  ],
+  "aiInsights": {
+    "keyInsights": [
+      "Consolidado de 10 departamentos",
+      "Total de enterprise pessoas",
+      "nutrition: ...",
+      "hospitality: ...",
+      "it: under500...",
+      "surgical: ...",
+      "pharmacy: ..."
+    ],
+    "recommendations": [
+      "Análise consolidada de toda a organização",
+      "ROI calculado considerando sinergia entre departamentos",
+      "Roadmap integrado para implementação em toda empresa"
+    ],
+    "concerns": []
+  },
+  "generatedAt": "2025-10-24T12:52:59.983Z",
+  "metadata": {
+    "departments": [
+      {
+        "name": "nutrition",
+        "responsible": "Nutrição (Controle e Planejamento)",
+        "teamSize": "goodUse",
+        "mainPain": ""
+      },
+      {
+        "name": "hospitality",
+        "responsible": "Hotelaria (Controle e Planejamento)",
+        "teamSize": "fullUse",
+        "mainPain": ""
+      },
+      {
+        "name": "it",
+        "responsible": "TI (Infra, Suporte)",
+        "teamSize": "goodUse",
+        "mainPain": "under500"
+      },
+      {
+        "name": "surgical",
+        "responsible": "Central Cirúrgica",
+        "teamSize": "someUse",
+        "mainPain": ""
+      },
+      {
+        "name": "pharmacy",
+        "responsible": "Farmácia (Controle Estoque, Dispensação, Validade)",
+        "teamSize": "someUse",
+        "mainPain": ""
+      },
+      {
+        "name": "scheduling",
+        "responsible": "Agendamento Cirúrgico (Telefone, WhatsApp, Email)",
+        "teamSize": "someUse",
+        "mainPain": ""
+      },
+      {
+        "name": "surgical",
+        "responsible": "Central Cirúrgica",
+        "teamSize": "someUse",
+        "mainPain": ""
+      },
+      {
+        "name": "purchasing",
+        "responsible": "Compras (Cotação, Follow up)",
+        "teamSize": "goodUse",
+        "mainPain": ""
+      },
+      {
+        "name": "commercial",
+        "responsible": "Comercial (Negociação com as Operadoras)",
+        "teamSize": "goodUse",
+        "mainPain": ""
+      },
+      {
+        "name": "commercial",
+        "responsible": "Comercial (Negociação com as Operadoras)",
+        "teamSize": "goodUse",
+        "mainPain": ""
+      }
+    ]
+  }
+}

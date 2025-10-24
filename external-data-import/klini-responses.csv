@@ -1,0 +1,304 @@
+Company,Timestamp,Dept ID Dept Name,Responsible,Manual Processes,Process Impact,Success Metrics,Data Usage,Team Size,Time Spent,Current Software,Current AI,Business Impact,Integration Needs,Monthly Budget,Main Pain,
+Hospital Casa,2025-10-16T14:01:17.524Z,nutrition,Nutrição (Controle e Planejamento),Catia Helena de Assis Pereira Porto,"Planejamento (compras dr insumos alimentares - processo 100% manual)
+Controle de refeicoes fornecidas nos refeitorios
+Controle de refeicoes fornecidas para pacientes e acompanhantes
+Contagem de consistencia de dietas para pacientes
+Mapa de nutricionistas e copeiras","Maior desperdicio de tempo em atividades que poderiam ser automatizadas no sistema, erros humanos que podem levar a prejuizos financeiros e aos clientes","Custo, pacientes internados, pacientes em dieta enteral e suplementos, ",goodUse,50+,more6h,MxM e mv 200 e mv soul,none,medium,"Sim, alguna hospitais usam mv soul e outros o mv 2000. Precisamos que seja usado um sistema unico.",,Planejamento via sistema e mapas de assistencia das nutricionistas e Copeiras via sistema.
+Klini Saúde,2025-10-17T10:45:13.749Z,medical,Área Médica,53w53,w5w53,53w,w55w5,littleUse,6-10,2-4h,wewew,basic,low,4wwew,2k-5k,wewew
+Hospital Casa,2025-10-17T11:07:15.979Z,hospitality,Hotelaria (Controle e Planejamento),Patricia carneiro,"Controles uniforme, enxoval, tempo leito, álcool gel, check list.",Tempo e financeiro ,"NPS, lavanderia, resíduo, materiais limpeza, enxoval, uniforme, tempo limpeza leito, álcool gel e sabonete, serviços prestados BI",fullUse,50+,more6h,"ERP, MV 200, MV SOUL, MXM, BI,
+EXCEL",none,minimal,Financeiro ,,. 
+Hospital Casa,2025-10-17T12:33:19.054Z,it,"TI (Infra, Suporte)",Fabio Henriques da Silva,"Processo de validação da folha de ponto;
+Controle de custo;
+Solicitação de compras;
+Solicitação de reembolso;
+Movimentação de equipamentos;
+Processo de inativação do colaborador afastado ou demitido;
+Solicitação de nova contratação ou demissão
+","Tempo perdido e qualidade
+","Medimos a evolução mensalmente com o comparativo dos últimos meses e a economia interna no desenvolvimento de software sem optar por produtos em prateleira. Os indicadores de performance são o Controle de custo; controle de parqueamento próprio e alugado; controle de chamados (abertos, solucionados, pendentes, numero de requisições, numero de incidentes, tempo medico de resolução e tempo médio geral de atendimento); Quantidade de impressões e folha A4.
+",goodUse,21-50,less1h,"ERP´s MV (soul e mv2000), vivace (pacs), alterdata, bioslab, bionexo, opmenexo, glpi, metabase, powerBI, airflow, trello, clickup, mxm, zero glosa, digsac, sistema ERP RHC (desenvolvimento próprio com diversos módulos de gestão), solvis, solidies, kairos, defenser, zabbix, pacote office, medicalpay, Docker, contactboard (central flux call center), lansweeper, sgg (sesmt), vnc       
+",some,minimal,"mv x mxm (somente o contas a pagar)
+mv x bioslab (nenhuma integração)
+mv x bionexo (integradas, HCP, HCE, HCIG. Em processo de integração HCRL e HCRB. Falta integrar HCSB, HCPM, HCSC, HCM) x opmenexo (nenhuma integração)
+alterdata x defense (sem integração)
+",under500,"Orçamento para o investimento em tecnologia e qualificação.
+"
+Hospital Casa,2025-10-17T16:07:46.356Z,surgical,Central Cirúrgica,Angélica Butter,"Orçamento Cirúrgico
+•	Recebimento de solicitações de orçamento de cirurgia pelas equipes médicas, via WhatsApp e e-mail.
+•	Contato com as equipes que possuem cirurgias particulares agendadas no mapa para confirmação e confecção do orçamento.
+•	Elaboração da guia de orçamento particular em Excel.
+•	Preenchimento da planilha de controle com os seguintes dados:
+Data // Hospital // Cirurgião // CRM // Nome do Paciente // Procedimento // Cirurgia Combinada? // Lateralidade // Tempo de Sala // Tempo de Internação // Acomodação // Sangue // Bridion // Perneira Pneumática // Manta Térmica // Valor // Canal de Recebimento // Data de Envio do Orçamento // Agendado // Data de Agendamento
+
+Agendamento
+•	Recebimento de solicitações de agendamento de cirurgias pelas equipes médicas, via WhatsApp e e-mail.
+•	Preenchimento da planilha de controle com os seguintes dados:
+Data // Hospital // Cirurgião // CRM // Nome do Paciente // Procedimento // Convênio // Canal de Recebimento // Data de Agendamento // Status (Incluído, Cancelado, Reagendado) // Reservas (Vídeo, Intensificador, CTI, Sangue, Microscópio, Frontulux) // Aviso // Colaborador
+
+Autorização
+•	Recebimento de solicitações de autorização de cirurgia pelas equipes médicas, via e-mail.
+•	Preenchimento da planilha de controle com os seguintes dados:
+Unidade // Paciente // Convênio // Código TUSS // Médico // Data de Recebimento // Data da Resposta (e-mail) // Data da Solicitação // Data de Finalização // Número da Solicitação // OPME (Sim ou Não) // Status (Autorizado, Cancelado, Em Análise, Em Cotação, Negado, etc.) // Colaborador // Última Atualização
+•	Atualização do status do processo via e-mail para as equipes médicas.
+
+Pré-Internação
+•	Envio de mensagem via WhatsApp para todos os pacientes eletivos constantes na programação do mapa cirúrgico.
+•	Coleta dos dados recebidos via WhatsApp e e-mail para realização do cadastro de pré-internação no sistema.
+•	Preenchimento da planilha de controle com os seguintes dados:
+Unidade // Paciente // Telefone de Contato // Procedimento // Médico // Data da Cirurgia // Data do Contato // Contato Realizado com Sucesso? (Sim ou Não) // Número de Prontuário Gerado // Status (Pré-internação Realizada, Não Realizada ou Cancelada) // Motivo da Não Realização (Sem Resposta, Cirurgia Cancelada, Telefone Incorreto, Sem Telefone de Contato, Paciente Optou por Não Enviar os Dados) // Colaborador.
+","1. Orçamento Cirúrgico
+Os processos manuais geram retrabalho, pois os mesmos dados precisam ser inseridos diversas vezes , tanto na planilha de controle quanto na guia de orçamento. Essa repetição aumenta o tempo gasto na elaboração dos orçamentos, além de elevar o risco de erros em valores e informações, impactando diretamente a confiabilidade dos dados financeiros e a eficiência operacional.
+
+2. Agendamento Cirúrgico
+Mesmo com informações já registradas no sistema, é necessário reinformar manualmente todos os dados para concluir o agendamento. Isso provoca retrabalho e prolonga o tempo de conclusão de cada processo, reduzindo a produtividade da equipe e atrasando a confirmação de cirurgias.
+
+3. Autorização
+O processo exige um colaborador exclusivamente dedicado ao recebimento, análise e registro manual dos documentos. Essa dinâmica gera lentidão na resposta às equipes médicas, atrasos no andamento dos processos e, consequentemente, insatisfação das equipes, que enfrentam delays na autorização das cirurgias.
+
+4. Pré-Internação
+A análise manual do mapa cirúrgico para identificar pacientes eletivos e realizar contato telefônico, seguida do envio manual de mensagens padronizadas e do duplo registro (sistema e planilha), resulta em perda de tempo, baixa agilidade e maior possibilidade de inconsistências nas informações. Isso impacta a qualidade do atendimento e o tempo de resposta ao paciente.
+","1. Orçamento Cirúrgico
+•	Orçamentos realizados por unidade – volume total de orçamentos emitidos em cada unidade.
+•	Orçamentos concretizados – percentual de orçamentos efetivados em cirurgias.
+•	Orçamentos de cirurgias combinadas – controle dos orçamentos que envolvem mais de uma especialidade ou procedimento.
+
+2. Agendamento Cirúrgico
+•	Agendamentos realizados por colaborador – número de cirurgias incluídas, reagendadas e canceladas por responsável.
+•	Agendamentos realizados por canal de atendimento – acompanhamento dos agendamentos feitos via WhatsApp, e-mail, telefone, entre outros.
+•	Agendamentos realizados por unidade – volume de agendamentos (inclusões, reagendamentos e cancelamentos) por unidade hospitalar.
+•	Agendamentos incluídos por unidade e por grupo de convênio – detalhamento das inclusões considerando unidade e tipo de convênio.
+•	Agendamentos incluídos, reagendados e cancelados por mês – monitoramento do mês vigente e projeção dos próximos dois meses.
+•	Cirurgias realizadas por unidade – número de cirurgias efetivamente executadas em cada unidade.
+
+3. Autorização Cirúrgica
+•	Solicitações no mês – total de pedidos recebidos, autorizados, cancelados e indeferidos dentro do mês de referência.
+•	Solicitações por convênio – volume e status das autorizações segmentadas por operadora de saúde.
+
+4. Pré-Internação
+•	Pré-internações realizadas por unidade – total de pré-internações concluídas em cada unidade.
+•	Pré-internações realizadas por colaborador – produtividade individual da equipe responsável pelos contatos e registros de pré-internação.
+
+",someUse,21-50,more6h,"ERP, Planilha, Google Forms, MV, Google Drive",none,minimal,Sem resposta.,,Acabar com o retrabalho de nutrir planilhas com informações que já constam em sistema. 
+Hospital Casa,2025-10-20T18:35:14.844Z,pharmacy,"Farmácia (Controle Estoque, Dispensação, Validade)",Debora Bighinzoli,"Entrada de notas fiscais e planejamento/pedido de compras para reposição de estoque, compilado das intervenções farmacêuticas.","Maior suscetibilidade de erros impactando na qualidade dos dados, maior gasto de hora/homem com atividades administrativas e gastos desnecessários com compras de medicamentos e materiais e/ou rupturas de estoques por falhas de planejamento."," O sucesso é estimado através dos seguintes indicadores: Custo de Material por Paciente, Custo de Medicamento por Paciente, Custo Operacional por Paciente Internado, Devolução de Material por Setor e Índice de Perda por Vencimento e Farmacoeconomia das Intervenções Farmacêuticas.",someUse,50+,2-4h,"MV2000, SoulMv, painéis de Power BI, ERP interno, GLPI, planilhas de Excel e Bionexo (Compras).",none,veryHigh,SoulMv x Bionexo. Há dificuldade de integração devido a diferentes bases de dados existentes.,,A falta de integração entre os sistemas e o inexistência de ordens de compras automatizadas no Mv.
+Hospital Casa,2025-10-21T15:14:28.638Z,scheduling,"Agendamento Cirúrgico (Telefone, WhatsApp, Email)",Angélica Butter,"•	Recebimento de solicitações de agendamento de cirurgias pelas equipes médicas, via WhatsApp e e-mail.
+•	Análise e inserção dos dados de agendamento em sistema (MVSOUL/MV2000)
+•	Preenchimento da planilha de controle com os seguintes dados: Data // Hospital // Cirurgião // CRM // Nome do Paciente // Procedimento // Convênio // Canal de Recebimento // Data de Agendamento // Status (Incluído, Cancelado, Reagendado) // Reservas (Vídeo, Intensificador, CTI, Sangue, Microscópio, Frontulux) // Aviso // Colaborador","Mesmo com informações já registradas no sistema, é necessário reinformar manualmente todos os dados no formulário do google para registro dos agendamentos realizados. Isso provoca retrabalho e prolonga o tempo de conclusão de cada processo, reduzindo a produtividade da equipe e atrasando a confirmação de cirurgias.
+","Agendamento 
+•	Agendamentos realizados por colaborador – número de cirurgias incluídas, reagendadas e canceladas por responsável.
+•	Agendamentos realizados por canal de atendimento – acompanhamento dos agendamentos feitos via WhatsApp, e-mail, telefone, entre outros.
+•	Agendamentos realizados por unidade – volume de agendamentos (inclusões, reagendamentos e cancelamentos) por unidade hospitalar.
+•	Agendamentos incluídos por unidade e por grupo de convênio – detalhamento das inclusões considerando unidade e tipo de convênio.
+•	Agendamentos incluídos, reagendados e cancelados por mês – monitoramento do mês vigente e projeção dos próximos dois meses.
+•	Cirurgias realizadas por unidade – número de cirurgias efetivamente executadas em cada unidade.",someUse,21-50,more6h,"ERP, MV Soul, MV2000, Google Drive, Google Forms",none,minimal,Mvsoul,,"Lançamentos repetidos, planilhas paralelas e cruzamento manual de dados."
+Hospital Casa,2025-10-21T15:14:28.638Z,surgical,Central Cirúrgica,Angélica Butter,"Orçamento 
+
+•	Recebimento de solicitações de orçamento de cirurgia pelas equipes médicas, via WhatsApp e e-mail.
+•	Contato com as equipes que possuem cirurgias particulares agendadas no mapa para confirmação e confecção do orçamento.
+•	Elaboração da guia de orçamento particular em Excel.
+•	Preenchimento da planilha de controle com os seguintes dados: Data // Hospital // Cirurgião // CRM // Nome do Paciente // Procedimento // Cirurgia Combinada? // Lateralidade // Tempo de Sala // Tempo de Internação // Acomodação // Sangue // Bridion // Perneira Pneumática // Manta Térmica // Valor // Canal de Recebimento // Data de Envio do Orçamento // Agendado // Data de Agendamento
+
+Autorização
+•	Recebimento de solicitações de autorização de cirurgia pelas equipes médicas, via e-mail.
+•	Preenchimento da planilha de controle com os seguintes dados: Unidade // Paciente // Convênio // Código TUSS // Médico // Data de Recebimento // Data da Resposta (e-mail) // Data da Solicitação // Data de Finalização // Número da Solicitação // OPME (Sim ou Não) // Status (Autorizado, Cancelado, Em Análise, Em Cotação, Negado, etc.) // Colaborador // Última Atualização
+•	Atualização do status do processo via e-mail para as equipes médicas
+
+
+Pré-Internação
+•	Envio de mensagem via WhatsApp para todos os pacientes eletivos constantes na programação do mapa cirúrgico.
+•	Coleta dos dados recebidos via WhatsApp e e-mail para realização do cadastro de pré-internação no sistema.
+•	Preenchimento da planilha de controle com os seguintes dados: Unidade // Paciente // Telefone de Contato // Procedimento // Médico // Data da Cirurgia // Data do Contato // Contato Realizado com Sucesso? (Sim ou Não) // Número de Prontuário Gerado // Status (Pré-internação Realizada, Não Realizada ou Cancelada) // Motivo da Não Realização (Sem Resposta, Cirurgia Cancelada, Telefone Incorreto, Sem Telefone de Contato, Paciente Optou por Não Enviar os Dados) // Colaborador
+","Orçamento 
+Os processos manuais geram retrabalho, pois os mesmos dados precisam ser inseridos diversas vezes — tanto na planilha de controle quanto na guia de orçamento. Essa repetição aumenta o tempo gasto na elaboração dos orçamentos, além de elevar o risco de erros em valores e informações, impactando diretamente a confiabilidade dos dados financeiros e a eficiência operacional.
+
+Autorização
+O processo exige um colaborador exclusivamente dedicado ao recebimento, análise e registro manual dos documentos. Essa dinâmica gera lentidão na resposta às equipes médicas, atrasos no andamento dos processos e, consequentemente, insatisfação das equipes, que enfrentam delays na autorização das cirurgias.
+
+Pré-Internação
+A análise manual do mapa cirúrgico para identificar pacientes eletivos e realizar contato telefônico, seguida do envio manual de mensagens padronizadas e do duplo registro (sistema e planilha), resulta em perda de tempo, baixa agilidade e maior possibilidade de inconsistências nas informações. Isso impacta a qualidade do atendimento e o tempo de resposta ao paciente.","Orçamento Cirúrgico
+•	Orçamentos realizados por unidade – volume total de orçamentos emitidos em cada unidade.
+•	Orçamentos concretizados – percentual de orçamentos efetivados em cirurgias.
+•	Orçamentos de cirurgias combinadas – controle dos orçamentos que envolvem mais de uma especialidade ou procedimento.
+
+Autorização Cirúrgica
+•	Solicitações no mês – total de pedidos recebidos, autorizados, cancelados e indeferidos dentro do mês de referência.
+•	Solicitações por convênio – volume e status das autorizações segmentadas por operadora de saúde.
+
+Pré-Internação
+•	Pré-internações realizadas por unidade – total de pré-internações concluídas em cada unidade.
+•	Pré-internações realizadas por colaborador – produtividade individual da equipe responsável pelos contatos e registros de pré-internação.",someUse,21-50,more6h,"ERP, Google Drive, Google Forms, Planilhas",none,minimal,"MV SOUL, E-mail",,"Retrabalho, planilhas paralelas e cdruzamento manual de dados"
+Hospital Casa,2025-10-23T15:59:32.929Z,purchasing,"Compras (Cotação, Follow up)",Cristiane Brito,"Principais processos manuais e repetitivos no departamento:
+
+1- Preenchimento manual de compras à vista no sistema MXM além da planilha de pagamento de controle financeiro.
+
+2- Elaboração manual de pedidos de contrato na plataforma, devido à falta de integração com o sistema MV.
+
+3-Envio manual dos espelhos de compras por e-mail, também em razão da ausência de integração com o MV.
+
+4- Criação manual de ordens de compra no sistema Tazy para a Klini.
+
+5- O setor financeiro da Klini não encaminha diretamente os comprovantes de pagamento de compras à vista ao departamento financeiro das demais empresas, o que faz com que o processo retorne ao setor de Compras para reenvio.
+
+Além disso, problemas de lentidão na rede e a necessidade de upgrade dos computadores impactam significativamente o tempo de execução das atividades, reduzindo a produtividade do departamento
+","Impacto: Tempo 
+Impacto: Erro digitação processos manuais
+Impacto: Risco financeiro ","Prazo de Faturamento
+Compra de Urgência
+Desempenho Equipe
+Saving
+ ",goodUse,6-10,1-2h,"Google Drive, MV, Tazy, Bionexo",basic,minimal,"MV com Bionexo 
+Klini com Bionexo
+Tazy com Bionexo",,"A principal dor do departamento é a falta de sinergia com a equipe de TI para a implantação correta da integração dos sistemas com o Bionexo.
+A resolução desse ponto, com a dedicação de um profissional exclusivo para a implantação da ferramenta, garantiria que o processo ocorresse sem riscos para o ambiente de produção e traria um impacto altamente positivo na eficiência e segurança operacional do departamento."
+Klini Saúde,2025-10-23T20:02:43.253Z,medical,Área Médica,teste,tteste,tests,tests,littleUse,6-10,4-6h,tste,some,low,teste,2k-5k,testte
+Klini Saúde,2025-10-23T20:55:37.120Z,medical,Área Médica,teste,teste,ststs,tsts,littleUse,11-20,1-2h,tsts,basic,low,tsts,under500,tsts
+Klini Saúde,2025-10-23T22:21:36.318Z,postsales,Pós-Vendas,Temis Ilma de Assis Rocha,"Pós-Vendas
+
+Movimentação cadastral (inclusões, exclusões, reativações, cancelamentos, alterações de vencimento).
+Emissão e envio de relatórios de sinistro.
+Conferência manual de termos de referência por região.
+Controle de solicitações via e-mail e planilhas (sem integração sistêmica).
+Régua de relacionamento - controle de visitas, relatórios de visitas, planos de ação, ações mensais, pessoas chaves...
+
+Retenção e Cobrança
+
+Cobrança via huggy – validação da cobrança automática
+Retenção dos beneficiários que chegam através de protocolo
+Negociação de mensalidades em atraso
+","Pós-Vendas, Retenção e Cobrança
+
+Retrabalho e risco de inconsistências cadastrais.
+Dificuldade em mensurar produtividade, SLA por analista e Executivo.
+Demora no tempo de resposta ao cliente. 
+Dificuldade de rastrear históricos de atendimentos e decisões.
+
+Específico - Retenção e Cobrança
+
+Morosidade nos seguintes processos com o cliente:
+Cobrança: necessidade revalidação via huggy/Tasy, pois muitas vezes o robô não efetua a cobrança, o processo já é automatizado, porém, precisa ser revisto para entender o motivo do bug. 
+Negociação direta: automatização, informando opções automáticas de negociação ao cliente, como por exemplo em processos bancários que já informam no ato da renegociação as opções de pagamento. ","Pós-Vendas / Retenção e Cobrança
+
+Indicadores de sinistralidade
+Retenção de vidas
+Cancelamento de contratos 
+Tempo médio de resolução de demanda
+Inadimplência
+Produção por executivo - crosseling e upselling
+Reajustes
+Quantitativo de reajustes realizados
+Quantitativo de visitas e ações por mês (relacionamento cliente)
+",someUse,11-20,more6h,"Pós-Vendas / Retenção e Cobrança
+
+Sistema interno da Operadora - Tasy
+Planilhas Excel (controle de contratos, controle de inadimplência, cancelamentos, indicadores e carteiras).
+Huggy (atendimento WhatsApp).
+Docusign (assinaturas digitais).
+Power BI (de forma limitada para indicadores).
+",none,medium,"Pós-Vendas, Retenção e Cobrança
+
+Hoje, o fluxo de informações entre o cliente e a operadora acontece de forma fragmentada, principalmente por e-mails, planilhas e consultas manuais.
+Se o cliente tivesse uma forma de se comunicar conosco sem depender do e-mail, seria o cenário ideal, muito mais prático, ágil e eficiente para todos.
+Na negociação o ideal seria o beneficiário realizar a negociação de seu débito de forma automática, ou seja, pelo robô. Sem precisar estar direto com um humano.
+O Portal Empresa seria a melhor alternativa de se criar um CRM completo integrado ao Tasy. 
+",,"Pós-Vendas
+
+O Portal da Empresa funciona como a ponte de comunicação entre o cliente e o sistema Tasy, permitindo que ele realize solicitações, acompanhe e visualize informações sem a necessidade de enviar e-mails.
+Atualmente, entretanto, o Portal não disponibiliza a abertura de tickets para análises de outras solicitações que não sejam de natureza administrativa que não existam no Portal, como por exemplo: dúvidas quanto ao faturamento mensal, solicitação de estorno financeiro, alteração de produto que não esteja vinculado ao portal etc.
+Na prática, o cliente acessaria o Portal e utilizaria, por exemplo, a Central de Solicitações (Tickets), que permite a abertura de chamados administrativos e assistenciais, sendo que, para as solicitações assistenciais, este para acompanhamento e a abertura somente será feita quando existir um BO ativo sem resolução para nossa análise e retorno. Caso contrário, o próprio Portal direciona o usuário automaticamente para o canal de WhatsApp da Klini.
+O Portal também não contempla a parte do relacionamento, voltada ao trabalho do executivo de contas, como o histórico de visitas, reajustes, sinistralidade, ações, comitês e demais registros que o executivo poderia alimentar e o cliente visualizar.
+A partir dessas interações, seria possível estruturar um painel de controle para acompanhamento das solicitações e análise das principais dores do cliente, promovendo uma gestão proativa e baseada em dados.
+Com esse modelo, o cliente passa a se sentir “dentro da operadora”, com autonomia e transparência, eliminando a necessidade de comunicação por e-mails.
+
+Retenção e Cobrança
+A maior dor da área de Retenção e Cobrança é a falta de integração e automatização dos processos, que hoje são conduzidos de forma manual e descentralizada, com registros em planilhas e trocas por e-mail. Isso gera retrabalho, dificuldade de controle e perda de agilidade no contato com o cliente.
+Se tivéssemos, o Portal Empresa integrado como já com o Tasy aos canais de atendimento (como Huggy e e-mail corporativo), seria possível centralizar todas as informações de contratos, cobranças, negociações e tentativas de retenção em um único ambiente.
+Com isso, a equipe teria visão em tempo real das interações com o cliente, histórico consolidado e indicadores de inadimplência e recuperação atualizados, permitindo atuações preventivas e mais estratégicas.
+Essa automação traria um impacto direto na redução de cancelamentos, aumento da taxa de retenção e melhoria da experiência do cliente, que passaria a ter respostas rápidas e acesso transparente às suas informações.
+"
+Klini Saúde,2025-10-23T22:21:52.821Z,postsales,Pós-Vendas,Temis Ilma de Assis Rocha,"Pós-Vendas
+
+Movimentação cadastral (inclusões, exclusões, reativações, cancelamentos, alterações de vencimento).
+Emissão e envio de relatórios de sinistro.
+Conferência manual de termos de referência por região.
+Controle de solicitações via e-mail e planilhas (sem integração sistêmica).
+Régua de relacionamento - controle de visitas, relatórios de visitas, planos de ação, ações mensais, pessoas chaves...
+
+Retenção e Cobrança
+
+Cobrança via huggy – validação da cobrança automática
+Retenção dos beneficiários que chegam através de protocolo
+Negociação de mensalidades em atraso
+","Pós-Vendas, Retenção e Cobrança
+
+Retrabalho e risco de inconsistências cadastrais.
+Dificuldade em mensurar produtividade, SLA por analista e Executivo.
+Demora no tempo de resposta ao cliente. 
+Dificuldade de rastrear históricos de atendimentos e decisões.
+
+Específico - Retenção e Cobrança
+
+Morosidade nos seguintes processos com o cliente:
+Cobrança: necessidade revalidação via huggy/Tasy, pois muitas vezes o robô não efetua a cobrança, o processo já é automatizado, porém, precisa ser revisto para entender o motivo do bug. 
+Negociação direta: automatização, informando opções automáticas de negociação ao cliente, como por exemplo em processos bancários que já informam no ato da renegociação as opções de pagamento. ","Pós-Vendas / Retenção e Cobrança
+
+Indicadores de sinistralidade
+Retenção de vidas
+Cancelamento de contratos 
+Tempo médio de resolução de demanda
+Inadimplência
+Produção por executivo - crosseling e upselling
+Reajustes
+Quantitativo de reajustes realizados
+Quantitativo de visitas e ações por mês (relacionamento cliente)
+",someUse,11-20,more6h,"Pós-Vendas / Retenção e Cobrança
+
+Sistema interno da Operadora - Tasy
+Planilhas Excel (controle de contratos, controle de inadimplência, cancelamentos, indicadores e carteiras).
+Huggy (atendimento WhatsApp).
+Docusign (assinaturas digitais).
+Power BI (de forma limitada para indicadores).
+",none,medium,"Pós-Vendas, Retenção e Cobrança
+
+Hoje, o fluxo de informações entre o cliente e a operadora acontece de forma fragmentada, principalmente por e-mails, planilhas e consultas manuais.
+Se o cliente tivesse uma forma de se comunicar conosco sem depender do e-mail, seria o cenário ideal, muito mais prático, ágil e eficiente para todos.
+Na negociação o ideal seria o beneficiário realizar a negociação de seu débito de forma automática, ou seja, pelo robô. Sem precisar estar direto com um humano.
+O Portal Empresa seria a melhor alternativa de se criar um CRM completo integrado ao Tasy. 
+",,"Pós-Vendas
+
+O Portal da Empresa funciona como a ponte de comunicação entre o cliente e o sistema Tasy, permitindo que ele realize solicitações, acompanhe e visualize informações sem a necessidade de enviar e-mails.
+Atualmente, entretanto, o Portal não disponibiliza a abertura de tickets para análises de outras solicitações que não sejam de natureza administrativa que não existam no Portal, como por exemplo: dúvidas quanto ao faturamento mensal, solicitação de estorno financeiro, alteração de produto que não esteja vinculado ao portal etc.
+Na prática, o cliente acessaria o Portal e utilizaria, por exemplo, a Central de Solicitações (Tickets), que permite a abertura de chamados administrativos e assistenciais, sendo que, para as solicitações assistenciais, este para acompanhamento e a abertura somente será feita quando existir um BO ativo sem resolução para nossa análise e retorno. Caso contrário, o próprio Portal direciona o usuário automaticamente para o canal de WhatsApp da Klini.
+O Portal também não contempla a parte do relacionamento, voltada ao trabalho do executivo de contas, como o histórico de visitas, reajustes, sinistralidade, ações, comitês e demais registros que o executivo poderia alimentar e o cliente visualizar.
+A partir dessas interações, seria possível estruturar um painel de controle para acompanhamento das solicitações e análise das principais dores do cliente, promovendo uma gestão proativa e baseada em dados.
+Com esse modelo, o cliente passa a se sentir “dentro da operadora”, com autonomia e transparência, eliminando a necessidade de comunicação por e-mails.
+
+Retenção e Cobrança
+A maior dor da área de Retenção e Cobrança é a falta de integração e automatização dos processos, que hoje são conduzidos de forma manual e descentralizada, com registros em planilhas e trocas por e-mail. Isso gera retrabalho, dificuldade de controle e perda de agilidade no contato com o cliente.
+Se tivéssemos, o Portal Empresa integrado como já com o Tasy aos canais de atendimento (como Huggy e e-mail corporativo), seria possível centralizar todas as informações de contratos, cobranças, negociações e tentativas de retenção em um único ambiente.
+Com isso, a equipe teria visão em tempo real das interações com o cliente, histórico consolidado e indicadores de inadimplência e recuperação atualizados, permitindo atuações preventivas e mais estratégicas.
+Essa automação traria um impacto direto na redução de cancelamentos, aumento da taxa de retenção e melhoria da experiência do cliente, que passaria a ter respostas rápidas e acesso transparente às suas informações.
+"
+Klini Saúde,2025-10-24T11:00:26.822Z,regulation,Regulação,Stephanye Marion Sampaio de Oliveira,"Preenchimento de planilhas
+Cadastro de cirurgias",Demanda muito tempo da equipe para realizar o preenchimento correto dos dados,Acompanhamos o SLA com base nos prazos da ANS,someUse,21-50,more6h,"Tasy
+Opmenexo",none,veryHigh,O sistema de autorização (tasy) não é integrado com o de cotação de opme (opmenexo),,O sistema de autorização (tasy) deveria trazer as informações de uma forma mais prática e intuitivo. Exemplo: ao analisar uma solicitação é necessário acessar várias outras abas do sistema para realizar a tratativa de forma pertinente.
+Hospital Casa,2025-10-24T11:13:39.694Z,commercial,Comercial (Negociação com as Operadoras),Felipe Vasconcellos,"1) Aprovação interna de novos negócios pelo wattsapp
+
+2) Estudos de impactos dos novos modelos de remuneração
+
+3) Análise de propostas comerciais","financeiro: Risco de perda de receita
+tempo perdido: Retrabalhos 
+qualidade e satisfação do cliente: Risco de demora e baixa aderência","1) Reajustes (Dentro do prazo e vencidos)
+
+2) Novos negócios (Novos contratos, Extensões de serviços e Extensões de planos)
+
+3) Faturamento (Acompanhamento do crescimento ou redução e Acompanhamento do TKM)",goodUse,1-5,2-4h,"MV, BI, Planilhas, GLPI, Compare",basic,minimal,"MV com BI, hoje ainda apresentam certa disparidade de dados",,"Hoje a maior dor e que se resolvido traria o aumento de impacto positivo nas entregas do comercial seria a regularização dos documentos legais das unidades (Vigilância, Alvarás, CART, Bombeiros, FGTS, CNES, CND, entre outros). Manter as documentações regulares, em dia é fundamental para avançar com novos negócios. Hoje temos uma estimativa financeira de R$ 78M travados no funil de novos negócios por Análise Documental."
+Hospital Casa,2025-10-24T11:13:50.913Z,commercial,Comercial (Negociação com as Operadoras),Felipe Vasconcellos,"1) Aprovação interna de novos negócios pelo wattsapp
+
+2) Estudos de impactos dos novos modelos de remuneração
+
+3) Análise de propostas comerciais","financeiro: Risco de perda de receita
+tempo perdido: Retrabalhos 
+qualidade e satisfação do cliente: Risco de demora e baixa aderência","1) Reajustes (Dentro do prazo e vencidos)
+
+2) Novos negócios (Novos contratos, Extensões de serviços e Extensões de planos)
+
+3) Faturamento (Acompanhamento do crescimento ou redução e Acompanhamento do TKM)",goodUse,1-5,2-4h,"MV, BI, Planilhas, GLPI, Compare",basic,minimal,"MV com BI, hoje ainda apresentam certa disparidade de dados",,"Hoje a maior dor e que se resolvido traria o aumento de impacto positivo nas entregas do comercial seria a regularização dos documentos legais das unidades (Vigilância, Alvarás, CART, Bombeiros, FGTS, CNES, CND, entre outros). Manter as documentações regulares, em dia é fundamental para avançar com novos negócios. Hoje temos uma estimativa financeira de R$ 78M travados no funil de novos negócios por Análise Documental."

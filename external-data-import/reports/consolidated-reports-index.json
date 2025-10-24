@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2025-10-24T12:52:59.985Z",
+  "totalReports": 2,
+  "reports": [
+    {
+      "company": "Hospital Casa",
+      "departmentCount": 10,
+      "reportId": "1761310379972-or5z5jn",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/consolidated/Hospital-Casa_CONSOLIDATED.json"
+    },
+    {
+      "company": "Klini Saúde",
+      "departmentCount": 6,
+      "reportId": "1761310379984-g9hgvtk",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/consolidated/Klini-Saúde_CONSOLIDATED.json"
+    }
+  ]
+}

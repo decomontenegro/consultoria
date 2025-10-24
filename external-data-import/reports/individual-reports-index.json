@@ -1,0 +1,118 @@
+{
+  "generatedAt": "2025-10-24T12:52:59.986Z",
+  "totalReports": 16,
+  "reports": [
+    {
+      "company": "Hospital Casa",
+      "department": "nutrition",
+      "responsible": "Nutrição (Controle e Planejamento)",
+      "reportId": "1761310379967-c942rox",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_nutrition_Nutrição-(Controle-e-Planejamento).json"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "medical",
+      "responsible": "Área Médica",
+      "reportId": "1761310379979-9o6vmza",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Klini-Saúde_medical_Área-Médica.json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "hospitality",
+      "responsible": "Hotelaria (Controle e Planejamento)",
+      "reportId": "1761310379980-jhtv7cg",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_hospitality_Hotelaria-(Controle-e-Planejamento).json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "it",
+      "responsible": "TI (Infra, Suporte)",
+      "reportId": "1761310379980-f3xqf0o",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_it_TI-(Infra,-Suporte).json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "surgical",
+      "responsible": "Central Cirúrgica",
+      "reportId": "1761310379981-xtnba7k",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_surgical_Central-Cirúrgica.json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "pharmacy",
+      "responsible": "Farmácia (Controle Estoque, Dispensação, Validade)",
+      "reportId": "1761310379981-qx7mybo",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_pharmacy_Farmácia-(Controle-Estoque,-Dispensação,-Validade).json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "scheduling",
+      "responsible": "Agendamento Cirúrgico (Telefone, WhatsApp, Email)",
+      "reportId": "1761310379982-6sjijxv",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_scheduling_Agendamento-Cirúrgico-(Telefone,-WhatsApp,-Email).json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "surgical",
+      "responsible": "Central Cirúrgica",
+      "reportId": "1761310379982-s1d29r3",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_surgical_Central-Cirúrgica.json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "purchasing",
+      "responsible": "Compras (Cotação, Follow up)",
+      "reportId": "1761310379983-om48byb",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_purchasing_Compras-(Cotação,-Follow-up).json"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "medical",
+      "responsible": "Área Médica",
+      "reportId": "1761310379984-cwxt1ze",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Klini-Saúde_medical_Área-Médica.json"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "medical",
+      "responsible": "Área Médica",
+      "reportId": "1761310379984-2tb1ux8",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Klini-Saúde_medical_Área-Médica.json"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "postsales",
+      "responsible": "Pós-Vendas",
+      "reportId": "1761310379984-ubwckth",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Klini-Saúde_postsales_Pós-Vendas.json"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "postsales",
+      "responsible": "Pós-Vendas",
+      "reportId": "1761310379985-d9uytpb",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Klini-Saúde_postsales_Pós-Vendas.json"
+    },
+    {
+      "company": "Klini Saúde",
+      "department": "regulation",
+      "responsible": "Regulação",
+      "reportId": "1761310379985-9fkb3x9",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Klini-Saúde_regulation_Regulação.json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "commercial",
+      "responsible": "Comercial (Negociação com as Operadoras)",
+      "reportId": "1761310379985-ojvwxxm",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_commercial_Comercial-(Negociação-com-as-Operadoras).json"
+    },
+    {
+      "company": "Hospital Casa",
+      "department": "commercial",
+      "responsible": "Comercial (Negociação com as Operadoras)",
+      "reportId": "1761310379985-yz3qhfo",
+      "reportPath": "/Users/decostudio/culturabuilder-assessment/external-data-import/reports/individual/Hospital-Casa_commercial_Comercial-(Negociação-com-as-Operadoras).json"
+    }
+  ]
+}
