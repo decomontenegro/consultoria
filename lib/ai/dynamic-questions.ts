@@ -86,6 +86,25 @@ export const EXPRESS_QUESTIONS: QuestionTemplate[] = [
   },
 
   {
+    id: 'company-name',
+    text: 'Qual o nome da sua empresa?',
+    category: 'company',
+    personas: ['board-executive', 'finance-ops', 'product-business', 'engineering-tech', 'it-devops'],
+    priority: 'essential',
+    inputType: 'text',
+    placeholder: 'Ex: TechCorp',
+    dataExtractor: (answer, data) => {
+      const companyName = Array.isArray(answer) ? answer[0] : answer;
+      return {
+        companyInfo: {
+          ...data.companyInfo,
+          name: companyName.trim()
+        }
+      };
+    }
+  },
+
+  {
     id: 'team-size',
     text: 'Qual o tamanho do time de tecnologia/desenvolvimento?',
     category: 'company',
@@ -133,14 +152,14 @@ export const EXPRESS_QUESTIONS: QuestionTemplate[] = [
     priority: 'essential',
     inputType: 'multi-choice',
     options: [
-      { value: 'velocity', label: '🐌 Desenvolvimento Lento', description: 'Time demora muito para entregar features' },
-      { value: 'quality', label: '🐛 Muitos Bugs', description: 'Qualidade baixa, retrabalho constante' },
-      { value: 'cost', label: '💸 Custos Altos', description: 'Operação cara, precisa reduzir gastos' },
-      { value: 'competition', label: '⚔️ Perdendo para Competidores', description: 'Concorrentes mais ágeis, market share caindo' },
-      { value: 'scalability', label: '📈 Dificuldade de Escalar', description: 'Sistemas não aguentam crescimento' },
-      { value: 'technical-debt', label: '🏗️ Technical Debt Alto', description: 'Código legado, arquitetura problemática' },
-      { value: 'talent', label: '👥 Falta de Talentos', description: 'Difícil contratar e reter bons profissionais' },
-      { value: 'process', label: '⚙️ Processos Ineficientes', description: 'Burocracia, falta de automação' }
+      { value: 'velocity', label: 'Desenvolvimento Lento', description: 'Time demora muito para entregar features' },
+      { value: 'quality', label: 'Muitos Bugs', description: 'Qualidade baixa, retrabalho constante' },
+      { value: 'cost', label: 'Custos Altos', description: 'Operação cara, precisa reduzir gastos' },
+      { value: 'competition', label: 'Perdendo para Competidores', description: 'Concorrentes mais ágeis, market share caindo' },
+      { value: 'scalability', label: 'Dificuldade de Escalar', description: 'Sistemas não aguentam crescimento' },
+      { value: 'technical-debt', label: 'Technical Debt Alto', description: 'Código legado, arquitetura problemática' },
+      { value: 'talent', label: 'Falta de Talentos', description: 'Difícil contratar e reter bons profissionais' },
+      { value: 'process', label: 'Processos Ineficientes', description: 'Burocracia, falta de automação' }
     ],
     dataExtractor: (answer, data) => {
       const selectedPains = Array.isArray(answer) ? answer : [answer];
@@ -487,4 +506,69 @@ export function suggestAdditionalQuestions(
   );
 
   return optionalQuestions.slice(0, 2); // Max 2 additional
+}
+
+/**
+ * Map AI Router pain point keywords to Express Mode pain point options
+ *
+ * AI Router extracts keywords like: ['lento', 'bugs', 'custo']
+ * This maps them to Express options like: ['velocity', 'quality', 'cost']
+ */
+export function mapAIRouterPainPointsToExpressOptions(painPoints: string[]): string[] {
+  if (!painPoints || painPoints.length === 0) return [];
+
+  const mapping: Record<string, string[]> = {
+    'velocity': ['lento', 'slow', 'atraso', 'delay'],
+    'quality': ['bugs', 'qualidade', 'quality'],
+    'cost': ['custo', 'cost'],
+    'competition': ['competidor', 'competitor'],
+    'process': ['eficiência', 'efficiency']
+  };
+
+  const selectedOptions: Set<string> = new Set();
+
+  // For each pain point keyword, find matching option
+  painPoints.forEach(keyword => {
+    const lowerKeyword = keyword.toLowerCase();
+
+    Object.entries(mapping).forEach(([option, keywords]) => {
+      if (keywords.some(k => lowerKeyword.includes(k) || k.includes(lowerKeyword))) {
+        selectedOptions.add(option);
+      }
+    });
+  });
+
+  const result = Array.from(selectedOptions);
+  console.log('🔄 [Pain Points Mapping]', {
+    input: painPoints,
+    output: result
+  });
+
+  return result;
+}
+
+/**
+ * Map AI Router company size to suggested team-size range
+ *
+ * Uses company size as a hint to suggest likely team-size range
+ */
+export function suggestTeamSizeFromCompanySize(companySize?: 'startup' | 'scaleup' | 'enterprise'): string | null {
+  if (!companySize) return null;
+
+  const sizeHints: Record<string, string> = {
+    'startup': '6-15',      // Startups typically have small tech teams
+    'scaleup': '16-30',     // Scaleups have medium teams
+    'enterprise': '51-100'  // Enterprises have large teams
+  };
+
+  const hint = sizeHints[companySize] || null;
+
+  if (hint) {
+    console.log('💡 [Team Size Hint]', {
+      companySize,
+      suggestedRange: hint
+    });
+  }
+
+  return hint;
 }

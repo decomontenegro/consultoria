@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2025-10-12T15:27:19.656Z",
+  "competitors": [
+    {
+      "name": "Tutoria IA",
+      "url": "https://tutoria-ia.vercel.app",
+      "category": "Healthcare Diagnostic Automation",
+      "timestamp": "2025-10-12T15:27:20.555Z",
+      "strengths": [
+        "Report/results terminology present"
+      ],
+      "weaknesses": [
+        "No obvious form structure detected"
+      ],
+      "uniqueFeatures": [],
+      "differentiators": []
+    },
+    {
+      "name": "AI Tutor (Generic)",
+      "url": "https://ai-tutor-senior-project.vercel.app",
+      "category": "AI-powered Learning",
+      "timestamp": "2025-10-12T15:27:24.095Z",
+      "strengths": [],
+      "weaknesses": [
+        "No obvious form structure detected"
+      ],
+      "uniqueFeatures": [
+        "Chat/conversational interface"
+      ],
+      "differentiators": []
+    }
+  ],
+  "marketGaps": [
+    "Most assessment tools lack real-time data integrations (GitHub, Jira)",
+    "Few tools offer persona-specific experiences (Executive vs Engineer)",
+    "Limited use of AI for personalized consultation (we have this!)",
+    "No visible confidence/certainty indicators on projections",
+    "Missing follow-up and progress tracking features",
+    "Limited industry-specific benchmarking"
+  ],
+  "opportunityAreas": [
+    "🚀 Triage/Urgency Scoring - Route high-priority leads to sales faster",
+    "📊 Live Dashboard Integrations - Real metrics from GitHub/Jira/PagerDuty",
+    "🎯 Express Mode - 3-minute assessment for busy executives",
+    "📈 Progress Tracking - 30/60/90-day check-ins on AI adoption",
+    "🔬 Confidence Scoring - Show certainty levels on all projections",
+    "🤝 Multi-specialist AI - Different AI perspectives (Engineering, Finance, Strategy)",
+    "🌍 Industry Benchmarking - Compare against anonymized peers",
+    "📱 Mobile-first Experience - Most tools are desktop-only"
+  ],
+  "featurePriorities": [
+    {
+      "feature": "Triage Score System",
+      "reason": "No competitors have visible urgency classification",
+      "competitorCount": 0,
+      "ourStatus": "planned"
+    },
+    {
+      "feature": "Confidence Levels on Calculations",
+      "reason": "Critical for executive trust, no one does this well",
+      "competitorCount": 0,
+      "ourStatus": "planned"
+    },
+    {
+      "feature": "AI Consultation",
+      "reason": "We already have this - unique differentiator",
+      "competitorCount": 1,
+      "ourStatus": "have"
+    },
+    {
+      "feature": "Persona-Specific Flows",
+      "reason": "We have basic version, need to enhance",
+      "competitorCount": 0,
+      "ourStatus": "have"
+    },
+    {
+      "feature": "Express Mode (3 min)",
+      "reason": "Most tools are too long for executives",
+      "competitorCount": 0,
+      "ourStatus": "planned"
+    },
+    {
+      "feature": "Live Integrations",
+      "reason": "Real data > self-reported data",
+      "competitorCount": 0,
+      "ourStatus": "missing"
+    }
+  ],
+  "recommendations": [
+    "1. IMPLEMENT TRIAGE SCORE (Week 1) - Highest differentiation, medium effort",
+    "2. ADD CONFIDENCE LEVELS (Week 1) - Quick win for credibility",
+    "3. BUILD EXPRESS MODE (Week 2-3) - Addresses executive persona pain point",
+    "4. ENHANCE AI CONSULTATION (Week 3-4) - Leverage our unique strength",
+    "5. PLAN LIVE INTEGRATIONS (Phase 2) - Game-changer but higher effort",
+    "6. MOBILE OPTIMIZATION (Ongoing) - Table stakes for modern tools"
+  ]
+}

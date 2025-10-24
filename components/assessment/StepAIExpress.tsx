@@ -24,11 +24,16 @@ import {
   getNextExpressQuestion,
   hasMinimumViableData,
   calculateCompleteness,
-  QuestionTemplate
+  QuestionTemplate,
+  mapAIRouterPainPointsToExpressOptions,
+  suggestTeamSizeFromCompanySize
 } from '@/lib/ai/dynamic-questions';
 import { generateReport, saveReport } from '@/lib/services/report-service';
 import { Zap, ArrowRight, Loader2, CheckCircle, Clock } from 'lucide-react';
 import QuestionRenderer from './QuestionRenderer';
+import { ResponseSuggestion } from '@/lib/ai/response-suggestions';
+import { generateAIPoweredSuggestions } from '@/lib/ai/ai-powered-suggestions';
+import AISuggestedResponses from './AISuggestedResponses';
 
 interface StepAIExpressProps {
   persona: UserPersona;
@@ -43,22 +48,107 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const [currentAnswer, setCurrentAnswer] = useState<string | string[]>('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionTemplate | null>(null);
-  const [answeredQuestionIds, setAnsweredQuestionIds] = useState<string[]>([]);
-  const [assessmentData, setAssessmentData] = useState<DeepPartial<AssessmentData>>({
-    persona,
-    ...partialData,
-    aiScope: {
-      engineering: true,
-      customerService: false,
-      sales: false,
-      marketing: false,
-      operations: false,
-      meetingIntelligence: false
+
+  // ✅ Pre-populate answered questions based on AI Router partial data
+  const getInitialAnsweredQuestions = (): string[] => {
+    const answered: string[] = [];
+
+    console.log('🔍 [Express] Checking partialData for skips:', {
+      hasIndustry: !!partialData?.companyInfo?.industry,
+      industry: partialData?.companyInfo?.industry,
+      hasBudget: !!partialData?.budget,
+      budget: partialData?.budget,
+      fullPartialData: partialData
+    });
+
+    // If we have industry from AI Router, skip asking about it again
+    if (partialData?.companyInfo?.industry) {
+      answered.push('company-industry');
+      console.log('✅ Skipping company-industry (already answered in AI Router)');
+    } else {
+      console.log('⚠️ No industry found in partialData - will ask again');
     }
-  });
+
+    // If we have budget from AI Router, skip asking about it again
+    if (partialData?.budget) {
+      answered.push('budget-range');
+      console.log('✅ Skipping budget-range (already answered in AI Router)');
+    } else {
+      console.log('⚠️ No budget found in partialData - will ask again');
+    }
+
+    // If we have company size from AI Router, skip asking about team size again
+    if (partialData?.companyInfo?.size) {
+      answered.push('team-size');
+      console.log('✅ Skipping team-size (company size already answered in AI Router):', partialData.companyInfo.size);
+    } else {
+      console.log('⚠️ No company size found in partialData - will ask about team size');
+    }
+
+    return answered;
+  };
+
+  const [answeredQuestionIds, setAnsweredQuestionIds] = useState<string[]>(getInitialAnsweredQuestions());
+
+  // ✅ Prepare initial assessment data with AI Router partial data
+  const getInitialAssessmentData = (): DeepPartial<AssessmentData> => {
+    const initial: DeepPartial<AssessmentData> = {
+      persona,
+      ...partialData,
+      aiScope: {
+        engineering: true,
+        customerService: false,
+        sales: false,
+        marketing: false,
+        operations: false,
+        meetingIntelligence: false
+      }
+    };
+
+    // If budget was answered in AI Router, populate it
+    if (partialData?.budget) {
+      initial.goals = {
+        ...initial.goals,
+        budgetRange: partialData.budget
+      };
+      console.log('✅ Pre-populating budget:', partialData.budget);
+    }
+
+    // If company size was answered in AI Router, populate dev team size
+    if (partialData?.companyInfo?.size) {
+      const teamSizeRange = suggestTeamSizeFromCompanySize(partialData.companyInfo.size);
+      if (teamSizeRange) {
+        // Map range to approximate number (same logic as team-size dataExtractor)
+        const sizeMap: Record<string, number> = {
+          '1-5': 3,
+          '6-15': 10,
+          '16-30': 23,
+          '31-50': 40,
+          '51-100': 75,
+          '100+': 150
+        };
+        const devTeamSize = sizeMap[teamSizeRange] || 10;
+
+        initial.currentState = {
+          ...initial.currentState,
+          devTeamSize
+        };
+        console.log('✅ Pre-populating devTeamSize from company size:', {
+          companySize: partialData.companyInfo.size,
+          teamSizeRange,
+          devTeamSize
+        });
+      }
+    }
+
+    return initial;
+  };
+
+  const [assessmentData, setAssessmentData] = useState<DeepPartial<AssessmentData>>(getInitialAssessmentData());
   const [startTime] = useState<Date>(new Date());
   const [isComplete, setIsComplete] = useState(false);
   const [hasLoadedFirstQuestion, setHasLoadedFirstQuestion] = useState(false);
+  const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +156,39 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Update suggestions when question changes (AI-powered)
+  useEffect(() => {
+    if (currentQuestion && currentQuestion.inputType === 'text' && currentQuestion.text) {
+      const questionText = currentQuestion.text.trim();
+
+      // Only proceed if we have a valid non-empty question
+      if (!questionText) {
+        console.warn('⚠️ Empty question text, skipping suggestions');
+        setSuggestions([]);
+        return;
+      }
+
+      // ✅ CLEAR old suggestions IMMEDIATELY to avoid showing wrong suggestions
+      setSuggestions([]);
+
+      // Get previous answers for context
+      const previousAnswers = messages
+        .filter(m => m.role === 'user')
+        .map(m => m.content)
+        .slice(-3); // Last 3 answers
+
+      // Generate AI-powered suggestions (async, will take ~2s)
+      generateAIPoweredSuggestions({
+        question: questionText,
+        context: `Express Mode assessment, question ${answeredQuestionIds.length + 1} of ~7`,
+        previousAnswers
+      }).then(setSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion, answeredQuestionIds.length]);
 
   // Focus input helper (only for text questions)
   const focusInput = useCallback(() => {
@@ -123,9 +246,11 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   }, []);
 
   const loadNextQuestion = (alreadyAnswered: string[] = answeredQuestionIds) => {
+    console.log('🔍 [Express] Loading next question. Already answered:', alreadyAnswered);
     const nextQuestion = getNextExpressQuestion(persona, assessmentData, alreadyAnswered);
 
     if (!nextQuestion) {
+      console.log('❌ [Express] No more questions available');
       // No more questions, check if we can finish
       if (hasMinimumViableData(assessmentData)) {
         handleComplete();
@@ -142,11 +267,18 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       return;
     }
 
+    console.log('✅ [Express] Next question:', {
+      id: nextQuestion.id,
+      text: nextQuestion.text?.substring(0, 60),
+      inputType: nextQuestion.inputType
+    });
+
     // Check if this question was already asked (prevent duplicates)
     setMessages(prev => {
       const lastMessage = prev[prev.length - 1];
       if (lastMessage?.role === 'assistant' && lastMessage?.content === nextQuestion.text) {
         // Don't add duplicate question
+        console.log('⚠️ [Express] Skipping duplicate question');
         return prev;
       }
 
@@ -162,12 +294,36 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
     // Set current question and reset answer
     setCurrentQuestion(nextQuestion);
 
-    // Reset answer based on input type
+    // Reset answer based on input type, with smart pre-selection
     if (nextQuestion.inputType === 'text') {
       setCurrentAnswer('');
       setInput(''); // Also reset text input
     } else if (nextQuestion.inputType === 'multi-choice' || nextQuestion.inputType === 'quick-chips') {
-      setCurrentAnswer([]);
+      // ✅ P1: Pre-select pain points from AI Router
+      if (nextQuestion.id === 'main-pain-point' && partialData?.painPoints) {
+        const preSelected = mapAIRouterPainPointsToExpressOptions(partialData.painPoints);
+        if (preSelected.length > 0) {
+          console.log('✨ [Express] Pre-selecting pain points:', preSelected);
+          setCurrentAnswer(preSelected);
+        } else {
+          setCurrentAnswer([]);
+        }
+      } else {
+        setCurrentAnswer([]);
+      }
+    } else if (nextQuestion.inputType === 'single-choice') {
+      // ✅ P1: Suggest team-size from company size
+      if (nextQuestion.id === 'team-size' && partialData?.companyInfo?.size) {
+        const suggestion = suggestTeamSizeFromCompanySize(partialData.companyInfo.size);
+        if (suggestion) {
+          console.log('✨ [Express] Suggesting team-size:', suggestion);
+          setCurrentAnswer(suggestion);
+        } else {
+          setCurrentAnswer('');
+        }
+      } else {
+        setCurrentAnswer('');
+      }
     } else {
       setCurrentAnswer('');
     }
@@ -264,6 +420,12 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
     setInput('');
   };
 
+  // Send message with specific text (for auto-send from suggestions)
+  const sendMessageWithText = async (text: string) => {
+    if (!text.trim() || isLoading || !currentQuestion) return;
+    await submitAnswer(text.trim());
+  };
+
   // Handler for choice-based questions
   const sendChoice = async () => {
     if (isLoading || !currentQuestion) return;
@@ -290,17 +452,76 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
     // Generate and save report
     try {
-      const report = generateReport(assessmentData as AssessmentData);
+      console.log('📊 Express Mode - Generating report with data:', assessmentData);
+
+      // Fill missing required fields with defaults
+      const completeData: AssessmentData = {
+        persona: assessmentData.persona as UserPersona,
+        companyInfo: {
+          name: assessmentData.companyInfo?.name || 'Empresa',
+          industry: assessmentData.companyInfo?.industry || 'Tecnologia',
+          size: assessmentData.companyInfo?.size || 'scaleup',
+          revenue: assessmentData.companyInfo?.revenue || 'R$1M-10M',
+          country: assessmentData.companyInfo?.country || 'Brasil'
+        },
+        currentState: {
+          devTeamSize: assessmentData.currentState?.devTeamSize || 10,
+          devSeniority: {
+            junior: assessmentData.currentState?.devSeniority?.junior ?? 3,
+            mid: assessmentData.currentState?.devSeniority?.mid ?? 4,
+            senior: assessmentData.currentState?.devSeniority?.senior ?? 2,
+            lead: assessmentData.currentState?.devSeniority?.lead ?? 1
+          },
+          currentTools: assessmentData.currentState?.currentTools?.filter((t): t is string => t !== undefined) || [],
+          deploymentFrequency: assessmentData.currentState?.deploymentFrequency || 'weekly',
+          avgCycleTime: assessmentData.currentState?.avgCycleTime || 14,
+          bugRate: assessmentData.currentState?.bugRate,
+          aiToolsUsage: assessmentData.currentState?.aiToolsUsage || 'exploring',
+          painPoints: assessmentData.currentState?.painPoints?.filter((p): p is string => p !== undefined) || ['Produtividade']
+        },
+        goals: {
+          primaryGoals: assessmentData.goals?.primaryGoals?.filter((g): g is string => g !== undefined) || ['Aumentar Produtividade'],
+          timeline: assessmentData.goals?.timeline || '6-months',
+          budgetRange: assessmentData.goals?.budgetRange || 'R$50k-100k',
+          successMetrics: assessmentData.goals?.successMetrics?.filter((m): m is string => m !== undefined) || ['Produtividade'],
+          competitiveThreats: assessmentData.goals?.competitiveThreats
+        },
+        contactInfo: {
+          fullName: assessmentData.contactInfo?.fullName || '',
+          title: assessmentData.contactInfo?.title || '',
+          email: assessmentData.contactInfo?.email || '',
+          phone: assessmentData.contactInfo?.phone,
+          company: assessmentData.contactInfo?.company || assessmentData.companyInfo?.name || 'Empresa',
+          agreeToContact: assessmentData.contactInfo?.agreeToContact ?? true
+        },
+        aiScope: {
+          engineering: assessmentData.aiScope?.engineering ?? true,
+          customerService: assessmentData.aiScope?.customerService ?? false,
+          sales: assessmentData.aiScope?.sales ?? false,
+          marketing: assessmentData.aiScope?.marketing ?? false,
+          operations: assessmentData.aiScope?.operations ?? false,
+          meetingIntelligence: assessmentData.aiScope?.meetingIntelligence ?? false
+        },
+        submittedAt: new Date()
+      };
+
+      console.log('✅ Complete data prepared:', completeData);
+
+      const report = generateReport(completeData);
+      console.log('✅ Report generated:', report.id);
+
       saveReport(report);
+      console.log('✅ Report saved');
 
       // Navigate to report
+      console.log('🔄 Redirecting to:', `/report/${report.id}`);
       router.push(`/report/${report.id}`);
 
       if (onComplete) {
         onComplete();
       }
     } catch (error) {
-      console.error('Report generation error:', error);
+      console.error('❌ Report generation error:', error);
 
       const errorMsg: ConversationMessage = {
         role: 'assistant',
@@ -309,6 +530,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       };
 
       setMessages(prev => [...prev, errorMsg]);
+      setIsComplete(false); // Allow retry
     }
   };
 
@@ -436,26 +658,42 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
               {/* Question Renderer */}
               {currentQuestion.inputType === 'text' ? (
                 // Text input - traditional style
-                <div className="flex gap-3">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                    placeholder={currentQuestion.placeholder || "Digite sua resposta..."}
-                    className="input-dark flex-1"
-                    disabled={isLoading}
-                    autoFocus
+                <div className="space-y-3">
+                  {/* Suggested Responses */}
+                  <AISuggestedResponses
+                    suggestions={suggestions}
+                    onSelect={(text) => {
+                      setInput(text);
+                      // Auto-send after brief delay
+                      setTimeout(() => {
+                        sendMessageWithText(text);
+                      }, 100);
+                    }}
+                    isLoading={isLoading}
                   />
-                  <button
-                    onClick={sendMessage}
-                    disabled={!input.trim() || isLoading}
-                    className="btn-primary px-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    <span>Enviar</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+
+                  {/* Text Input */}
+                  <div className="flex gap-3">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                      placeholder={currentQuestion.placeholder || "Digite sua resposta..."}
+                      className="input-dark flex-1"
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                    <button
+                      onClick={sendMessage}
+                      disabled={!input.trim() || isLoading}
+                      className="btn-primary px-6 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <span>Enviar</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 // Choice-based input - render with QuestionRenderer

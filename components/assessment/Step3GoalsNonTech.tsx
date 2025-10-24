@@ -1,5 +1,5 @@
 import { NonTechGoals } from "@/lib/types";
-import { ArrowLeft, ArrowRight, ClipboardList, BarChart2, Target, Rocket } from "lucide-react";
+import { ArrowLeft, ArrowRight, ClipboardList, BarChart2, Target, Rocket, Lightbulb } from "lucide-react";
 
 interface Props {
   data: Partial<NonTechGoals>;
@@ -277,8 +277,9 @@ export default function Step3GoalsNonTech({ data, onUpdate, onNext, onBack }: Pr
 
       {/* Information Box */}
       <div className="mt-8 p-4 bg-neon-green/5 border border-neon-green/20 rounded-lg">
-        <h4 className="text-sm font-semibold text-neon-green mb-2">
-          💡 Sobre as Métricas
+        <h4 className="text-sm font-semibold text-neon-green mb-2 flex items-center gap-2">
+          <Lightbulb className="w-4 h-4" />
+          Sobre as Métricas
         </h4>
         <p className="text-sm text-tech-gray-300">
           Essas métricas de negócio serão traduzidas em indicadores técnicos no seu relatório,

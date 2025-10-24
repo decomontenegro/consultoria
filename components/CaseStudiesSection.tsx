@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { Check } from 'lucide-react';
 import { getFeaturedCaseStudies, getRegionalCaseStudies } from '@/lib/utils/case-studies';
 import CaseStudyCard from './CaseStudyCard';
 import { CaseStudy } from '@/lib/types';
@@ -144,7 +145,7 @@ export default function CaseStudiesSection() {
                   {selectedCase.company}
                 </h2>
                 {selectedCase.verified && (
-                  <span className="text-neon-green text-xl" title="Verified">✓</span>
+                  <Check className="w-6 h-6 text-neon-green" title="Verified" />
                 )}
               </div>
 

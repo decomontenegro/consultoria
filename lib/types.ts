@@ -193,6 +193,58 @@ export interface ROICalculation {
     optimisticNPV: number;
     mostLikelyNPV: number; // Same as threeYearNPV
   };
+  // 4-Pillar Framework (optional, for enhanced ROI view)
+  fourPillarROI?: FourPillarROI;
+}
+
+// ============================================
+// 4-PILLAR ROI FRAMEWORK (Inspired by Writer AI)
+// ============================================
+
+export interface FourPillarROI {
+  // Pillar 1: Efficiency Gains
+  efficiency: {
+    productivityIncrease: number; // Percentage
+    timeToMarketReduction: number; // Percentage
+    annualValue: number; // BRL
+    keyMetrics: string[];
+  };
+
+  // Pillar 2: Revenue Acceleration
+  revenue: {
+    fasterProductLaunches: number; // Additional products per year
+    customerAcquisitionGain: number; // Percentage increase
+    marketShareGain: number; // Percentage
+    annualValue: number; // BRL
+    keyMetrics: string[];
+  };
+
+  // Pillar 3: Risk Mitigation
+  risk: {
+    codeQualityImprovement: number; // Percentage
+    bugReduction: number; // Percentage
+    securityImprovements: string[];
+    annualValue: number; // BRL saved on incidents
+    keyMetrics: string[];
+  };
+
+  // Pillar 4: Business Agility
+  agility: {
+    deploymentFrequencyIncrease: number; // Percentage
+    experimentVelocity: number; // Additional A/B tests per quarter
+    innovationCapacity: number; // New features per sprint increase
+    annualValue: number; // BRL value of agility
+    keyMetrics: string[];
+  };
+
+  // Overall 4-Pillar Summary
+  totalValue: {
+    efficiency: number;
+    revenue: number;
+    risk: number;
+    agility: number;
+    combined: number; // Total across all 4 pillars
+  };
 }
 
 // ============================================
@@ -342,11 +394,11 @@ export interface RiskMatrix {
 
 /**
  * Assessment modes for AI-first journey
+ * Simplified to 2 clear options after user research
  */
 export type AssessmentMode =
-  | 'express'  // 5-7 min: Essential questions only, quick report
-  | 'guided'   // 10-15 min: Smart form with relevant fields only
-  | 'deep';    // 20-30 min: Full multi-specialist consultation
+  | 'express'  // 5-7 min: AI-powered essential questions, executive report
+  | 'deep';    // 15-20 min: Multi-specialist consultation, complete analysis
 
 /**
  * Urgency level detected by AI
@@ -381,6 +433,7 @@ export interface AIRouterResult {
   // Recommendation
   recommendedMode: AssessmentMode;
   reasoning: string;
+  reasons: string[]; // Specific bullet points explaining the recommendation
 
   // Partial data collected during routing conversation
   partialData: {

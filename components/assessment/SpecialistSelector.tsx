@@ -7,7 +7,19 @@
 'use client';
 
 import { SPECIALISTS, SpecialistType, Specialist } from '@/lib/prompts/specialist-prompts';
-import { Check } from 'lucide-react';
+import { Check, Settings, TrendingUp, Target, Lightbulb, LucideIcon } from 'lucide-react';
+
+// Map icon names to Lucide components
+const ICON_MAP: Record<string, LucideIcon> = {
+  'Settings': Settings,
+  'TrendingUp': TrendingUp,
+  'Target': Target
+};
+
+// Helper to get icon component
+function getIcon(iconName: string) {
+  return ICON_MAP[iconName] || Settings;
+}
 
 interface SpecialistSelectorProps {
   selectedSpecialists: SpecialistType[];
@@ -63,8 +75,11 @@ export default function SpecialistSelector({
                 </div>
 
                 {/* Icon */}
-                <div className="flex-shrink-0 text-4xl">
-                  {specialist.icon}
+                <div className={`flex-shrink-0 ${specialist.color}`}>
+                  {(() => {
+                    const IconComponent = getIcon(specialist.iconName);
+                    return <IconComponent className="w-10 h-10" strokeWidth={1.5} />;
+                  })()}
                 </div>
 
                 {/* Content */}
@@ -148,8 +163,9 @@ export default function SpecialistSelector({
             )}
           </p>
           {mode === 'multiple' && selectedSpecialists.length > 1 && (
-            <p className="text-xs text-tech-gray-500 mt-1">
-              💡 Múltiplas perspectivas geram análise mais completa, mas levam mais tempo
+            <p className="text-xs text-tech-gray-500 mt-1 flex items-center gap-1">
+              <Lightbulb className="w-3.5 h-3.5 text-neon-purple" strokeWidth={2} />
+              Múltiplas perspectivas geram análise mais completa, mas levam mais tempo
             </p>
           )}
         </div>
@@ -163,10 +179,11 @@ export default function SpecialistSelector({
  */
 export function SpecialistBadge({ specialistType }: { specialistType: SpecialistType }) {
   const specialist = SPECIALISTS[specialistType];
+  const IconComponent = getIcon(specialist.iconName);
 
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${specialist.bgColor} border ${specialist.borderColor}`}>
-      <span className="text-sm">{specialist.icon}</span>
+      <IconComponent className={`w-4 h-4 ${specialist.color}`} strokeWidth={2} />
       <span className={`text-xs font-semibold ${specialist.color}`}>
         {specialist.name}
       </span>
@@ -179,10 +196,11 @@ export function SpecialistBadge({ specialistType }: { specialistType: Specialist
  */
 export function SpecialistIndicator({ specialistType }: { specialistType: SpecialistType }) {
   const specialist = SPECIALISTS[specialistType];
+  const IconComponent = getIcon(specialist.iconName);
 
   return (
     <div className="flex items-center gap-2 mb-2">
-      <span className="text-lg">{specialist.icon}</span>
+      <IconComponent className={`w-5 h-5 ${specialist.color}`} strokeWidth={2} />
       <div className="flex-1">
         <div className={`text-xs font-bold ${specialist.color}`}>
           {specialist.name}

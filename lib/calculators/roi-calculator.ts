@@ -12,6 +12,7 @@ import {
   calculateUncertaintyRange,
   generateAssumptions
 } from './confidence-calculator';
+import { calculateFourPillarROI } from './four-pillar-roi-calculator';
 
 interface TeamCost {
   totalAnnualSalary: number;
@@ -189,6 +190,24 @@ export function calculateROI(assessment: AssessmentData): ROICalculation {
   // Step 7: Calculate uncertainty range based on confidence
   const uncertaintyRange = calculateUncertaintyRange(Math.round(threeYearNPV), confidenceLevel);
 
+  // Step 8: Calculate 4-Pillar ROI (optional enhanced view)
+  let fourPillarROI;
+  try {
+    fourPillarROI = calculateFourPillarROI({
+      teamSize: assessment.currentState.devTeamSize,
+      averageSalary: teamCost.totalAnnualSalary / assessment.currentState.devTeamSize,
+      industry: assessment.companyInfo.industry,
+      companySize: assessment.companyInfo.size,
+      currentDeploymentFrequency: parseDeploymentFrequency(assessment.currentState.deploymentFrequency),
+      currentBugRate: assessment.currentState.bugRate,
+      currentTimeToMarket: assessment.currentState.avgCycleTime,
+      aiAdoptionLevel: assessment.currentState.aiToolsUsage || 'none',
+    });
+  } catch (error) {
+    // If 4-Pillar calculation fails, leave it undefined
+    fourPillarROI = undefined;
+  }
+
   return {
     investment: {
       trainingCost,
@@ -209,7 +228,20 @@ export function calculateROI(assessment: AssessmentData): ROICalculation {
     dataQuality,
     assumptions,
     uncertaintyRange,
+    // 4-Pillar Framework
+    fourPillarROI,
   };
+}
+
+/**
+ * Parse deployment frequency string to standard format
+ */
+function parseDeploymentFrequency(frequency: string): 'daily' | 'weekly' | 'biweekly' | 'monthly' {
+  const lower = frequency.toLowerCase();
+  if (lower.includes('daily') || lower.includes('diário')) return 'daily';
+  if (lower.includes('week') || lower.includes('semana')) return 'weekly';
+  if (lower.includes('biweekly') || lower.includes('quinzenal')) return 'biweekly';
+  return 'monthly';
 }
 
 /**

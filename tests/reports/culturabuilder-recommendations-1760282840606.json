@@ -1,0 +1,79 @@
+{
+  "timestamp": "2025-10-12T15:27:20.605Z",
+  "source": "tutoria-ia.vercel.app",
+  "context": "Healthcare diagnostic automation → AI readiness assessment",
+  "crossIndustryInsights": [
+    {
+      "category": "Diagnostic Flow",
+      "observation": "Healthcare uses triaging to classify urgency and route patients",
+      "application": "Implement AI Readiness Triage Score (0-100) to classify companies by urgency",
+      "priority": "high",
+      "effort": "medium"
+    },
+    {
+      "category": "Confidence Communication",
+      "observation": "Medical diagnostics communicate certainty levels to manage expectations",
+      "application": "Add confidence scores to ROI calculations and show data quality indicators",
+      "priority": "high",
+      "effort": "low"
+    },
+    {
+      "category": "Progressive Disclosure",
+      "observation": "Healthcare UX reveals complexity gradually based on patient needs",
+      "application": "Create Express Mode (3 min) vs Deep Dive Mode (15 min) for different personas",
+      "priority": "medium",
+      "effort": "high"
+    },
+    {
+      "category": "Follow-up Care",
+      "observation": "Medical systems have structured post-treatment monitoring",
+      "application": "Implement 30/60/90-day check-ins to track AI adoption progress",
+      "priority": "medium",
+      "effort": "medium"
+    },
+    {
+      "category": "Visual Diagnostics",
+      "observation": "Healthcare uses visual aids (X-rays, charts) for communication",
+      "application": "Add interactive visualizations of before/after AI adoption scenarios",
+      "priority": "low",
+      "effort": "high"
+    }
+  ],
+  "technicalImplementations": [
+    {
+      "feature": "Triage Score Engine",
+      "description": "Calculate 0-100 urgency score based on pain points and timeline",
+      "files": [
+        "lib/triage-engine.ts",
+        "components/assessment/TriageResult.tsx"
+      ],
+      "estimatedTime": "2 days"
+    },
+    {
+      "feature": "Confidence Level System",
+      "description": "Add confidence scores to all calculations based on data completeness",
+      "files": [
+        "lib/types.ts",
+        "lib/calculators/roi-calculator.ts"
+      ],
+      "estimatedTime": "1 day"
+    },
+    {
+      "feature": "Express Assessment Mode",
+      "description": "Simplified 3-minute flow for busy executives",
+      "files": [
+        "app/assessment/express/page.tsx",
+        "components/assessment/ExpressFlow.tsx"
+      ],
+      "estimatedTime": "3 days"
+    }
+  ],
+  "nextSteps": [
+    "1. Review extracted findings from all tests",
+    "2. Prioritize implementations by impact vs effort",
+    "3. Create detailed specs for top 3 features",
+    "4. Implement Triage Score Engine (highest priority)",
+    "5. Add Confidence Levels to ROI calculations",
+    "6. Design Express Mode UX flow"
+  ]
+}

@@ -3,6 +3,7 @@ import CulturaBuilderLogo from "@/components/CulturaBuilderLogo";
 import CulturaBuilderLogoVideo from "@/components/CulturaBuilderLogoVideo";
 import CaseStudiesSection from "@/components/CaseStudiesSection";
 import { InteractiveRobotSpline } from "@/components/ui/interactive-3d-robot";
+import SocialProofCounter from "@/components/homepage/SocialProofCounter";
 
 export default function Home() {
   return (
@@ -148,6 +149,11 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Social Proof Counter */}
+        <div className="relative z-10">
+          <SocialProofCounter />
         </div>
 
         {/* Trust Indicators - Partners */}

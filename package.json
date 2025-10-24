@@ -8,10 +8,18 @@
     "start": "next start",
     "lint": "next lint",
     "test": "playwright test",
+    "test:funnel": "playwright test tests/simplified-funnel.spec.ts",
+    "test:funnel:ui": "playwright test tests/simplified-funnel.spec.ts --ui",
+    "test:complete": "playwright test tests/complete-funnel.spec.ts",
+    "test:complete:ui": "playwright test tests/complete-funnel.spec.ts --ui",
+    "test:complete:headed": "playwright test tests/complete-funnel.spec.ts --headed",
+    "test:complete:debug": "playwright test tests/complete-funnel.spec.ts --debug",
     "test:personas": "playwright test tests/ai-consultation-personas.spec.ts",
     "test:personas:ui": "playwright test tests/ai-consultation-personas.spec.ts --ui",
     "test:analyze": "ts-node tests/analysis/analyze-results.ts",
-    "test:persona": "playwright test tests/ai-consultation-personas.spec.ts --grep"
+    "test:persona": "playwright test tests/ai-consultation-personas.spec.ts --grep",
+    "test:all": "playwright test --reporter=html,json",
+    "test:report": "playwright show-report"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",

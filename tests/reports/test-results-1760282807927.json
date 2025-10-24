@@ -1,0 +1,21 @@
+[
+  {
+    "testId": "T21-it-devops-otimista",
+    "persona": "it-devops",
+    "scenarioType": "otimista",
+    "success": false,
+    "metrics": {
+      "topicsSuggested": 0,
+      "topicsAppropriate": false,
+      "questionsAsked": 0,
+      "questionsAppropriate": 0,
+      "questionnaireFlow": false,
+      "jargonViolations": [],
+      "abstractionLevel": ""
+    },
+    "issues": [
+      "Test failed with error: page.waitForLoadState: Test timeout of 30000ms exceeded."
+    ],
+    "timestamp": "2025-10-12T15:26:18.016Z"
+  }
+]

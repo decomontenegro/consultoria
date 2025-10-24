@@ -1,0 +1,267 @@
+/**
+ * AI Response Suggestions Engine
+ *
+ * Generates contextual response suggestions based on AI questions
+ * to guide users and improve UX in conversational flows
+ */
+
+export interface ResponseSuggestion {
+  text: string;
+  category?: string;
+  icon?: string;
+}
+
+/**
+ * Question patterns and their corresponding suggestions
+ */
+const SUGGESTION_PATTERNS: Record<string, ResponseSuggestion[]> = {
+  // Challenges and Pain Points
+  'desafio|problema|dificuldade|pain point': [
+    { text: 'Produtividade baixa da equipe', icon: '⏱️' },
+    { text: 'Time-to-market muito lento', icon: '🚀' },
+    { text: 'Dificuldade em contratar talentos', icon: '👥' },
+    { text: 'Qualidade do código preocupante', icon: '🐛' },
+    { text: 'Falta de inovação tecnológica', icon: '💡' },
+    { text: 'Custos operacionais altos', icon: '💰' },
+  ],
+
+  // Company Size
+  'tamanho|porte|empresa|equipe|quantos': [
+    { text: '5-20 pessoas (Startup)', icon: '🌱' },
+    { text: '21-100 pessoas (Scaleup)', icon: '📈' },
+    { text: '101-500 pessoas (Mid-market)', icon: '🏢' },
+    { text: '500+ pessoas (Enterprise)', icon: '🏛️' },
+  ],
+
+  // Industry
+  'indústria|setor|área|ramo': [
+    { text: 'Tecnologia / SaaS', icon: '💻' },
+    { text: 'Fintech / Serviços Financeiros', icon: '💳' },
+    { text: 'E-commerce / Varejo', icon: '🛒' },
+    { text: 'Saúde / Healthcare', icon: '🏥' },
+    { text: 'Educação / EdTech', icon: '🎓' },
+    { text: 'Manufatura / Indústria', icon: '🏭' },
+  ],
+
+  // Goals
+  'objetivo|meta|quer|alcançar|melhorar': [
+    { text: 'Aumentar produtividade em 30%+', icon: '📊' },
+    { text: 'Acelerar time-to-market', icon: '⚡' },
+    { text: 'Reduzir bugs e incidentes', icon: '🛡️' },
+    { text: 'Melhorar qualidade do código', icon: '✨' },
+    { text: 'Atrair e reter talentos', icon: '🎯' },
+    { text: 'Reduzir custos operacionais', icon: '💵' },
+  ],
+
+  // Timeline
+  'prazo|timeline|quando|urgência|tempo': [
+    { text: 'Urgente - próximos 3 meses', icon: '🔥' },
+    { text: 'Curto prazo - 6 meses', icon: '⏰' },
+    { text: 'Médio prazo - 12 meses', icon: '📅' },
+    { text: 'Longo prazo - 18+ meses', icon: '🗓️' },
+  ],
+
+  // Budget
+  'orçamento|budget|investimento|quanto': [
+    { text: 'Até R$ 50k', icon: '💵' },
+    { text: 'R$ 50k - R$ 200k', icon: '💰' },
+    { text: 'R$ 200k - R$ 500k', icon: '💸' },
+    { text: 'R$ 500k+', icon: '🏦' },
+    { text: 'Ainda não definido', icon: '❓' },
+  ],
+
+  // AI Adoption
+  'ia|ai|inteligência artificial|ferramentas|copilot': [
+    { text: 'Não usamos IA ainda', icon: '🆕' },
+    { text: 'Alguns devs testando', icon: '🔬' },
+    { text: 'Piloto em andamento', icon: '🚀' },
+    { text: 'Uso parcial em produção', icon: '⚙️' },
+    { text: 'Totalmente integrado', icon: '✅' },
+  ],
+
+  // Team Experience
+  'experiência|senioridade|time|desenvolvedores': [
+    { text: 'Maioria júnior (0-2 anos)', icon: '🌱' },
+    { text: 'Mix júnior/pleno', icon: '📚' },
+    { text: 'Maioria pleno (3-5 anos)', icon: '⚙️' },
+    { text: 'Time sênior (5+ anos)', icon: '🎓' },
+    { text: 'Mix balanceado', icon: '⚖️' },
+  ],
+
+  // Development Practices
+  'práticas|metodologia|processo|desenvolvimento': [
+    { text: 'Agile / Scrum', icon: '🔄' },
+    { text: 'Kanban', icon: '📋' },
+    { text: 'DevOps / CI/CD', icon: '🔧' },
+    { text: 'Waterfall tradicional', icon: '📊' },
+    { text: 'Processo informal', icon: '🤷' },
+  ],
+
+  // Tech Stack
+  'stack|tecnologia|linguagem|framework': [
+    { text: 'JavaScript / TypeScript', icon: '🟨' },
+    { text: 'Python', icon: '🐍' },
+    { text: 'Java / Kotlin', icon: '☕' },
+    { text: 'C# / .NET', icon: '🔷' },
+    { text: 'Go / Rust', icon: '🦀' },
+    { text: 'Múltiplas linguagens', icon: '🌈' },
+  ],
+
+  // Deployment Frequency
+  'deploy|implantação|frequência|releases': [
+    { text: 'Várias vezes por dia', icon: '🚀' },
+    { text: 'Diariamente', icon: '📅' },
+    { text: 'Semanalmente', icon: '📆' },
+    { text: 'Quinzenalmente', icon: '🗓️' },
+    { text: 'Mensalmente ou menos', icon: '⏰' },
+  ],
+
+  // Yes/No confirmations
+  'sim|não|confirma|concorda': [
+    { text: 'Sim', icon: '✅' },
+    { text: 'Não', icon: '❌' },
+    { text: 'Parcialmente', icon: '🤔' },
+    { text: 'Não tenho certeza', icon: '❓' },
+  ],
+
+  // Metrics Tracking
+  'métricas|kpi|medir|acompanhar': [
+    { text: 'DORA metrics (deploy freq, lead time, MTTR, change failure)', icon: '📊' },
+    { text: 'Velocidade de sprint', icon: '⚡' },
+    { text: 'Code coverage e qualidade', icon: '✨' },
+    { text: 'Bug rate e incidents', icon: '🐛' },
+    { text: 'Developer satisfaction', icon: '😊' },
+    { text: 'Não medimos formalmente', icon: '❓' },
+  ],
+
+  // Urgency Level
+  'urgente|prioritário|crítico|importante': [
+    { text: 'Extremamente urgente (semanas)', icon: '🔥' },
+    { text: 'Alta prioridade (1-3 meses)', icon: '⚡' },
+    { text: 'Prioridade média (3-6 meses)', icon: '📅' },
+    { text: 'Planejamento (6+ meses)', icon: '🗓️' },
+  ],
+};
+
+/**
+ * Generate contextual response suggestions based on AI question
+ */
+export function generateSuggestions(aiQuestion: string): ResponseSuggestion[] {
+  if (!aiQuestion) return [];
+
+  const lowerQuestion = aiQuestion.toLowerCase();
+
+  // Find matching pattern
+  for (const [pattern, suggestions] of Object.entries(SUGGESTION_PATTERNS)) {
+    const regex = new RegExp(pattern, 'i');
+    if (regex.test(lowerQuestion)) {
+      // Return first 4-5 suggestions (randomize a bit for variety)
+      const shuffled = [...suggestions].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 4);
+    }
+  }
+
+  // Default suggestions if no pattern matches
+  return [
+    { text: 'Conte-me mais...', icon: '💬' },
+    { text: 'Preciso de ajuda para responder', icon: '❓' },
+    { text: 'Pular esta pergunta', icon: '⏭️' },
+  ];
+}
+
+/**
+ * Get suggestions for specific specialist types
+ */
+export function getSpecialistSuggestions(
+  specialistType: 'engineering' | 'product' | 'operations' | 'strategy' | 'technical',
+  question: string
+): ResponseSuggestion[] {
+
+  const contextualSuggestions = generateSuggestions(question);
+
+  // Add specialist-specific context if no match found
+  if (contextualSuggestions.length <= 3) {
+    const specialistDefaults: Record<string, ResponseSuggestion[]> = {
+      'engineering': [
+        { text: 'Produtividade da equipe', icon: '⚡' },
+        { text: 'Qualidade do código', icon: '✨' },
+        { text: 'Deploy e CI/CD', icon: '🚀' },
+        { text: 'Tech debt', icon: '🏗️' },
+      ],
+      'product': [
+        { text: 'Time-to-market', icon: '🚀' },
+        { text: 'Feature velocity', icon: '📈' },
+        { text: 'User feedback loop', icon: '💬' },
+        { text: 'Roadmap execution', icon: '🗺️' },
+      ],
+      'operations': [
+        { text: 'Automação de processos', icon: '🤖' },
+        { text: 'Eficiência operacional', icon: '⚙️' },
+        { text: 'Custos e recursos', icon: '💰' },
+        { text: 'Escalabilidade', icon: '📊' },
+      ],
+      'strategy': [
+        { text: 'Competitividade no mercado', icon: '🎯' },
+        { text: 'ROI e métricas', icon: '📊' },
+        { text: 'Transformação digital', icon: '🔄' },
+        { text: 'Vantagem competitiva', icon: '🏆' },
+      ],
+      'technical': [
+        { text: 'Arquitetura e escalabilidade', icon: '🏗️' },
+        { text: 'Performance e otimização', icon: '⚡' },
+        { text: 'Segurança e compliance', icon: '🔒' },
+        { text: 'Infraestrutura', icon: '☁️' },
+      ],
+    };
+
+    return specialistDefaults[specialistType] || contextualSuggestions;
+  }
+
+  return contextualSuggestions;
+}
+
+/**
+ * Get suggestions for Express Mode
+ */
+export function getExpressModeSuggestions(question: string, questionNumber: number): ResponseSuggestion[] {
+
+  // Generate based on question content first
+  const contentSuggestions = generateSuggestions(question);
+
+  if (contentSuggestions.length > 3) {
+    return contentSuggestions.slice(0, 4);
+  }
+
+  // Fallback based on question number
+  const fallbacksByPhase: Record<number, ResponseSuggestion[]> = {
+    1: [ // Usually about challenges
+      { text: 'Produtividade', icon: '⏱️' },
+      { text: 'Qualidade', icon: '✨' },
+      { text: 'Velocidade', icon: '🚀' },
+      { text: 'Custos', icon: '💰' },
+    ],
+    2: [ // Usually about goals
+      { text: 'Melhorar eficiência', icon: '📊' },
+      { text: 'Acelerar entregas', icon: '⚡' },
+      { text: 'Reduzir bugs', icon: '🛡️' },
+      { text: 'Aumentar inovação', icon: '💡' },
+    ],
+    3: [ // Usually about timeline
+      { text: '3 meses', icon: '🔥' },
+      { text: '6 meses', icon: '📅' },
+      { text: '12 meses', icon: '🗓️' },
+    ],
+  };
+
+  return fallbacksByPhase[Math.min(questionNumber, 3)] || contentSuggestions;
+}
+
+/**
+ * Common quick responses for any AI interaction
+ */
+export const COMMON_QUICK_RESPONSES: ResponseSuggestion[] = [
+  { text: 'Sim, exatamente', icon: '✅' },
+  { text: 'Não, diferente', icon: '❌' },
+  { text: 'Mais ou menos', icon: '🤔' },
+  { text: 'Não sei responder', icon: '❓' },
+];

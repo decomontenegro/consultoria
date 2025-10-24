@@ -197,6 +197,7 @@ export function determineComplexity(messages: ConversationMessage[]): Complexity
 
 /**
  * Recommend assessment mode based on analysis
+ * Now returns detailed reasoning with specific reasons
  */
 export function recommendMode(
   persona: UserPersona | null,
@@ -206,8 +207,12 @@ export function recommendMode(
 ): {
   mode: AssessmentMode;
   reasoning: string;
+  reasons: string[]; // Specific bullet points
   alternatives: AssessmentMode[];
 } {
+  const userMessages = messages.filter(m => m.role === 'user');
+  const partialData = extractPartialData(messages);
+
   // Executive + high urgency → Express
   if (
     (persona === 'board-executive' || persona === 'finance-ops') &&
@@ -215,8 +220,14 @@ export function recommendMode(
   ) {
     return {
       mode: 'express',
-      reasoning: 'Como executivo com alta urgência, recomendo o Express Mode (5-7 min) para análise rápida e acionável.',
-      alternatives: ['guided', 'deep']
+      reasoning: 'Recomendo o Express Mode: você precisa de agilidade e foco executivo.',
+      reasons: [
+        'Você é C-level e precisa de decisões rápidas',
+        'Alta urgência detectada nas suas respostas',
+        'Express entrega análise acionável em 5-7 minutos',
+        partialData.budget ? 'Orçamento já definido - foco em execução' : 'Análise rápida para definir próximos passos'
+      ],
+      alternatives: ['deep']
     };
   }
 
@@ -227,8 +238,14 @@ export function recommendMode(
   ) {
     return {
       mode: 'deep',
-      reasoning: 'Contexto técnico complexo se beneficia de análise profunda com múltiplos especialistas (Deep Dive).',
-      alternatives: ['guided', 'express']
+      reasoning: 'Recomendo o Deep Dive: contexto técnico complexo precisa de análise multi-perspectiva.',
+      reasons: [
+        'Você tem expertise técnica para aproveitar análise profunda',
+        'Complexidade detectada requer múltiplos especialistas',
+        'Deep Dive oferece visão de Engineering, Finance e Strategy',
+        'Relatório detalhado para embasar decisões técnicas importantes'
+      ],
+      alternatives: ['express']
     };
   }
 
@@ -236,25 +253,73 @@ export function recommendMode(
   if (urgency === 'low' && complexity === 'simple') {
     return {
       mode: 'express',
-      reasoning: 'Para exploração inicial, Express Mode oferece análise rápida suficiente.',
-      alternatives: ['guided', 'deep']
+      reasoning: 'Recomendo o Express Mode: perfeito para exploração inicial e análise focada.',
+      reasons: [
+        'Contexto simples não precisa de análise exaustiva',
+        'Express oferece direcionamento claro em menos tempo',
+        'Você pode fazer Deep Dive depois se precisar',
+        'Ótimo custo-benefício para primeira análise'
+      ],
+      alternatives: ['deep']
     };
   }
 
-  // Critical urgency + complex → Deep (need thorough analysis)
+  // Critical urgency + complex → Deep (need thorough but fast)
   if (urgency === 'critical' && complexity === 'complex') {
     return {
       mode: 'deep',
-      reasoning: 'Situação crítica e complexa requer análise profunda e multi-perspectiva.',
-      alternatives: ['guided', 'express']
+      reasoning: 'Recomendo o Deep Dive: situação crítica e complexa precisa de análise robusta antes de agir.',
+      reasons: [
+        'Urgência crítica + complexidade alta = risco de decisão errada',
+        'Deep Dive oferece múltiplas perspectivas em 15-20 min',
+        'Análise completa evita retrabalho e custos futuros',
+        'Melhor investir 15min agora que meses corrigindo depois'
+      ],
+      alternatives: ['express']
     };
   }
 
-  // Default: Guided mode (balanced)
+  // Product/Business + moderate → Express (default for most)
+  if (persona === 'product-business') {
+    return {
+      mode: 'express',
+      reasoning: 'Recomendo o Express Mode: foco em resultados e métricas de negócio.',
+      reasons: [
+        'Você precisa de insights acionáveis para produto/negócio',
+        'Express foca em ROI e impacto mensurável',
+        'Relatório direto com próximos passos claros',
+        'Tempo otimizado para profissionais de produto'
+      ],
+      alternatives: ['deep']
+    };
+  }
+
+  // High budget / investment → Deep
+  if (partialData.budget && (partialData.budget.includes('500k') || partialData.budget.includes('1M'))) {
+    return {
+      mode: 'deep',
+      reasoning: 'Recomendo o Deep Dive: investimento alto merece análise completa multi-expert.',
+      reasons: [
+        'Investimento significativo detectado',
+        'Deep Dive oferece análise de ROI detalhada',
+        'Múltiplos especialistas validam a decisão',
+        'Vale investir 15min para decisão de R$500k+'
+      ],
+      alternatives: ['express']
+    };
+  }
+
+  // Default: Express (most common path)
   return {
-    mode: 'guided',
-    reasoning: 'Modo Guided recomendado: balanceia profundidade e eficiência com questionário inteligente.',
-    alternatives: ['express', 'deep']
+    mode: 'express',
+    reasoning: 'Recomendo o Express Mode: análise inteligente e focada para a maioria dos casos.',
+    reasons: [
+      'Express combina velocidade com qualidade de análise',
+      'Perguntas personalizadas baseadas no seu contexto',
+      'Relatório executivo com ações prioritárias',
+      'Você sempre pode fazer Deep Dive depois se precisar'
+    ],
+    alternatives: ['deep']
   };
 }
 
@@ -268,31 +333,98 @@ export function extractPartialData(messages: ConversationMessage[]) {
   const partialData: AIRouterResult['partialData'] = {};
 
   // Extract company size
-  const sizePatterns = {
-    startup: /startup|pequen[ao]|10-50|menos de 50/i,
-    scaleup: /scaleup|médio|50-200|100-500/i,
-    enterprise: /enterprise|grande|500\+|mil|centenas/i
-  };
+  // First try to get from question #3 specifically (most reliable - "Quantos funcionários...")
+  const companySizeQuestionIndex = 2; // 0-indexed, question #3 is "Quantos funcionários..."
+  let companySizeExtracted = false;
 
-  for (const [size, pattern] of Object.entries(sizePatterns)) {
-    if (pattern.test(fullText)) {
+  if (userMessages.length > companySizeQuestionIndex) {
+    const sizeAnswer = userMessages[companySizeQuestionIndex].content;
+
+    // Try to extract number from answer
+    const numberMatch = sizeAnswer.match(/(\d+)/);
+    if (numberMatch) {
+      const employeeCount = parseInt(numberMatch[1]);
+      let companySize: 'startup' | 'scaleup' | 'enterprise';
+
+      if (employeeCount < 50) {
+        companySize = 'startup';
+      } else if (employeeCount < 200) {
+        companySize = 'scaleup';
+      } else {
+        companySize = 'enterprise';
+      }
+
       partialData.companyInfo = {
         ...partialData.companyInfo,
-        size: size as 'startup' | 'scaleup' | 'enterprise'
+        size: companySize
       };
-      break;
+      companySizeExtracted = true;
+      console.log('✅ [AI Router] Extracted company size from question #3:', {
+        answer: sizeAnswer,
+        employeeCount,
+        mappedSize: companySize
+      });
     }
   }
 
-  // Extract industry (basic)
-  const industries = ['fintech', 'saas', 'e-commerce', 'varejo', 'healthtech', 'edtech'];
-  for (const industry of industries) {
-    if (fullText.toLowerCase().includes(industry)) {
+  // Fallback: Try pattern matching if not extracted from question #3
+  if (!companySizeExtracted) {
+    const sizePatterns = {
+      startup: /startup|pequen[ao]|10-50|menos de 50/i,
+      scaleup: /scaleup|médio|50-200|100-500/i,
+      enterprise: /enterprise|grande|500\+|mil|centenas/i
+    };
+
+    for (const [size, pattern] of Object.entries(sizePatterns)) {
+      if (pattern.test(fullText)) {
+        partialData.companyInfo = {
+          ...partialData.companyInfo,
+          size: size as 'startup' | 'scaleup' | 'enterprise'
+        };
+        console.log('✅ [AI Router] Extracted company size from patterns:', size);
+        break;
+      }
+    }
+  }
+
+  // Extract industry
+  // First try to get from question #4 specifically (most reliable)
+  const industryQuestionIndex = 3; // 0-indexed, question #4 is "Em qual setor..."
+  if (userMessages.length > industryQuestionIndex) {
+    const industryAnswer = userMessages[industryQuestionIndex].content;
+
+    // Try to match common industries
+    const industryPatterns = {
+      'fintech': /fintech|pagamento|banco|financ|criptomoeda/i,
+      'saas': /saas|software.*serviço|b2b/i,
+      'e-commerce': /e-commerce|marketplace|loja.*online|varejo.*online/i,
+      'healthtech': /health|saúde|hospital|médic|telemedicina/i,
+      'edtech': /edtech|educação|ensino|escola|curso/i,
+      'logistics': /logística|transporte|entrega|supply chain/i,
+      'retail': /varejo|retail|loja/i,
+      'agritech': /agro|agrícola|fazenda/i
+    };
+
+    let matched = false;
+    for (const [industry, pattern] of Object.entries(industryPatterns)) {
+      if (pattern.test(industryAnswer)) {
+        partialData.companyInfo = {
+          ...partialData.companyInfo,
+          industry
+        };
+        matched = true;
+        console.log('✅ [AI Router] Extracted industry from question #4:', industry);
+        break;
+      }
+    }
+
+    // If no pattern matched, use the raw answer (for other industries)
+    if (!matched && industryAnswer.trim()) {
       partialData.companyInfo = {
         ...partialData.companyInfo,
-        industry
+        industry: industryAnswer.trim().toLowerCase()
       };
-      break;
+      console.log('✅ [AI Router] Using raw industry answer:', industryAnswer);
     }
   }
 
@@ -384,6 +516,9 @@ export function canRoute(messages: ConversationMessage[]): boolean {
 
   // Need at least 3 user responses
   if (userMessagesCount < 3) return false;
+
+  // If we've asked all 5 questions, MUST route (can't ask more questions)
+  if (userMessagesCount >= DISCOVERY_QUESTIONS.length) return true;
 
   // Check if we detected a persona
   const { confidence } = detectPersona(messages);

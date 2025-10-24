@@ -6,7 +6,8 @@ import {
   Bug,
   Users,
   Zap,
-  AlertTriangle
+  AlertTriangle,
+  Lightbulb
 } from "lucide-react";
 
 interface Props {
@@ -130,14 +131,20 @@ export default function CostOfInaction({ costOfInaction }: Props) {
       {/* Summary Message */}
       <div className="p-6 bg-gradient-to-r from-amber-500/10 via-red-500/10 to-amber-500/10 border-2 border-amber-500/30 rounded-xl">
         <p className="text-base text-tech-gray-200 leading-relaxed">
-          <strong className="text-amber-400">⚠️ Atenção:</strong> {costOfInaction.summary}
+          <strong className="text-amber-400 inline-flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Atenção:
+          </strong> {costOfInaction.summary}
         </p>
       </div>
 
       {/* Action CTA */}
       <div className="mt-6 p-5 bg-neon-green/10 border border-neon-green/30 rounded-xl">
         <p className="text-base text-tech-gray-200 leading-relaxed">
-          <strong className="text-neon-green">💡 A boa notícia:</strong> Todos esses custos são evitáveis.
+          <strong className="text-neon-green inline-flex items-center gap-2">
+            <Lightbulb className="w-5 h-5" />
+            A boa notícia:
+          </strong> Todos esses custos são evitáveis.
           Começar agora significa parar de perder dinheiro e começar a ganhar vantagem competitiva.
           O melhor momento para começar foi ontem. O segundo melhor momento é agora.
         </p>

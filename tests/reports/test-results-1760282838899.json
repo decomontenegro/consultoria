@@ -1,0 +1,21 @@
+[
+  {
+    "testId": "T18-engineering-tech-realista",
+    "persona": "engineering-tech",
+    "scenarioType": "realista",
+    "success": false,
+    "metrics": {
+      "topicsSuggested": 0,
+      "topicsAppropriate": false,
+      "questionsAsked": 0,
+      "questionsAppropriate": 0,
+      "questionnaireFlow": false,
+      "jargonViolations": [],
+      "abstractionLevel": ""
+    },
+    "issues": [
+      "Test failed with error: locator.selectOption: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('select').first()\u001b[22m\n\u001b[2m    - locator resolved to <select class=\"select-dark\">…</select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    46 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - did not find some options\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    ],
+    "timestamp": "2025-10-12T15:26:49.021Z"
+  }
+]

@@ -1,3 +1,5 @@
+import { Bot } from 'lucide-react';
+
 interface AIInsightsSectionProps {
   insights: string[];
 }
@@ -9,7 +11,7 @@ export default function AIInsightsSection({ insights }: AIInsightsSectionProps) 
     <section className="mb-16">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-lg bg-neon-purple/20 flex items-center justify-center">
-          <span className="text-2xl">🤖</span>
+          <Bot className="w-6 h-6 text-neon-purple" />
         </div>
         <div>
           <h2 className="text-2xl font-bold text-white">Insights da Consulta AI</h2>

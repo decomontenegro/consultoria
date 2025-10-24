@@ -113,15 +113,27 @@ export async function POST(req: NextRequest) {
       ? generateSpecialistSystemPrompt(specialistType, assessmentData as AssessmentData)
       : generateConsultationSystemPrompt(assessmentData);
 
+    // If messages array is empty (start of conversation), add initial user message
+    // Claude API requires at least one message
+    const conversationMessages = messages.length === 0
+      ? [{ role: 'user' as const, content: 'Olá! Estou pronto para responder suas perguntas sobre minha empresa.' }]
+      : messages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+
+    console.log('[API /api/consult] Calling Claude with:', {
+      specialistType,
+      messageCount: conversationMessages.length,
+      systemPromptLength: systemPrompt.length
+    });
+
     // Call Anthropic API with streaming
     const stream = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
       system: systemPrompt,
-      messages: messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+      messages: conversationMessages,
       stream: true,
     });
 

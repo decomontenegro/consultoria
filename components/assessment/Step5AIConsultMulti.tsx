@@ -15,6 +15,9 @@ import {
 } from '@/lib/prompts/specialist-prompts';
 import SpecialistSelector, { SpecialistIndicator } from './SpecialistSelector';
 import { Check, Sparkles, ArrowRight } from 'lucide-react';
+import { ResponseSuggestion } from '@/lib/ai/response-suggestions';
+import { generateAIPoweredSuggestions } from '@/lib/ai/ai-powered-suggestions';
+import AISuggestedResponses from './AISuggestedResponses';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,11 +38,13 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
   const [selectedSpecialists, setSelectedSpecialists] = useState<SpecialistType[]>([]);
   const [currentSpecialist, setCurrentSpecialist] = useState<SpecialistType | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [specialistInsights, setSpecialistInsights] = useState<Record<SpecialistType, string[]>>({} as any);
   const [completedSpecialists, setCompletedSpecialists] = useState<SpecialistType[]>([]);
   const [questionCount, setQuestionCount] = useState(0);
+  const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MIN_QUESTIONS_PER_SPECIALIST = 5;
@@ -52,7 +57,44 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingMessage]);
+
+  // Update suggestions when last AI message changes (AI-powered)
+  // Use a ref to track the last message we generated suggestions for to avoid loops
+  const lastSuggestionMessageRef = useRef<string>('');
+
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+
+    // Only generate suggestions for NEW assistant messages during consultation phase
+    if (
+      lastMessage &&
+      lastMessage.role === 'assistant' &&
+      currentSpecialist &&
+      phase === 'consultation' &&
+      lastMessage.content !== lastSuggestionMessageRef.current // Prevent duplicate calls
+    ) {
+      // Mark this message as processed
+      lastSuggestionMessageRef.current = lastMessage.content;
+
+      // ✅ CLEAR old suggestions IMMEDIATELY to avoid showing wrong suggestions
+      setSuggestions([]);
+
+      // Get previous answers for context
+      const previousAnswers = messages
+        .filter(m => m.role === 'user')
+        .map(m => m.content)
+        .slice(-3); // Last 3 answers
+
+      // Generate AI-powered suggestions with specialist context (async, will take ~2s)
+      generateAIPoweredSuggestions({
+        question: lastMessage.content,
+        context: `Multi-specialist consultation, current question ${questionCount + 1}`,
+        previousAnswers,
+        specialistType: currentSpecialist
+      }).then(setSuggestions);
+    }
+  }, [messages, currentSpecialist, phase, questionCount]);
 
   // Toggle specialist selection
   const toggleSpecialist = (specialist: SpecialistType) => {
@@ -75,6 +117,8 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
     setIsLoading(true);
 
     try {
+      console.log('[Step5AIConsultMulti] Starting consultation with:', firstSpecialist);
+
       // Call API to get first question from specialist
       const response = await fetch('/api/consult', {
         method: 'POST',
@@ -86,18 +130,64 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         }),
       });
 
+      console.log('[Step5AIConsultMulti] Start consultation response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Step5AIConsultMulti] Start consultation error:', {
+          status: response.status,
+          body: errorText
+        });
         throw new Error(`API error: ${response.status}`);
       }
 
-      const responseData = await response.json();
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let firstQuestion = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.slice(6);
+              if (dataStr === '[DONE]') break;
+
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.text) {
+                  firstQuestion += parsed.text;
+                  // Update streaming message during reception
+                  setStreamingMessage({
+                    role: 'assistant',
+                    content: firstQuestion,
+                    specialist: firstSpecialist
+                  });
+                }
+              } catch (e) {
+                // Ignore parse errors
+              }
+            }
+          }
+        }
+      }
+
+      console.log('[Step5AIConsultMulti] First question received:', firstQuestion.substring(0, 100));
 
       const assistantMessage: Message = {
         role: 'assistant',
-        content: responseData.message || 'Olá! Vamos começar nossa consulta.',
+        content: firstQuestion || 'Olá! Vamos começar nossa consulta.',
         specialist: firstSpecialist
       };
 
+      // Clear streaming message and add final message to array
+      setStreamingMessage(null);
       setMessages([assistantMessage]);
     } catch (error) {
       console.error('Error starting consultation:', error);
@@ -136,6 +226,12 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         m => !m.specialist || m.specialist === currentSpecialist
       );
 
+      console.log('[Step5AIConsultMulti] Calling /api/consult with:', {
+        specialistType: currentSpecialist,
+        messageCount: specialistMessages.length,
+        assessmentDataPresent: !!data
+      });
+
       const response = await fetch('/api/consult', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,7 +242,15 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         }),
       });
 
+      console.log('[Step5AIConsultMulti] Response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Step5AIConsultMulti] API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
         throw new Error(`API error: ${response.status}`);
       }
 
@@ -172,14 +276,12 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                 const parsed = JSON.parse(dataStr);
                 if (parsed.text) {
                   assistantMessage += parsed.text;
-                  setMessages([
-                    ...updatedMessages,
-                    {
-                      role: 'assistant',
-                      content: assistantMessage,
-                      specialist: currentSpecialist
-                    }
-                  ]);
+                  // Update streaming message during reception (NOT messages array)
+                  setStreamingMessage({
+                    role: 'assistant',
+                    content: assistantMessage,
+                    specialist: currentSpecialist
+                  });
                 }
               } catch (e) {
                 // Ignore parse errors
@@ -188,6 +290,17 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
           }
         }
       }
+
+      // Clear streaming and add final message to array
+      setStreamingMessage(null);
+      setMessages([
+        ...updatedMessages,
+        {
+          role: 'assistant',
+          content: assistantMessage,
+          specialist: currentSpecialist
+        }
+      ]);
 
       setQuestionCount(prev => prev + 1);
 
@@ -521,7 +634,22 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                 </div>
               ))}
 
-              {isLoading && (
+              {/* Streaming message (shown while receiving) */}
+              {streamingMessage && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-lg px-4 py-3 bg-tech-gray-800/50 border border-tech-gray-700 text-tech-gray-200">
+                    {streamingMessage.specialist && (
+                      <SpecialistIndicator specialistType={streamingMessage.specialist} />
+                    )}
+                    <div className="whitespace-pre-wrap leading-relaxed text-sm">
+                      {streamingMessage.content}
+                      <span className="inline-block w-2 h-4 ml-1 bg-neon-cyan animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isLoading && !streamingMessage && (
                 <div className="flex justify-start">
                   <div className="bg-tech-gray-800/50 border border-tech-gray-700 rounded-lg px-4 py-3">
                     <div className="flex items-center gap-2 text-tech-gray-400">
@@ -558,9 +686,10 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                       {completedSpecialists.map(spec => (
                         <span
                           key={spec}
-                          className="text-xs px-2 py-1 rounded-full bg-neon-green/20 text-neon-green border border-neon-green/30"
+                          className="text-xs px-2 py-1 rounded-full bg-neon-green/20 text-neon-green border border-neon-green/30 flex items-center gap-1"
                         >
-                          ✓ {spec}
+                          <Check className="w-3 h-3" />
+                          {spec}
                         </span>
                       ))}
                     </div>
@@ -580,6 +709,20 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
             {/* Input */}
             {phase === 'consultation' && (
               <div className="space-y-3">
+                {/* Suggested Responses */}
+                <AISuggestedResponses
+                  suggestions={suggestions}
+                  onSelect={(text) => {
+                    setInput(text);
+                    // Auto-send after brief delay
+                    setTimeout(() => {
+                      sendMessage(text);
+                    }, 100);
+                  }}
+                  isLoading={isLoading}
+                />
+
+                {/* Text Input */}
                 <div className="flex gap-3">
                   <input
                     type="text"

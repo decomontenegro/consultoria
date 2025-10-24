@@ -236,7 +236,7 @@ function AssessmentPageContent() {
                 AI Readiness Assessment
                 {assessmentMode && (
                   <span className="ml-3 text-sm font-normal text-neon-cyan">
-                    • {assessmentMode === 'express' ? 'Express Mode' : assessmentMode === 'guided' ? 'Guided Mode' : 'Deep Dive'}
+                    • {assessmentMode === 'express' ? 'Express Mode' : 'Deep Dive'}
                   </span>
                 )}
               </h2>

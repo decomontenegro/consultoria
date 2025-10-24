@@ -17,7 +17,7 @@ export interface Specialist {
   name: string;
   title: string;
   description: string;
-  icon: string;
+  iconName: string; // Lucide icon name
   color: string;
   bgColor: string;
   borderColor: string;
@@ -36,7 +36,7 @@ export const SPECIALISTS: Record<SpecialistType, Specialist> = {
     name: 'Dr. Tech',
     title: 'Engineering & DevOps Specialist',
     description: 'Foca em arquitetura, processos de desenvolvimento, tooling, e práticas de engenharia. Análise técnica profunda.',
-    icon: '⚙️',
+    iconName: 'Settings',
     color: 'text-neon-cyan',
     bgColor: 'bg-neon-cyan/10',
     borderColor: 'border-neon-cyan/30',
@@ -69,7 +69,7 @@ export const SPECIALISTS: Record<SpecialistType, Specialist> = {
     name: 'Dr. ROI',
     title: 'Finance & Operations Specialist',
     description: 'Especialista em análise financeira, ROI, custos operacionais e eficiência. Foca em métricas de negócio e retorno financeiro.',
-    icon: '💰',
+    iconName: 'TrendingUp',
     color: 'text-neon-green',
     bgColor: 'bg-neon-green/10',
     borderColor: 'border-neon-green/30',
@@ -102,7 +102,7 @@ export const SPECIALISTS: Record<SpecialistType, Specialist> = {
     name: 'Dr. Strategy',
     title: 'Business & Strategy Specialist',
     description: 'Foca em posicionamento competitivo, estratégia de mercado, riscos de negócio e impacto estratégico da transformação AI.',
-    icon: '🎯',
+    iconName: 'Target',
     color: 'text-neon-purple',
     bgColor: 'bg-neon-purple/10',
     borderColor: 'border-neon-purple/30',
@@ -344,7 +344,7 @@ export function generateAggregatedInsightsSummary(
 
   // Engineering insights
   if (specialistInsights.engineering && specialistInsights.engineering.length > 0) {
-    aggregated.push('🔧 **Perspectiva Técnica (Engineering)**:');
+    aggregated.push('**Perspectiva Técnica (Engineering)**:');
     specialistInsights.engineering.slice(0, 2).forEach(insight => {
       aggregated.push(`   • ${insight}`);
     });
@@ -352,7 +352,7 @@ export function generateAggregatedInsightsSummary(
 
   // Finance insights
   if (specialistInsights.finance && specialistInsights.finance.length > 0) {
-    aggregated.push('💰 **Perspectiva Financeira (Finance)**:');
+    aggregated.push('**Perspectiva Financeira (Finance)**:');
     specialistInsights.finance.slice(0, 2).forEach(insight => {
       aggregated.push(`   • ${insight}`);
     });
@@ -360,7 +360,7 @@ export function generateAggregatedInsightsSummary(
 
   // Strategy insights
   if (specialistInsights.strategy && specialistInsights.strategy.length > 0) {
-    aggregated.push('🎯 **Perspectiva Estratégica (Strategy)**:');
+    aggregated.push('**Perspectiva Estratégica (Strategy)**:');
     specialistInsights.strategy.slice(0, 2).forEach(insight => {
       aggregated.push(`   • ${insight}`);
     });

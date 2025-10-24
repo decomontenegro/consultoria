@@ -10,7 +10,8 @@ import {
   Users,
   BarChart3,
   Settings,
-  CheckCircle
+  CheckCircle,
+  Lightbulb
 } from "lucide-react";
 
 interface Props {
@@ -236,7 +237,10 @@ export default function RiskMatrixSection({ riskMatrix }: Props) {
       {riskMatrix.risks.length > 0 && (
         <div className="mt-8 p-6 bg-gradient-to-r from-neon-cyan/10 to-neon-green/10 border border-neon-cyan/30 rounded-xl">
           <p className="text-base text-tech-gray-200 leading-relaxed">
-            <strong className="text-neon-cyan">💡 Próximo Passo:</strong> Priorize os riscos de impacto
+            <strong className="text-neon-cyan inline-flex items-center gap-2">
+              <Lightbulb className="w-5 h-5" />
+              Próximo Passo:
+            </strong> Priorize os riscos de impacto
             "crítico" e "alto" com timeframe "imediato" ou "curto prazo". A implementação de AI pode
             mitigar simultaneamente vários desses riscos, criando valor defensivo e ofensivo.
           </p>

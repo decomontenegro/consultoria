@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AssessmentData } from '@/lib/types';
 import { getConsultationIntro } from '@/lib/prompts/consultation-prompt';
 import { generateSuggestedTopics, generateTopicContext, SuggestedTopic } from '@/lib/prompts/topic-generator';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Sparkles, Lightbulb } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -320,8 +320,9 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
               </div>
             </div>
 
-            <p className="text-center text-sm text-tech-gray-500">
-              💡 Você pode mudar de ideia durante a conversa - pergunte o que quiser
+            <p className="text-center text-sm text-tech-gray-500 flex items-center justify-center gap-2">
+              <Lightbulb className="w-4 h-4" />
+              Você pode mudar de ideia durante a conversa - pergunte o que quiser
             </p>
           </div>
         )}
@@ -409,7 +410,7 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
                 <div className="mb-6 p-6 bg-gradient-to-br from-neon-cyan/10 to-neon-green/10 border border-neon-cyan/30 rounded-xl">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="flex-shrink-0 w-10 h-10 bg-neon-cyan/20 rounded-full flex items-center justify-center">
-                      <span className="text-neon-cyan text-xl">✓</span>
+                      <Check className="w-6 h-6 text-neon-cyan" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-neon-cyan mb-2">
@@ -431,7 +432,7 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
                       <ul className="space-y-1.5">
                         {discussedTopics.map((topic, idx) => (
                           <li key={idx} className="text-sm text-tech-gray-200 flex items-center gap-2">
-                            <span className="text-neon-green text-xs">✓</span>
+                            <Check className="w-3.5 h-3.5 text-neon-green flex-shrink-0" />
                             {topic}
                           </li>
                         ))}
