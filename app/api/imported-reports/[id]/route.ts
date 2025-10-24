@@ -12,9 +12,10 @@ const REPORTS_DIR = path.join(process.cwd(), 'external-data-import', 'reports');
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await props.params;
     const reportId = params.id;
 
     // Search in both individual and consolidated directories

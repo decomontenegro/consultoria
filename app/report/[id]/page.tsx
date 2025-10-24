@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Report } from "@/lib/types";
@@ -124,7 +124,9 @@ export default function ReportPage() {
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              <LayoutSelector />
+              <Suspense fallback={<div className="w-32 h-10 bg-tech-gray-800 animate-pulse rounded-lg" />}>
+                <LayoutSelector />
+              </Suspense>
               <ExportButtons report={report} compact={true} />
             </div>
           </div>

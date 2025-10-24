@@ -1,10 +1,14 @@
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { COMPLETE_SAMPLE_REPORT } from '@/lib/utils/generate-complete-sample';
 import ReportLayoutWrapper from '@/components/report/ReportLayoutWrapper';
 import LayoutSelector from '@/components/report/LayoutSelector';
 import ExportButtons from '@/components/export/ExportButtons';
+
+// Force dynamic rendering for this page since it uses components with useSearchParams
+export const dynamic = 'force-dynamic';
 
 export default function SampleReportPage() {
   return (
@@ -32,7 +36,9 @@ export default function SampleReportPage() {
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              <LayoutSelector />
+              <Suspense fallback={<div className="w-32 h-10 bg-tech-gray-800 animate-pulse rounded-lg" />}>
+                <LayoutSelector />
+              </Suspense>
               <ExportButtons report={COMPLETE_SAMPLE_REPORT} compact={true} />
             </div>
           </div>

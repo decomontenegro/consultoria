@@ -16,6 +16,9 @@ import {
   Share2
 } from 'lucide-react';
 
+// Force dynamic rendering for this page since it uses useSearchParams
+export const dynamic = 'force-dynamic';
+
 export default function ComparePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -65,8 +68,9 @@ export default function ComparePage() {
     }).format(value);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
@@ -230,7 +234,7 @@ export default function ComparePage() {
                 </td>
                 {reports.map((report) => (
                   <td key={report.id} className="p-4 text-tech-gray-300">
-                    {report.assessmentData.companyInfo.teamSize} pessoas
+                    {report.assessmentData.currentState.devTeamSize} pessoas
                   </td>
                 ))}
               </tr>
