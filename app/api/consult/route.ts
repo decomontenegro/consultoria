@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     // Call Anthropic API with streaming
     const stream = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-opus-20240229',
       max_tokens: 1024,
       system: systemPrompt,
       messages: conversationMessages,
