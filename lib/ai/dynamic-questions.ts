@@ -47,6 +47,7 @@ export interface QuestionTemplate {
   options?: QuestionOption[]; // For choice-based questions
   allowOther?: boolean; // Allow "Other" option with text input
   placeholder?: string; // For text inputs
+  disableSuggestions?: boolean; // Disable AI suggestions for this question (e.g. free text fields like company name)
   followUpCondition?: (answer: string) => boolean;
   dataExtractor: (answer: string | string[], currentData: DeepPartial<AssessmentData>) => DeepPartial<AssessmentData>;
 }
@@ -93,6 +94,7 @@ export const EXPRESS_QUESTIONS: QuestionTemplate[] = [
     priority: 'essential',
     inputType: 'text',
     placeholder: 'Ex: TechCorp',
+    disableSuggestions: true, // Nome é campo único, não precisa de sugestões
     dataExtractor: (answer, data) => {
       const companyName = Array.isArray(answer) ? answer[0] : answer;
       return {

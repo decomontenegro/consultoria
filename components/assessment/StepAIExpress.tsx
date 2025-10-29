@@ -159,7 +159,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
   // Update suggestions when question changes (AI-powered)
   useEffect(() => {
-    if (currentQuestion && currentQuestion.inputType === 'text' && currentQuestion.text) {
+    if (currentQuestion && currentQuestion.inputType === 'text' && currentQuestion.text && !currentQuestion.disableSuggestions) {
       const questionText = currentQuestion.text.trim();
 
       // Only proceed if we have a valid non-empty question
