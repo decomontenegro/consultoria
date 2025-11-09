@@ -151,6 +151,28 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastMessageCountRef = useRef<number>(0);
+
+  // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
+  // Scroll only when a new assistant message (question) appears
+  useEffect(() => {
+    const currentMessageCount = messages.length;
+    const lastMessage = messages[messages.length - 1];
+
+    // Only scroll if:
+    // 1. We have more messages than before
+    // 2. The last message is from the assistant (new question)
+    if (currentMessageCount > lastMessageCountRef.current && lastMessage?.role === 'assistant') {
+      // Small delay to ensure DOM is updated
+      setTimeout(scrollToBottom, 100);
+    }
+
+    lastMessageCountRef.current = currentMessageCount;
+  }, [messages, scrollToBottom]);
 
   // Update suggestions when question changes (AI-powered)
   useEffect(() => {

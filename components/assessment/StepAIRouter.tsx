@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ConversationMessage, AIRouterResult, AssessmentMode, UserPersona } from '@/lib/types';
 import { Sparkles, ArrowRight, Loader2, Zap, Microscope, Target, Check, Clock, User } from 'lucide-react';
 import { ResponseSuggestion } from '@/lib/ai/response-suggestions';
@@ -31,6 +31,28 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
   const [showModeSelection, setShowModeSelection] = useState(false);
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMessageCountRef = useRef<number>(0);
+
+  // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
+  // Scroll only when a new assistant message (question) appears
+  useEffect(() => {
+    const currentMessageCount = messages.length;
+    const lastMessage = messages[messages.length - 1];
+
+    // Only scroll if:
+    // 1. We have more messages than before
+    // 2. The last message is from the assistant (new question)
+    if (currentMessageCount > lastMessageCountRef.current && lastMessage?.role === 'assistant') {
+      // Small delay to ensure DOM is updated
+      setTimeout(scrollToBottom, 100);
+    }
+
+    lastMessageCountRef.current = currentMessageCount;
+  }, [messages, scrollToBottom]);
 
   // Start with first question
   useEffect(() => {

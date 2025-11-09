@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AssessmentData } from '@/lib/types';
 import {
   SpecialistType,
@@ -46,9 +46,31 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
   const [questionCount, setQuestionCount] = useState(0);
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMessageCountRef = useRef<number>(0);
 
   const MIN_QUESTIONS_PER_SPECIALIST = 5;
   const recommendedSpecialist = data.persona ? getRecommendedSpecialist(data as AssessmentData) : undefined;
+
+  // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
+  // Scroll only when a new assistant message appears OR when streaming updates
+  useEffect(() => {
+    const currentMessageCount = messages.length;
+    const lastMessage = messages[messages.length - 1];
+
+    // Scroll if:
+    // 1. New message from assistant
+    // 2. OR streaming message is updating (for real-time streaming)
+    if ((currentMessageCount > lastMessageCountRef.current && lastMessage?.role === 'assistant') || streamingMessage) {
+      // Small delay to ensure DOM is updated
+      setTimeout(scrollToBottom, 100);
+    }
+
+    lastMessageCountRef.current = currentMessageCount;
+  }, [messages, streamingMessage, scrollToBottom]);
 
   // Update suggestions when last AI message changes (AI-powered)
   // Use a ref to track the last message we generated suggestions for to avoid loops

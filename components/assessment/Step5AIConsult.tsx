@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { AssessmentData } from '@/lib/types';
 import { getConsultationIntro } from '@/lib/prompts/consultation-prompt';
 import { generateSuggestedTopics, generateTopicContext, SuggestedTopic } from '@/lib/prompts/topic-generator';
@@ -29,8 +29,30 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
   const [questionCount, setQuestionCount] = useState(0);
   const [discussedTopics, setDiscussedTopics] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMessageCountRef = useRef<number>(0);
 
   const MIN_QUESTIONS_BEFORE_EXIT = 3; // Minimum questions before showing "Generate Report" option
+
+  // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
+  // Scroll only when a new assistant message (question) appears
+  useEffect(() => {
+    const currentMessageCount = messages.length;
+    const lastMessage = messages[messages.length - 1];
+
+    // Only scroll if:
+    // 1. We have more messages than before
+    // 2. The last message is from the assistant (new question)
+    if (currentMessageCount > lastMessageCountRef.current && lastMessage?.role === 'assistant') {
+      // Small delay to ensure DOM is updated
+      setTimeout(scrollToBottom, 100);
+    }
+
+    lastMessageCountRef.current = currentMessageCount;
+  }, [messages, scrollToBottom]);
 
   // Initialize suggested topics
   useEffect(() => {
