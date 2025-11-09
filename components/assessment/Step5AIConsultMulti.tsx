@@ -50,15 +50,6 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
   const MIN_QUESTIONS_PER_SPECIALIST = 5;
   const recommendedSpecialist = data.persona ? getRecommendedSpecialist(data as AssessmentData) : undefined;
 
-  // Auto-scroll
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingMessage]);
-
   // Update suggestions when last AI message changes (AI-powered)
   // Use a ref to track the last message we generated suggestions for to avoid loops
   const lastSuggestionMessageRef = useRef<string>('');

@@ -32,15 +32,6 @@ export default function Step5AIConsult({ data, onSkip, onComplete }: Step5AICons
 
   const MIN_QUESTIONS_BEFORE_EXIT = 3; // Minimum questions before showing "Generate Report" option
 
-  // Auto-scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   // Initialize suggested topics
   useEffect(() => {
     if (data.companyInfo && data.currentState && data.goals) {

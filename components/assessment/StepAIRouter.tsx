@@ -32,15 +32,6 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   // Start with first question
   useEffect(() => {
     const firstQuestion: ConversationMessage = {

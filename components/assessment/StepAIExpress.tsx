@@ -152,11 +152,6 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   // Update suggestions when question changes (AI-powered)
   useEffect(() => {
     if (currentQuestion && currentQuestion.inputType === 'text' && currentQuestion.text && !currentQuestion.disableSuggestions) {
@@ -222,8 +217,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   }, [isLoading, isComplete, currentQuestion]);
 
   useEffect(() => {
-    scrollToBottom();
-    // Focus input after scrolling
+    // Focus input when messages change (without scrolling)
     if (!isLoading && !isComplete) {
       focusInput();
     }
