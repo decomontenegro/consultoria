@@ -236,11 +236,11 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      {/* Main Content - Fixed height to keep current question + suggestions + input always visible */}
+      <div className="max-w-4xl mx-auto px-6 py-4" style={{ height: 'calc(100vh - 100px)' }}>
         {/* Chat Messages */}
-        <div className="card-dark p-6 min-h-[400px] flex flex-col">
-          <div className="flex-1 overflow-y-auto space-y-4 mb-6">
+        <div className="card-dark p-6 h-full flex flex-col">
+          <div className="overflow-y-auto space-y-4 mb-4 flex-shrink" style={{ maxHeight: messages.length > 3 ? '30vh' : 'none' }}>
             {messages.map((msg, idx) => (
               <div
                 key={idx}

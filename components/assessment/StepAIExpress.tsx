@@ -595,11 +595,11 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="card-dark p-6 min-h-[500px] flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-4 mb-6">
+      {/* Main Content - Fixed height to keep current question + suggestions + input always visible */}
+      <div className="max-w-4xl mx-auto px-6 py-4" style={{ height: 'calc(100vh - 100px)' }}>
+        <div className="card-dark p-6 h-full flex flex-col">
+          {/* Messages - Limited height with scroll */}
+          <div className="overflow-y-auto space-y-4 mb-4 flex-shrink" style={{ maxHeight: messages.length > 3 ? '30vh' : 'none' }}>
             {/* Welcome message */}
             {messages.length === 0 && (
               <div className="text-center py-8">
