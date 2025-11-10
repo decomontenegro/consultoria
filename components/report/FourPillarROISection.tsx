@@ -2,13 +2,15 @@
 
 import { FourPillarROI } from '@/lib/types';
 import { formatPillarValue, getPillarColor } from '@/lib/calculators/four-pillar-roi-calculator';
+import { DataQualityBadge } from './DataQualityBadge';
 import { TrendingUp, DollarSign, Shield, Zap, Check } from 'lucide-react';
 
 interface FourPillarROISectionProps {
   fourPillarROI: FourPillarROI;
+  isMockData?: boolean;
 }
 
-export default function FourPillarROISection({ fourPillarROI }: FourPillarROISectionProps) {
+export default function FourPillarROISection({ fourPillarROI, isMockData = false }: FourPillarROISectionProps) {
   const pillars = [
     {
       id: 'efficiency',
@@ -57,9 +59,12 @@ export default function FourPillarROISection({ fourPillarROI }: FourPillarROISec
     <div className="card-professional p-10 mb-12">
       {/* Header */}
       <div className="mb-8">
-        <h2 className="text-3xl font-bold font-display text-tech-gray-100 mb-2">
-          4-Pillar ROI Framework
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-3xl font-bold font-display text-tech-gray-100">
+            4-Pillar ROI Framework
+          </h2>
+          <DataQualityBadge isRealData={!isMockData} variant="compact" showTooltip={true} />
+        </div>
         <p className="text-lg text-tech-gray-400">
           Comprehensive value analysis across strategic dimensions
         </p>

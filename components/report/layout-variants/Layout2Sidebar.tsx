@@ -218,7 +218,10 @@ export default function Layout2Sidebar({ report, benchmarkComparison }: Layout2S
         {/* 4-Pillar ROI */}
         {roi.fourPillarROI && (
           <section ref={(el) => (sectionRefs.current['four-pillar'] = el)} id="four-pillar">
-            <FourPillarROISection fourPillarROI={roi.fourPillarROI} />
+            <FourPillarROISection
+              fourPillarROI={roi.fourPillarROI}
+              isMockData={!hasRealDepartmentData(report.assessmentData)}
+            />
           </section>
         )}
 
@@ -231,7 +234,10 @@ export default function Layout2Sidebar({ report, benchmarkComparison }: Layout2S
 
         {/* Cost of Inaction */}
         <section ref={(el) => (sectionRefs.current['cost-inaction'] = el)} id="cost-inaction">
-          <CostOfInaction costOfInaction={report.costOfInaction} />
+          <CostOfInaction
+            costOfInaction={report.costOfInaction}
+            isMockData={!hasRealDepartmentData(report.assessmentData)}
+          />
         </section>
 
         {/* Risk Matrix */}

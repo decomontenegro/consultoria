@@ -1,5 +1,6 @@
 import { EnterpriseROI, DepartmentROI } from '@/lib/types';
 import { formatCurrency } from '@/lib/calculators/enterprise-roi-calculator';
+import { DataQualityBadge } from './DataQualityBadge';
 import {
   Code2,
   Headphones,
@@ -104,10 +105,13 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
   return (
     <div className="card-glow p-8 mb-8">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">
-          <span className="text-tech-gray-100">ROI </span>
-          <span className="text-gradient-neon">Enterprise-Wide</span>
-        </h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-2xl font-bold">
+            <span className="text-tech-gray-100">ROI </span>
+            <span className="text-gradient-neon">Enterprise-Wide</span>
+          </h2>
+          <DataQualityBadge isRealData={!isMockData} variant="compact" showTooltip={true} />
+        </div>
         <p className="text-tech-gray-400 text-sm">
           Impacto estimado da transformação de IA em toda a organização
         </p>

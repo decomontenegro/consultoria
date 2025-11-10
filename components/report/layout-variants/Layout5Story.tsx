@@ -285,7 +285,10 @@ export default function Layout5Story({ report, benchmarkComparison }: Layout5Sto
               </p>
             </div>
 
-            <CostOfInaction costOfInaction={report.costOfInaction} />
+            <CostOfInaction
+              costOfInaction={report.costOfInaction}
+              isMockData={!hasRealDepartmentData(report.assessmentData)}
+            />
             <RiskMatrixSection riskMatrix={report.riskMatrix} />
           </div>
         )}
@@ -302,7 +305,12 @@ export default function Layout5Story({ report, benchmarkComparison }: Layout5Sto
               </p>
             </div>
 
-            {roi.fourPillarROI && <FourPillarROISection fourPillarROI={roi.fourPillarROI} />}
+            {roi.fourPillarROI && (
+              <FourPillarROISection
+                fourPillarROI={roi.fourPillarROI}
+                isMockData={!hasRealDepartmentData(report.assessmentData)}
+              />
+            )}
             <PossibilitiesMatrix assessmentData={assessmentData} />
 
             {report.enterpriseROI && (

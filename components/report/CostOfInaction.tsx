@@ -1,5 +1,6 @@
 import { CostOfInactionAnalysis } from "@/lib/types";
 import { formatCurrency } from "@/lib/calculators/roi-calculator";
+import { DataQualityBadge } from './DataQualityBadge';
 import {
   TrendingDown,
   Clock,
@@ -12,6 +13,7 @@ import {
 
 interface Props {
   costOfInaction: CostOfInactionAnalysis;
+  isMockData?: boolean;
 }
 
 const iconMap: { [key: string]: any } = {
@@ -22,15 +24,18 @@ const iconMap: { [key: string]: any } = {
   'trending-down': TrendingDown,
 };
 
-export default function CostOfInaction({ costOfInaction }: Props) {
+export default function CostOfInaction({ costOfInaction, isMockData = false }: Props) {
   return (
     <div className="card-professional p-10 mb-12 border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-red-500/5">
       <div className="flex items-start justify-between mb-8">
-        <div>
-          <h2 className="text-3xl font-bold font-display text-tech-gray-100 mb-4 flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-amber-400" />
-            O Custo de NÃO Agir
-          </h2>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl font-bold font-display text-tech-gray-100 flex items-center gap-3">
+              <AlertTriangle className="w-8 h-8 text-amber-400" />
+              O Custo de NÃO Agir
+            </h2>
+            <DataQualityBadge isRealData={!isMockData} variant="compact" showTooltip={true} />
+          </div>
           <p className="text-lg text-tech-gray-300 leading-relaxed max-w-3xl">
             Enquanto você avalia se deve ou não investir em AI, seus competidores já estão ganhando vantagens.
             Veja quanto a inação está custando.

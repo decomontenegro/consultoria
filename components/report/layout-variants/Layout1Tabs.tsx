@@ -205,7 +205,10 @@ export default function Layout1Tabs({ report, benchmarkComparison }: Layout1Tabs
           <div className="space-y-8">
             {/* 4-Pillar ROI */}
             {roi.fourPillarROI && (
-              <FourPillarROISection fourPillarROI={roi.fourPillarROI} />
+              <FourPillarROISection
+                fourPillarROI={roi.fourPillarROI}
+                isMockData={!hasRealDepartmentData(report.assessmentData)}
+              />
             )}
 
             {/* Enterprise ROI */}
@@ -301,7 +304,10 @@ export default function Layout1Tabs({ report, benchmarkComparison }: Layout1Tabs
             </div>
 
             {/* Cost of Inaction */}
-            <CostOfInaction costOfInaction={report.costOfInaction} />
+            <CostOfInaction
+              costOfInaction={report.costOfInaction}
+              isMockData={!hasRealDepartmentData(report.assessmentData)}
+            />
           </div>
         )}
 

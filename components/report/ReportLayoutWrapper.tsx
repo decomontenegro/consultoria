@@ -154,7 +154,10 @@ export default function ReportLayoutWrapper({ report, benchmarkComparison }: Rep
 
       {/* 4-Pillar ROI */}
       {roi.fourPillarROI && (
-        <FourPillarROISection fourPillarROI={roi.fourPillarROI} />
+        <FourPillarROISection
+          fourPillarROI={roi.fourPillarROI}
+          isMockData={!hasRealDepartmentData(report.assessmentData)}
+        />
       )}
 
       {/* AI Insights */}
@@ -163,7 +166,10 @@ export default function ReportLayoutWrapper({ report, benchmarkComparison }: Rep
       )}
 
       {/* Cost of Inaction */}
-      <CostOfInaction costOfInaction={report.costOfInaction} />
+      <CostOfInaction
+        costOfInaction={report.costOfInaction}
+        isMockData={!hasRealDepartmentData(report.assessmentData)}
+      />
 
       {/* Risk Matrix */}
       <RiskMatrixSection riskMatrix={report.riskMatrix} />

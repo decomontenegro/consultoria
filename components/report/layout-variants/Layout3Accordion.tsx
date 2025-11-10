@@ -205,7 +205,10 @@ export default function Layout3Accordion({ report, benchmarkComparison }: Layout
           isExpanded={expandedSections.has('four-pillar')}
           onToggle={() => toggleSection('four-pillar')}
         >
-          <FourPillarROISection fourPillarROI={roi.fourPillarROI} />
+          <FourPillarROISection
+            fourPillarROI={roi.fourPillarROI}
+            isMockData={!hasRealDepartmentData(report.assessmentData)}
+          />
         </AccordionItem>
       )}
 
@@ -230,7 +233,10 @@ export default function Layout3Accordion({ report, benchmarkComparison }: Layout
         isExpanded={expandedSections.has('cost-inaction')}
         onToggle={() => toggleSection('cost-inaction')}
       >
-        <CostOfInaction costOfInaction={report.costOfInaction} />
+        <CostOfInaction
+          costOfInaction={report.costOfInaction}
+          isMockData={!hasRealDepartmentData(report.assessmentData)}
+        />
       </AccordionItem>
 
       {/* Risk Matrix */}

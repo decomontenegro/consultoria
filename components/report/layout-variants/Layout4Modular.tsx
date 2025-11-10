@@ -195,7 +195,10 @@ export default function Layout4Modular({ report, benchmarkComparison }: Layout4M
         {/* 4-Pillar ROI */}
         {roi.fourPillarROI && (
           <div className="lg:col-span-2">
-            <FourPillarROISection fourPillarROI={roi.fourPillarROI} />
+            <FourPillarROISection
+              fourPillarROI={roi.fourPillarROI}
+              isMockData={!hasRealDepartmentData(report.assessmentData)}
+            />
           </div>
         )}
 
@@ -208,7 +211,10 @@ export default function Layout4Modular({ report, benchmarkComparison }: Layout4M
 
         {/* Cost of Inaction */}
         <div className="lg:col-span-2">
-          <CostOfInaction costOfInaction={report.costOfInaction} />
+          <CostOfInaction
+            costOfInaction={report.costOfInaction}
+            isMockData={!hasRealDepartmentData(report.assessmentData)}
+          />
         </div>
 
         {/* Risk Matrix */}
