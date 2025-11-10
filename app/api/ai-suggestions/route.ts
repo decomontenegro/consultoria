@@ -14,7 +14,7 @@ const anthropic = new Anthropic({
 
 // Simple in-memory cache to avoid duplicate API calls
 const suggestionCache = new Map<string, any>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (reduced for faster iterations)
 
 interface SuggestionRequest {
   question: string;
@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
     // Call Claude to generate suggestions
     const systemPrompt = `You are a helpful AI assistant generating quick response suggestions for users filling out an AI readiness assessment.
 
-Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC response suggestions that:
-1. Directly answer the question
-2. Cover common scenarios (most common to least common)
-3. Are concise (2-8 words max)
-4. Include variety (different perspectives/options)
+Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC, and DIVERSE response suggestions that:
+1. Directly answer the question with DIFFERENT perspectives
+2. Cover the full spectrum of possible answers (yes/no/maybe, high/medium/low, specific examples)
+3. Are concise (2-10 words max)
+4. AVOID semantic repetition - each suggestion must be meaningfully different
 5. Use Brazilian Portuguese
 
 Output format (JSON only, no other text):
@@ -84,9 +84,11 @@ Output format (JSON only, no other text):
   ]
 }
 
-Important:
-- Keep text VERY short (2-8 words)
-- Cover different scenarios/levels
+CRITICAL RULES:
+- Each suggestion must be SEMANTICALLY DIFFERENT from others
+- For budget/money questions: include specific ranges (ex: "Entre R$ 50k-100k", "Menos de R$ 20k", "Acima de R$ 500k", "Ainda sem orçamento")
+- For yes/no questions: include nuanced options (ex: "Sim, totalmente", "Parcialmente", "Não, mas planejamos", "Não temos planos")
+- NEVER generate 3+ suggestions that mean basically the same thing
 - Order from most to least common
 - ONLY output valid JSON, nothing else`;
 
