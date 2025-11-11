@@ -407,14 +407,36 @@ export const EXPRESS_QUESTIONS: QuestionTemplate[] = [
 
 /**
  * Get next question based on persona and current data
+ * PHASE 2: Now includes contextual questions based on AI Router data
  */
 export function getNextExpressQuestion(
   persona: UserPersona,
   currentData: DeepPartial<AssessmentData>,
-  answeredQuestionIds: string[]
+  answeredQuestionIds: string[],
+  aiRouterPartialData?: any // NEW: AI Router context
 ): QuestionTemplate | null {
+  // ========== PHASE 2: Inject contextual questions dynamically ==========
+  let allQuestions = [...EXPRESS_QUESTIONS];
+
+  // If we have AI Router data, add contextual questions
+  if (aiRouterPartialData) {
+    try {
+      // Dynamically import contextual questions
+      const { getAllContextualQuestions } = require('./express-contextual-questions');
+      const contextualQuestions = getAllContextualQuestions(persona, aiRouterPartialData);
+
+      // Add contextual questions to the pool
+      allQuestions = [...allQuestions, ...contextualQuestions];
+
+      console.log(`✨ [Express Phase 2] Added ${contextualQuestions.length} contextual questions based on AI Router data`);
+    } catch (error) {
+      console.warn('⚠️ Could not load contextual questions:', error);
+    }
+  }
+  // ======================================================================
+
   // Filter questions for this persona that haven't been answered
-  const availableQuestions = EXPRESS_QUESTIONS.filter(q =>
+  const availableQuestions = allQuestions.filter(q =>
     q.personas.includes(persona) &&
     !answeredQuestionIds.includes(q.id)
   );

@@ -263,7 +263,8 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
   const loadNextQuestion = (alreadyAnswered: string[] = answeredQuestionIds) => {
     console.log('🔍 [Express] Loading next question. Already answered:', alreadyAnswered);
-    const nextQuestion = getNextExpressQuestion(persona, assessmentData, alreadyAnswered);
+    // ✨ PHASE 2: Pass AI Router partial data for contextual questions
+    const nextQuestion = getNextExpressQuestion(persona, assessmentData, alreadyAnswered, partialData);
 
     if (!nextQuestion) {
       console.log('❌ [Express] No more questions available');
