@@ -47,6 +47,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageCountRef = useRef<number>(0);
+  const activeMessageContentRef = useRef<string | null>(null); // ✅ Track active message to prevent race conditions
 
   const MIN_QUESTIONS_PER_SPECIALIST = 5;
   const recommendedSpecialist = data.persona ? getRecommendedSpecialist(data as AssessmentData) : undefined;
@@ -93,6 +94,10 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       // ✅ CLEAR old suggestions IMMEDIATELY to avoid showing wrong suggestions
       setSuggestions([]);
 
+      // ✅ Track current message to prevent race conditions
+      const messageContent = lastMessage.content;
+      activeMessageContentRef.current = messageContent;
+
       // Get previous answers for context
       const previousAnswers = messages
         .filter(m => m.role === 'user')
@@ -105,7 +110,14 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         context: `Multi-specialist consultation, current question ${questionCount + 1}`,
         previousAnswers,
         specialistType: currentSpecialist
-      }).then(setSuggestions);
+      }).then(newSuggestions => {
+        // ✅ Only update suggestions if this is still the active message
+        if (activeMessageContentRef.current === messageContent) {
+          setSuggestions(newSuggestions);
+        } else {
+          console.log('⚠️ [Consult] Ignoring stale suggestions for message:', messageContent.substring(0, 50));
+        }
+      });
     }
   }, [messages, currentSpecialist, phase, questionCount]);
 

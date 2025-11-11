@@ -152,6 +152,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastMessageCountRef = useRef<number>(0);
+  const activeQuestionIdRef = useRef<string | null>(null); // ✅ Track active question to prevent race conditions
 
   // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
   const scrollToBottom = useCallback(() => {
@@ -189,6 +190,10 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       // ✅ CLEAR old suggestions IMMEDIATELY to avoid showing wrong suggestions
       setSuggestions([]);
 
+      // ✅ Track current question ID to prevent race conditions
+      const questionId = currentQuestion.id;
+      activeQuestionIdRef.current = questionId;
+
       // Get previous answers for context
       const previousAnswers = messages
         .filter(m => m.role === 'user')
@@ -200,7 +205,14 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
         question: questionText,
         context: `Express Mode assessment, question ${answeredQuestionIds.length + 1} of ~7`,
         previousAnswers
-      }).then(setSuggestions);
+      }).then(newSuggestions => {
+        // ✅ Only update suggestions if this is still the active question
+        if (activeQuestionIdRef.current === questionId) {
+          setSuggestions(newSuggestions);
+        } else {
+          console.log('⚠️ [Express] Ignoring stale suggestions for:', questionId);
+        }
+      });
     } else {
       setSuggestions([]);
     }

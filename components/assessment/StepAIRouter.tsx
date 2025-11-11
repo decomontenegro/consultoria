@@ -32,6 +32,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageCountRef = useRef<number>(0);
+  const activeQuestionCountRef = useRef<number>(0); // ✅ Track question sequence to prevent race conditions
 
   // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
   const scrollToBottom = useCallback(() => {
@@ -64,10 +65,17 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
     setMessages([firstQuestion]);
 
     // Generate AI-powered suggestions for first question
+    const questionNum = 1;
+    activeQuestionCountRef.current = questionNum;
     generateAIPoweredSuggestions({
       question: firstQuestion.content,
       context: 'Starting AI Router conversation - extracting urgency and specific problem'
-    }).then(setSuggestions);
+    }).then(newSuggestions => {
+      // ✅ Only update suggestions if this is still the active question
+      if (activeQuestionCountRef.current === questionNum) {
+        setSuggestions(newSuggestions);
+      }
+    });
   }, []);
 
   // Note: Suggestions are now updated directly in sendMessageWithText
@@ -155,11 +163,22 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
           .filter(m => m.role === 'user')
           .map(m => m.content);
 
+        // ✅ Track question number to prevent race conditions
+        const questionNum = questionsAsked + 2; // +2 because we just incremented questionsAsked
+        activeQuestionCountRef.current = questionNum;
+
         generateAIPoweredSuggestions({
           question: data.nextQuestion,
           context: 'AI Router conversation',
           previousAnswers: previousAnswers.slice(-3) // Last 3 answers for context
-        }).then(setSuggestions);
+        }).then(newSuggestions => {
+          // ✅ Only update suggestions if this is still the active question
+          if (activeQuestionCountRef.current === questionNum) {
+            setSuggestions(newSuggestions);
+          } else {
+            console.log('⚠️ [Router] Ignoring stale suggestions for question:', questionNum);
+          }
+        });
       } else {
         console.error('[StepAIRouter] Unexpected API response structure:', data);
         throw new Error('Unexpected API response');
