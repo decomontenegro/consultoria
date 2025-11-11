@@ -58,7 +58,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
   useEffect(() => {
     const firstQuestion: ConversationMessage = {
       role: 'assistant',
-      content: 'Olá! Sou o CulturaBuilder AI. Para começar, me conte: qual o principal desafio de tecnologia ou inovação da sua empresa hoje?',
+      content: 'Olá! Sou o CulturaBuilder AI. Para começar: o que te trouxe aqui hoje? Tem algum problema específico que você precisa resolver nos próximos 3-6 meses?',
       timestamp: new Date()
     };
     setMessages([firstQuestion]);
@@ -66,7 +66,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
     // Generate AI-powered suggestions for first question
     generateAIPoweredSuggestions({
       question: firstQuestion.content,
-      context: 'Starting AI Router conversation'
+      context: 'Starting AI Router conversation - extracting urgency and specific problem'
     }).then(setSuggestions);
   }, []);
 
@@ -229,7 +229,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
                 AI Discovery
               </h2>
               <p className="text-xs text-tech-gray-400">
-                {showModeSelection ? 'Escolha seu modo' : `Pergunta ${questionsAsked + 1}/5`}
+                {showModeSelection ? 'Escolha seu modo' : `Pergunta ${questionsAsked + 1}/6`}
               </p>
             </div>
           </div>

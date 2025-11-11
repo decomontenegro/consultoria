@@ -18,33 +18,39 @@ import {
 } from '../types';
 
 /**
- * Initial discovery questions (max 5)
+ * Initial discovery questions (max 6)
+ * New approach: Extract OPERATIONAL CONTEXT, not just generic info
  */
 export const DISCOVERY_QUESTIONS = [
   {
-    id: 'main-challenge',
-    text: 'Olá! Sou o CulturaBuilder AI. Para começar, me conte: qual o principal desafio de tecnologia ou inovação da sua empresa hoje?',
-    extractors: ['pain_points', 'urgency_indicators', 'technical_language']
+    id: 'urgency-context',
+    text: 'Olá! Sou o CulturaBuilder AI. Para começar: o que te trouxe aqui hoje? Tem algum problema específico que você precisa resolver nos próximos 3-6 meses?',
+    extractors: ['urgency', 'specific_problem', 'timeline', 'pain_points']
   },
   {
-    id: 'user-role',
-    text: 'Entendi. Qual seu cargo ou função na empresa?',
-    extractors: ['persona', 'seniority_level']
+    id: 'role-responsibilities',
+    text: 'Entendi. Me conta: qual seu cargo e, mais importante, o que você é responsável por entregar na empresa?',
+    extractors: ['persona', 'responsibilities', 'kpis', 'seniority_level']
   },
   {
-    id: 'company-size',
-    text: 'Quantos funcionários tem sua empresa aproximadamente?',
-    extractors: ['company_size', 'company_stage']
+    id: 'team-structure',
+    text: 'Quantas pessoas tem na empresa no total? E especificamente, quantas pessoas no time de tecnologia/produto?',
+    extractors: ['company_size', 'tech_team_size', 'team_structure']
   },
   {
-    id: 'industry',
-    text: 'Em qual setor ou indústria sua empresa atua?',
-    extractors: ['industry', 'complexity_indicators']
+    id: 'current-process',
+    text: 'Me conte um pouco sobre como vocês trabalham hoje: desde uma ideia até estar em produção, demora quanto tempo tipicamente? Quais as principais dores desse processo?',
+    extractors: ['current_process', 'cycle_time', 'bottlenecks', 'maturity']
   },
   {
-    id: 'budget-timeline',
-    text: 'Você já tem orçamento definido para investir nessa área ou ainda está explorando possibilidades?',
-    extractors: ['budget', 'urgency', 'readiness']
+    id: 'measurable-impact',
+    text: 'Esse problema tem impactado a empresa de alguma forma mensurável? Por exemplo: perda de clientes, atraso em lançamentos, custos extras, oportunidades perdidas?',
+    extractors: ['measurable_impact', 'cost_of_inaction', 'urgency', 'business_impact']
+  },
+  {
+    id: 'budget-investment',
+    text: 'Tem orçamento aprovado ou estimativa para investir nessa área? Se tiver, pode compartilhar a faixa de investimento que considera viável?',
+    extractors: ['budget', 'budget_range', 'decision_stage', 'readiness']
   }
 ];
 
@@ -325,12 +331,133 @@ export function recommendMode(
 
 /**
  * Extract partial data from conversation
+ * Enhanced to extract operational context from new questions
  */
 export function extractPartialData(messages: ConversationMessage[]) {
   const userMessages = messages.filter(m => m.role === 'user');
   const fullText = userMessages.map(m => m.content).join(' ');
 
   const partialData: AIRouterResult['partialData'] = {};
+
+  // === NEW: Extract specific problem and urgency from Q1 ===
+  if (userMessages.length > 0) {
+    const q1Answer = userMessages[0].content.toLowerCase();
+
+    // Check for urgency indicators
+    const urgentKeywords = [
+      'urgente', 'rápido', 'já', 'agora', 'imediato', 'crítico',
+      'board', 'decisão', 'trimestre', '3 meses', 'q1', 'q2',
+      'perdendo', 'concorrente', 'atrasado'
+    ];
+
+    const hasUrgency = urgentKeywords.some(keyword => q1Answer.includes(keyword));
+
+    if (hasUrgency) {
+      partialData.urgencyIndicators = urgentKeywords.filter(k => q1Answer.includes(k));
+    }
+
+    // Extract specific problem mentioned
+    if (q1Answer.length > 10) {
+      partialData.specificProblem = userMessages[0].content.substring(0, 200);
+    }
+  }
+
+  // === NEW: Extract responsibilities from Q2 ===
+  if (userMessages.length > 1) {
+    const q2Answer = userMessages[1].content;
+
+    // Extract responsibilities/KPIs mentioned
+    const responsibilityKeywords = [
+      'responsável', 'entregar', 'kpi', 'meta', 'objetivo',
+      'velocidade', 'qualidade', 'custo', 'receita', 'crescimento',
+      'time-to-market', 'eficiência', 'produtividade'
+    ];
+
+    const responsibilities = responsibilityKeywords.filter(keyword =>
+      q2Answer.toLowerCase().includes(keyword)
+    );
+
+    if (responsibilities.length > 0) {
+      partialData.responsibilities = responsibilities;
+    }
+  }
+
+  // === NEW: Extract tech team size from Q3 ===
+  if (userMessages.length > 2) {
+    const q3Answer = userMessages[2].content;
+
+    // Try to extract tech team size
+    // Patterns: "5 devs", "30 em tech", "10 pessoas em tecnologia"
+    const techSizePatterns = [
+      /(\d+)\s*(?:dev|engenheiro|desenvolvedor|tech|tecnologia|produto|ti)/gi,
+      /tech.*?(\d+)/gi,
+      /(\d+).*?(?:tech|dev|engenheiro)/gi
+    ];
+
+    for (const pattern of techSizePatterns) {
+      const match = q3Answer.match(pattern);
+      if (match) {
+        const numbers = q3Answer.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          partialData.techTeamSize = parseInt(numbers[1]); // Second number is usually tech team
+        }
+        break;
+      }
+    }
+  }
+
+  // === NEW: Extract process and cycle time from Q4 ===
+  if (userMessages.length > 3) {
+    const q4Answer = userMessages[3].content.toLowerCase();
+
+    // Extract cycle time mentions
+    const timePatterns = [
+      /(\d+)\s*(?:semanas?|weeks?)/gi,
+      /(\d+)\s*(?:meses|months?)/gi,
+      /(\d+)\s*(?:dias?|days?)/gi
+    ];
+
+    for (const pattern of timePatterns) {
+      const match = q4Answer.match(pattern);
+      if (match) {
+        partialData.cycleTime = match[0];
+        break;
+      }
+    }
+
+    // Extract bottleneck mentions
+    const bottleneckKeywords = [
+      'review', 'teste', 'aprovação', 'deploy', 'manual',
+      'burocracia', 'lento', 'gargalo', 'demora', 'travado'
+    ];
+
+    const bottlenecks = bottleneckKeywords.filter(keyword => q4Answer.includes(keyword));
+    if (bottlenecks.length > 0) {
+      partialData.bottlenecks = bottlenecks;
+    }
+  }
+
+  // === NEW: Extract measurable impact from Q5 ===
+  if (userMessages.length > 4) {
+    const q5Answer = userMessages[4].content.toLowerCase();
+
+    // Check for measurable impact indicators
+    const impactKeywords = [
+      'perdemos', 'perda', 'atras', 'custo', 'cliente',
+      'oportunidade', 'competidor', 'mercado', 'receita'
+    ];
+
+    const impacts = impactKeywords.filter(keyword => q5Answer.includes(keyword));
+    if (impacts.length > 0) {
+      partialData.measurableImpact = impacts;
+    }
+
+    // Try to extract numbers (lost customers, delays, costs)
+    const numberMatches = q5Answer.match(/(\d+)\s*(?:clientes?|meses|dias|mil|k|reais)/gi);
+    if (numberMatches) {
+      partialData.impactNumbers = numberMatches;
+    }
+  }
 
   // Extract company size
   // First try to get from question #3 specifically (most reliable - "Quantos funcionários...")
@@ -425,6 +552,43 @@ export function extractPartialData(messages: ConversationMessage[]) {
         industry: industryAnswer.trim().toLowerCase()
       };
       console.log('✅ [AI Router] Using raw industry answer:', industryAnswer);
+    }
+  }
+
+  // === NEW: Extract budget from Q6 ===
+  if (userMessages.length > 5) {
+    const q6Answer = userMessages[5].content.toLowerCase();
+
+    // Extract budget range more accurately
+    const budgetPatterns = {
+      'Entre R$ 20k-50k': /20.*50|vinte.*cinquenta|20k.*50k/i,
+      'Entre R$ 50k-100k': /50.*100|cinquenta.*cem|50k.*100k/i,
+      'Entre R$ 100k-300k': /100.*300|cem.*trezentos|100k.*300k/i,
+      'Entre R$ 300k-500k': /300.*500|trezentos.*quinhentos|300k.*500k/i,
+      'Acima de R$ 500k': /500k|quinhentos mil|acima.*500|mais.*500/i,
+      'Ainda sem orçamento': /ainda.*não|sem orçamento|não.*definido|explorando|analisando/i,
+      'Preciso justificar': /justificar|apresentar|board|aprovação pendente/i
+    };
+
+    for (const [range, pattern] of Object.entries(budgetPatterns)) {
+      if (pattern.test(q6Answer)) {
+        partialData.budget = range;
+        console.log('✅ [AI Router] Extracted budget from Q6:', range);
+        break;
+      }
+    }
+
+    // Check if budget is approved vs still analyzing
+    const approvedKeywords = ['aprovado', 'approved', 'sim', 'tenho', 'temos'];
+    const exploringKeywords = ['ainda', 'explorando', 'analisando', 'não', 'sem'];
+
+    const hasApproved = approvedKeywords.some(k => q6Answer.includes(k));
+    const hasExploring = exploringKeywords.some(k => q6Answer.includes(k));
+
+    if (hasApproved && !hasExploring) {
+      partialData.budgetStatus = 'approved';
+    } else if (hasExploring) {
+      partialData.budgetStatus = 'exploring';
     }
   }
 

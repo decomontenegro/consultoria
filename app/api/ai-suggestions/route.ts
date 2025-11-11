@@ -69,11 +69,11 @@ export async function POST(request: NextRequest) {
     // Call Claude to generate suggestions
     const systemPrompt = `You are a helpful AI assistant generating quick response suggestions for users filling out an AI readiness assessment.
 
-Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC, and DIVERSE response suggestions that:
-1. Directly answer the question with DIFFERENT perspectives
-2. Cover the full spectrum of possible answers (yes/no/maybe, high/medium/low, specific examples)
-3. Are concise (2-10 words max)
-4. AVOID semantic repetition - each suggestion must be meaningfully different
+Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC, OPERATIONAL, and DIVERSE response suggestions that:
+1. Focus on OPERATIONAL DETAILS not generic answers
+2. Include SPECIFIC numbers, metrics, or concrete examples when relevant
+3. Cover the full spectrum of possibilities with MEANINGFUL differences
+4. Are concise but informative (3-15 words)
 5. Use Brazilian Portuguese
 
 Output format (JSON only, no other text):
@@ -84,13 +84,51 @@ Output format (JSON only, no other text):
   ]
 }
 
-CRITICAL RULES:
-- Each suggestion must be SEMANTICALLY DIFFERENT from others
-- For budget/money questions: include specific ranges (ex: "Entre R$ 50k-100k", "Menos de R$ 20k", "Acima de R$ 500k", "Ainda sem orçamento")
-- For yes/no questions: include nuanced options (ex: "Sim, totalmente", "Parcialmente", "Não, mas planejamos", "Não temos planos")
-- NEVER generate 3+ suggestions that mean basically the same thing
-- Order from most to least common
-- ONLY output valid JSON, nothing else`;
+CRITICAL RULES - OPERATIONAL SPECIFICITY:
+
+For URGENCY/PROBLEM questions:
+✅ GOOD: "Sim - decisão de Board em 30 dias"
+✅ GOOD: "Sim - perdendo clientes para concorrentes"
+✅ GOOD: "Não - explorando possibilidades"
+❌ BAD: "Sim", "Tenho problema", "É urgente"
+
+For ROLE/RESPONSIBILITY questions:
+✅ GOOD: "CTO - responsável por velocidade de entrega"
+✅ GOOD: "Head de Produto - aumentar conversão"
+✅ GOOD: "VP Engineering - reduzir bugs em produção"
+❌ BAD: "CTO", "Gerente", "Líder"
+
+For TEAM SIZE questions:
+✅ GOOD: "50 pessoas total, 8 em tech/produto"
+✅ GOOD: "20 funcionários, sem dev dedicado"
+✅ GOOD: "200 pessoas, 40 em engineering"
+❌ BAD: "50", "Pequeno", "Médio porte"
+
+For PROCESS questions:
+✅ GOOD: "Ideias levam 2-3 meses para produção"
+✅ GOOD: "Deploys semanais mas cheios de bugs"
+✅ GOOD: "Processo todo manual - sem CI/CD"
+❌ BAD: "Lento", "Tem problemas", "Não é bom"
+
+For IMPACT questions:
+✅ GOOD: "Sim - perdemos 3 clientes este trimestre"
+✅ GOOD: "Sim - lançamento atrasou 4 meses"
+✅ GOOD: "Sim - ~R$50k/mês em overtime"
+❌ BAD: "Sim", "Tem impacto", "É ruim"
+
+For BUDGET questions:
+✅ GOOD: "Entre R$ 50k-100k aprovado"
+✅ GOOD: "R$ 300k+ para transformação completa"
+✅ GOOD: "Ainda sem orçamento - preciso justificar"
+❌ BAD: "Sim", "Temos budget", "Alto"
+
+NEVER:
+- Generate 3+ suggestions that are semantically similar
+- Use vague/generic answers when specific is possible
+- Ignore numbers, metrics, or concrete details mentioned in context
+
+Order from most to least common for the target audience.
+ONLY output valid JSON, nothing else.`;
 
     const userPrompt = `Question from AI: "${question}"${contextPrompt}
 
