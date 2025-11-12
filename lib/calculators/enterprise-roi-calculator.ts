@@ -53,16 +53,17 @@ function calculateCustomerServiceROI(state: CustomerServiceState): DepartmentROI
   const threeYearNPV = calculateNPV(investment, annualSavings);
 
   return {
-    department: 'Customer Service',
+    department: 'Atendimento ao Cliente',
     investment,
     annualSavings,
     paybackMonths: Math.round(paybackMonths * 10) / 10,
     threeYearNPV,
     keyMetrics: [
-      `Redução de ${(bench.avgCostPerInteraction.reduction * 100).toFixed(0)}% no custo por interação`,
-      `First Response Time: ${bench.firstResponseTime.before}min → ${bench.firstResponseTime.after}min`,
-      `${(bench.automationRate.achievable * 100).toFixed(0)}% das interações automatizadas`,
-      `ROI de ${bench.yearOneROI.toFixed(1)}x no primeiro ano`,
+      `🤖 ${(bench.automationRate.achievable * 100).toFixed(0)}% dos tickets resolvidos por Ada AI / Intercom Fin`,
+      `⚡ Tempo de primeira resposta: ${bench.firstResponseTime.before}min → ${bench.firstResponseTime.after}min`,
+      `💰 Redução de ${(bench.avgCostPerInteraction.reduction * 100).toFixed(0)}% no custo por interação`,
+      `🎯 100% das calls auditadas com Observe.AI (vs ~5% manual)`,
+      `📞 Voicebot automatiza ligações com Kore.ai`,
     ],
     enabled: true,
   };
@@ -97,16 +98,17 @@ function calculateSalesROI(state: SalesState): DepartmentROI {
   const threeYearNPV = calculateNPV(investment, annualSavings);
 
   return {
-    department: 'Sales & CRM',
+    department: 'Vendas & CRM',
     investment,
     annualSavings,
     paybackMonths: Math.round(paybackMonths * 10) / 10,
     threeYearNPV,
     keyMetrics: [
-      `${(bench.revenueIncrease.percentage * 100).toFixed(0)}% aumento em revenue`,
-      `${(bench.productivityBoost.percentage * 100).toFixed(0)}% boost em produtividade de vendas`,
-      `${(bench.leadConversionImprovement.percentage * 100).toFixed(0)}% melhoria em conversão de leads`,
-      `${(bench.exceedGoalsLikelihood.percentage * 100).toFixed(0)}% mais chance de exceder metas`,
+      `🎯 Win rate +${(bench.productivityBoost.percentage * 100).toFixed(0)}% com insights do Gong AI`,
+      `📊 Forecast 95% acurado via Clari AI (vs 60% manual)`,
+      `✉️ +${(bench.leadConversionImprovement.percentage * 100).toFixed(0)}% conversão de leads com Outreach AI`,
+      `💬 100% das sales calls transcritas e analisadas`,
+      `🤖 SDR virtual (Conversica) qualifica leads 24/7`,
     ],
     enabled: true,
   };
@@ -148,10 +150,12 @@ function calculateMarketingROI(state: MarketingState): DepartmentROI {
     paybackMonths: Math.round(paybackMonths * 10) / 10,
     threeYearNPV,
     keyMetrics: [
-      `ROI de ${bench.roi.multiplier.toFixed(2)}x em 3 anos`,
-      `${(bench.qualifiedLeadsIncrease.percentage * 100).toFixed(0)}% aumento em leads qualificados`,
-      `${bench.timesSavedPerWeek.hours}h/semana economizadas por marketer`,
-      `Payback em ${bench.paybackMonths} meses`,
+      `✍️ Gerar 10 variações de copy em 2min com Jasper AI`,
+      `📱 1 artigo vira 50 posts sociais via Lately AI`,
+      `🎨 Designs prontos em <1min com Canva AI`,
+      `📹 Vídeos profissionais em horas via Runway AI`,
+      `📈 -50% CPA com otimização de ads por IA (Madgicx)`,
+      `🎯 ${(bench.qualifiedLeadsIncrease.percentage * 100).toFixed(0)}% mais leads qualificados`,
     ],
     enabled: true,
   };
@@ -191,16 +195,18 @@ function calculateMeetingIntelligenceROI(state: MeetingGovernanceState): Departm
   const threeYearNPV = calculateNPV(investment, annualSavings);
 
   return {
-    department: 'Meeting Intelligence & Governance',
+    department: 'Inteligência em Reuniões & Governança',
     investment,
     annualSavings,
     paybackMonths: Math.round(paybackMonths * 10) / 10,
     threeYearNPV,
     keyMetrics: [
-      `${bench.hoursPerWeek.hours}h/semana economizadas por executivo`,
-      `${(bench.productivityDuringUse.percentage * 100).toFixed(0)}% mais produtivo durante uso de AI`,
-      `${(bench.reviewTimeReduction.percentage * 100).toFixed(0)}% redução em review times`,
-      state.complianceAuditNeeds ? 'Audit trail automático para compliance' : 'Transparência em decisões',
+      `📝 Transcrever + sumarizar todas reuniões com Otter.ai`,
+      `🎯 Action items extraídos automaticamente`,
+      `⏱️ ${bench.hoursPerWeek.hours}h/semana economizadas em note-taking`,
+      `📊 Analytics de produtividade: identificar meetings inúteis`,
+      `🔍 Biblioteca pesquisável de todas as decisões`,
+      state.complianceAuditNeeds ? '✅ Audit trail automático para compliance' : '✅ Transparência total em decisões',
     ],
     enabled: true,
   };
@@ -233,16 +239,18 @@ function calculateOperationsROI(state: OperationsState): DepartmentROI {
   const threeYearNPV = calculateNPV(investment, annualSavings);
 
   return {
-    department: 'Operations',
+    department: 'Operações',
     investment,
     annualSavings,
     paybackMonths: Math.round(paybackMonths * 10) / 10,
     threeYearNPV,
     keyMetrics: [
-      `${(bench.laborCostSavings.average * 100).toFixed(0)}% redução em labor costs`,
-      `${(bench.productivityGains.min * 100).toFixed(0)}-${(bench.productivityGains.max * 100).toFixed(0)}% ganhos de produtividade`,
-      `${state.manualProcessesIdentified} processos automatizados`,
-      `${(bench.processSpeedImprovement.percentage * 100).toFixed(0)}% melhoria em velocidade de processos`,
+      `📄 Processar invoices com 95% acurácia via UiPath AI`,
+      `🤖 Eliminar data entry manual com Automation Anywhere`,
+      `⚡ Workflows criados falando em português via Zapier Central`,
+      `📋 OCR inteligente: extrair dados de qualquer documento`,
+      `${state.manualProcessesIdentified} processos manuais automatizados`,
+      `💰 ${(bench.laborCostSavings.average * 100).toFixed(0)}% redução em custos operacionais`,
     ],
     enabled: true,
   };
@@ -266,9 +274,12 @@ export function calculateEnterpriseROI(assessment: AssessmentData): EnterpriseRO
     paybackMonths: (engineeringInvestment / (engineeringSavings / 12)),
     threeYearNPV: calculateNPV(engineeringInvestment, engineeringSavings),
     keyMetrics: [
-      '25-35% produtividade dev increase',
-      '30% redução em bugs',
-      '15% faster time-to-market',
+      '🚀 55% mais código/hora com GitHub Copilot / Cursor AI',
+      '🔍 Code review em <2min via CodeRabbit AI (vs 2h manual)',
+      '🐛 +20% bugs detectados com SonarQube AI',
+      '⚡ 15% faster time-to-market com automação',
+      '🤖 Agentes autônomos (Devin) resolvem tickets completos',
+      '📚 Docs sempre atualizadas via Mintlify AI',
     ],
     enabled: assessment.aiScope?.engineering ?? true,
   };
