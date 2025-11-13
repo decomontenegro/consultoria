@@ -69,7 +69,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
     activeQuestionCountRef.current = questionNum;
     generateAIPoweredSuggestions({
       question: firstQuestion.content,
-      context: 'Starting AI Router conversation - extracting urgency and specific problem'
+      context: 'Iniciando conversa com AI Router - extraindo urgência e problema específico'
     }).then(newSuggestions => {
       // ✅ Only update suggestions if this is still the active question
       if (activeQuestionCountRef.current === questionNum) {
@@ -169,7 +169,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
 
         generateAIPoweredSuggestions({
           question: data.nextQuestion,
-          context: 'AI Router conversation',
+          context: 'Conversa com AI Router',
           previousAnswers: previousAnswers.slice(-3) // Last 3 answers for context
         }).then(newSuggestions => {
           // ✅ Only update suggestions if this is still the active question
@@ -217,7 +217,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
     switch (mode) {
       case 'express':
         return {
-          title: 'Express Mode',
+          title: 'Modo Express',
           duration: '5-7 min',
           description: 'Perguntas essenciais personalizadas. Relatório executivo e acionável.',
           icon: Zap,
@@ -225,9 +225,9 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
         };
       case 'deep':
         return {
-          title: 'Deep Dive',
+          title: 'Análise Profunda',
           duration: '15-20 min',
-          description: 'Análise completa com múltiplos especialistas (Engineering, Finance, Strategy).',
+          description: 'Análise completa com múltiplos especialistas (Engenharia, Finanças, Estratégia).',
           icon: Microscope,
           color: 'neon-purple'
         };
@@ -245,7 +245,7 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">
-                AI Discovery
+                Descoberta com IA
               </h2>
               <p className="text-xs text-tech-gray-400">
                 {showModeSelection ? 'Escolha seu modo' : `Pergunta ${questionsAsked + 1}/6`}

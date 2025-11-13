@@ -203,7 +203,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       // Generate AI-powered suggestions (async, will take ~2s)
       generateAIPoweredSuggestions({
         question: questionText,
-        context: `Express Mode assessment, question ${answeredQuestionIds.length + 1} of ~7`,
+        context: `Avaliação Modo Express, pergunta ${answeredQuestionIds.length + 1} de ~7`,
         previousAnswers
       }).then(newSuggestions => {
         // ✅ Only update suggestions if this is still the active question
@@ -578,10 +578,10 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-white">
-                  Express Mode
+                  Modo Express
                 </h2>
                 <p className="text-xs text-tech-gray-400">
-                  Assessment rápido em 5-7 min
+                  Avaliação rápida em 5-7 min
                 </p>
               </div>
             </div>
@@ -620,7 +620,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
                   <Zap className="w-8 h-8 text-neon-green" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Express Mode Activated
+                  Modo Express Ativado
                 </h3>
                 <p className="text-sm text-tech-gray-400">
                   Vou fazer 7-10 perguntas essenciais para gerar seu relatório rapidamente.
@@ -670,7 +670,7 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
                   <div className="flex items-center gap-3 text-neon-green">
                     <CheckCircle className="w-6 h-6" />
                     <div>
-                      <p className="font-semibold">Assessment Completo!</p>
+                      <p className="font-semibold">Avaliação Completa!</p>
                       <p className="text-sm text-tech-gray-400">Gerando seu relatório...</p>
                     </div>
                   </div>

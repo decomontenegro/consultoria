@@ -107,7 +107,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       // Generate AI-powered suggestions with specialist context (async, will take ~2s)
       generateAIPoweredSuggestions({
         question: lastMessage.content,
-        context: `Multi-specialist consultation, current question ${questionCount + 1}`,
+        context: `Consulta multi-especialista, pergunta ${questionCount + 1}`,
         previousAnswers,
         specialistType: currentSpecialist
       }).then(newSuggestions => {

@@ -168,7 +168,7 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
         </div>
         <div className="text-center md:text-left">
           <div className="text-xs text-tech-gray-400 uppercase tracking-wider mb-2">
-            Savings Anuais
+            Economia Anual
           </div>
           <div className="text-2xl md:text-3xl font-bold text-gradient-neon">
             {formatCurrency(enterpriseROI.totalEnterprise.totalAnnualSavings)}
@@ -219,7 +219,7 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
       <div>
         <h3 className="text-lg font-semibold text-tech-gray-100 mb-4 flex items-center gap-2">
           <span className="w-1 h-6 bg-neon-green rounded-full"></span>
-          Breakdown por Departamento
+          Detalhamento por Departamento
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {enabledDepartments.map((dept) => (
