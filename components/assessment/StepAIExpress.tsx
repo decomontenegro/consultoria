@@ -49,6 +49,21 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionTemplate | null>(null);
 
+  // 🧠 NEW: Follow-up orchestrator state
+  const [isFollowUpMode, setIsFollowUpMode] = useState(false);
+  const [currentFollowUp, setCurrentFollowUp] = useState<{
+    question: string;
+    parentQuestionId: string;
+    type: string;
+  } | null>(null);
+  const [followUpsAsked, setFollowUpsAsked] = useState(0);
+  const [conversationHistory, setConversationHistory] = useState<Array<{
+    questionId: string;
+    question: string;
+    answer: string;
+    metrics?: Record<string, any>;
+  }>>([]);
+
   // ✅ Pre-populate answered questions based on AI Router partial data
   const getInitialAnsweredQuestions = (): string[] => {
     const answered: string[] = [];
@@ -401,6 +416,110 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       };
 
       setAssessmentData(updatedData);
+
+      // 🧠 NEW: Add to conversation history for orchestrator
+      const questionId = isFollowUpMode ? `followup-${currentFollowUp?.parentQuestionId}` : currentQuestion.id;
+      const questionText = isFollowUpMode ? currentFollowUp!.question : currentQuestion.text;
+
+      const newHistoryEntry = {
+        questionId,
+        question: questionText,
+        answer: answerText,
+        metrics: extractedData
+      };
+
+      const updatedHistory = [...conversationHistory, newHistoryEntry];
+      setConversationHistory(updatedHistory);
+
+      // If this was a follow-up, mark it as done and go to next essential question
+      if (isFollowUpMode) {
+        console.log('✅ [Orchestrator] Follow-up answered, continuing to next question');
+        setIsFollowUpMode(false);
+        setCurrentFollowUp(null);
+
+        // Update answered questions list (for essential question that triggered follow-up)
+        const newAnsweredIds = [...answeredQuestionIds, currentFollowUp!.parentQuestionId];
+        setAnsweredQuestionIds(newAnsweredIds);
+
+        // Small delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Continue to next essential question
+        if (hasMinimumViableData(updatedData) && newAnsweredIds.length >= 6) {
+          handleComplete();
+        } else {
+          loadNextQuestion(newAnsweredIds);
+        }
+
+        setIsLoading(false);
+        return;
+      }
+
+      // 🧠 NEW: Check if should ask follow-up (only for essential questions)
+      // Skip follow-ups for last 2 questions to speed up completion
+      const shouldCheckFollowUp = followUpsAsked < 3 && answeredQuestionIds.length < 6;
+
+      if (shouldCheckFollowUp) {
+        console.log('🧠 [Orchestrator] Checking if follow-up needed...');
+
+        try {
+          const followUpResponse = await fetch('/api/consultant-followup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              questionId: currentQuestion.id,
+              question: currentQuestion.text,
+              answer: answerText,
+              persona,
+              conversationHistory: updatedHistory,
+              maxFollowUps: 3
+            })
+          });
+
+          if (followUpResponse.ok) {
+            const followUpData = await followUpResponse.json();
+
+            console.log('🧠 [Orchestrator] Response:', {
+              shouldAsk: followUpData.shouldAskFollowUp,
+              type: followUpData.followUp?.type,
+              cost: followUpData.cost
+            });
+
+            if (followUpData.shouldAskFollowUp && followUpData.followUp) {
+              // Show follow-up question
+              await new Promise(resolve => setTimeout(resolve, 800));
+
+              const followUpMsg: ConversationMessage = {
+                role: 'assistant',
+                content: followUpData.followUp.question,
+                timestamp: new Date()
+              };
+
+              setMessages(prev => [...prev, followUpMsg]);
+
+              // Enter follow-up mode
+              setIsFollowUpMode(true);
+              setCurrentFollowUp({
+                question: followUpData.followUp.question,
+                parentQuestionId: currentQuestion.id,
+                type: followUpData.followUp.type
+              });
+              setFollowUpsAsked(prev => prev + 1);
+
+              // Keep current question active (will be text input for follow-up)
+              setCurrentAnswer('');
+              setInput('');
+
+              setIsLoading(false);
+              setTimeout(() => focusInput(), 100);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('❌ [Orchestrator] Error checking follow-up:', error);
+          // Continue normally if orchestrator fails
+        }
+      }
 
       // Update answered questions list
       const newAnsweredIds = [...answeredQuestionIds, currentQuestion.id];
