@@ -16,43 +16,18 @@ import {
   AIRouterResult,
   ConversationMessage
 } from '../types';
+import {
+  ENHANCED_DISCOVERY_QUESTIONS,
+  getQuestionForPersona,
+  shouldAskFollowUp,
+  extractMetricsFromAnswer
+} from './enhanced-discovery-questions';
 
 /**
  * Initial discovery questions (max 6)
- * New approach: Extract OPERATIONAL CONTEXT, not just generic info
+ * NOW USING: Enhanced PhD-style operational questions
  */
-export const DISCOVERY_QUESTIONS = [
-  {
-    id: 'urgency-context',
-    text: 'Olá! Sou o CulturaBuilder AI. Para começar: o que te trouxe aqui hoje? Tem algum problema específico que você precisa resolver nos próximos 3-6 meses?',
-    extractors: ['urgency', 'specific_problem', 'timeline', 'pain_points']
-  },
-  {
-    id: 'role-responsibilities',
-    text: 'Entendi. Me conta: qual seu cargo e, mais importante, o que você é responsável por entregar na empresa?',
-    extractors: ['persona', 'responsibilities', 'kpis', 'seniority_level']
-  },
-  {
-    id: 'team-structure',
-    text: 'Quantas pessoas tem na empresa no total? E especificamente, quantas pessoas no time de tecnologia/produto?',
-    extractors: ['company_size', 'tech_team_size', 'team_structure']
-  },
-  {
-    id: 'current-process',
-    text: 'Me conte um pouco sobre como vocês trabalham hoje: desde uma ideia até estar em produção, demora quanto tempo tipicamente? Quais as principais dores desse processo?',
-    extractors: ['current_process', 'cycle_time', 'bottlenecks', 'maturity']
-  },
-  {
-    id: 'measurable-impact',
-    text: 'Esse problema tem impactado a empresa de alguma forma mensurável? Por exemplo: perda de clientes, atraso em lançamentos, custos extras, oportunidades perdidas?',
-    extractors: ['measurable_impact', 'cost_of_inaction', 'urgency', 'business_impact']
-  },
-  {
-    id: 'budget-investment',
-    text: 'Tem orçamento aprovado ou estimativa para investir nessa área? Se tiver, pode compartilhar a faixa de investimento que considera viável?',
-    extractors: ['budget', 'budget_range', 'decision_stage', 'readiness']
-  }
-];
+export const DISCOVERY_QUESTIONS = ENHANCED_DISCOVERY_QUESTIONS;
 
 /**
  * Analyze conversation and detect persona
@@ -331,7 +306,7 @@ export function recommendMode(
 
 /**
  * Extract partial data from conversation
- * Enhanced to extract operational context from new questions
+ * NOW ENHANCED: Uses PhD-style metrics extraction
  */
 export function extractPartialData(messages: ConversationMessage[]) {
   const userMessages = messages.filter(m => m.role === 'user');
@@ -339,135 +314,141 @@ export function extractPartialData(messages: ConversationMessage[]) {
 
   const partialData: AIRouterResult['partialData'] = {};
 
-  // === NEW: Extract specific problem and urgency from Q1 ===
-  if (userMessages.length > 0) {
-    const q1Answer = userMessages[0].content.toLowerCase();
+  // === Q1: Operational Baseline (cycle time, deploy frequency) ===
+  if (userMessages.length > 0 && DISCOVERY_QUESTIONS.length > 0) {
+    const q1Answer = userMessages[0].content;
+    const q1 = DISCOVERY_QUESTIONS[0];
 
-    // Check for urgency indicators
-    const urgentKeywords = [
-      'urgente', 'rápido', 'já', 'agora', 'imediato', 'crítico',
-      'board', 'decisão', 'trimestre', '3 meses', 'q1', 'q2',
-      'perdendo', 'concorrente', 'atrasado'
-    ];
+    const q1Metrics = extractMetricsFromAnswer(q1Answer, q1.extractors);
 
-    const hasUrgency = urgentKeywords.some(keyword => q1Answer.includes(keyword));
-
-    if (hasUrgency) {
-      partialData.urgencyIndicators = urgentKeywords.filter(k => q1Answer.includes(k));
+    // Store cycle time
+    if (q1Metrics.cycle_time_days) {
+      partialData.cycleTime = `${q1Metrics.cycle_time_days} dias`;
     }
 
-    // Extract specific problem mentioned
-    if (q1Answer.length > 10) {
-      partialData.specificProblem = userMessages[0].content.substring(0, 200);
+    // Store deploy frequency
+    if (q1Metrics.deploy_frequency) {
+      partialData.deployFrequency = q1Metrics.deploy_frequency;
     }
+
+    console.log('[AI Router] Q1 metrics extracted:', q1Metrics);
   }
 
-  // === NEW: Extract responsibilities from Q2 ===
-  if (userMessages.length > 1) {
+  // === Q2: Quantified Pain (bugs, rework hours, incidents) ===
+  if (userMessages.length > 1 && DISCOVERY_QUESTIONS.length > 1) {
     const q2Answer = userMessages[1].content;
+    const q2 = DISCOVERY_QUESTIONS[1];
 
-    // Extract responsibilities/KPIs mentioned
-    const responsibilityKeywords = [
-      'responsável', 'entregar', 'kpi', 'meta', 'objetivo',
-      'velocidade', 'qualidade', 'custo', 'receita', 'crescimento',
-      'time-to-market', 'eficiência', 'produtividade'
+    const q2Metrics = extractMetricsFromAnswer(q2Answer, q2.extractors);
+
+    // Store pain metrics
+    if (q2Metrics.bugs_per_month) {
+      partialData.bugsPerMonth = q2Metrics.bugs_per_month;
+    }
+
+    if (q2Metrics.rework_hours_per_week) {
+      partialData.reworkHoursPerWeek = q2Metrics.rework_hours_per_week;
+    }
+
+    if (q2Metrics.time_wasted_percentage) {
+      partialData.timeWastedPercentage = q2Metrics.time_wasted_percentage;
+    }
+
+    console.log('[AI Router] Q2 metrics extracted:', q2Metrics);
+  }
+
+  // === Q3: Cost of Inaction (monthly cost, revenue at risk, customers lost) ===
+  if (userMessages.length > 2 && DISCOVERY_QUESTIONS.length > 2) {
+    const q3Answer = userMessages[2].content;
+    const q3 = DISCOVERY_QUESTIONS[2];
+
+    const q3Metrics = extractMetricsFromAnswer(q3Answer, q3.extractors);
+
+    // Store cost metrics
+    if (q3Metrics.monthly_cost_brl) {
+      partialData.monthlyCost = q3Metrics.monthly_cost_brl;
+    }
+
+    if (q3Metrics.customers_lost) {
+      partialData.customersLost = q3Metrics.customers_lost;
+    }
+
+    console.log('[AI Router] Q3 metrics extracted:', q3Metrics);
+  }
+
+  // === Q4: Team Context (company size, tech team, AI maturity) ===
+  if (userMessages.length > 3 && DISCOVERY_QUESTIONS.length > 3) {
+    const q4Answer = userMessages[3].content;
+    const q4 = DISCOVERY_QUESTIONS[3];
+
+    const q4Metrics = extractMetricsFromAnswer(q4Answer, q4.extractors);
+
+    // Store team metrics
+    if (q4Metrics.tech_team_size) {
+      partialData.techTeamSize = q4Metrics.tech_team_size;
+    }
+
+    console.log('[AI Router] Q4 metrics extracted:', q4Metrics);
+  }
+
+  // === Q5: Urgency Pressure (timeline, external pressure) ===
+  if (userMessages.length > 4 && DISCOVERY_QUESTIONS.length > 4) {
+    const q5Answer = userMessages[4].content;
+
+    // Extract urgency indicators
+    const urgentKeywords = [
+      'urgente', 'crítico', 'board', 'competidor', 'já',
+      'imediato', '3 meses', 'q1', 'q2', 'deadline'
     ];
 
-    const responsibilities = responsibilityKeywords.filter(keyword =>
-      q2Answer.toLowerCase().includes(keyword)
+    const urgencyIndicators = urgentKeywords.filter(k =>
+      q5Answer.toLowerCase().includes(k)
     );
 
-    if (responsibilities.length > 0) {
-      partialData.responsibilities = responsibilities;
+    if (urgencyIndicators.length > 0) {
+      partialData.urgencyIndicators = urgencyIndicators;
     }
+
+    console.log('[AI Router] Q5 urgency extracted:', urgencyIndicators);
   }
 
-  // === NEW: Extract tech team size from Q3 ===
-  if (userMessages.length > 2) {
-    const q3Answer = userMessages[2].content;
+  // === Q6: Budget Authority (budget range, decision authority) ===
+  if (userMessages.length > 5 && DISCOVERY_QUESTIONS.length > 5) {
+    const q6Answer = userMessages[5].content;
+    const q6 = DISCOVERY_QUESTIONS[5];
 
-    // Try to extract tech team size
-    // Patterns: "5 devs", "30 em tech", "10 pessoas em tecnologia"
-    const techSizePatterns = [
-      /(\d+)\s*(?:dev|engenheiro|desenvolvedor|tech|tecnologia|produto|ti)/gi,
-      /tech.*?(\d+)/gi,
-      /(\d+).*?(?:tech|dev|engenheiro)/gi
-    ];
+    const q6Metrics = extractMetricsFromAnswer(q6Answer, q6.extractors);
 
-    for (const pattern of techSizePatterns) {
-      const match = q3Answer.match(pattern);
-      if (match) {
-        const numbers = q3Answer.match(/\d+/g);
-        if (numbers && numbers.length >= 2) {
-          partialData.techTeamSize = parseInt(numbers[1]); // Second number is usually tech team
-        }
-        break;
-      }
+    // Store budget metrics
+    if (q6Metrics.budget_range) {
+      partialData.budget = q6Metrics.budget_range;
     }
+
+    // Check if budget is approved vs still analyzing
+    const approvedKeywords = ['aprovado', 'approved', 'sim', 'tenho', 'temos'];
+    const exploringKeywords = ['ainda', 'explorando', 'analisando', 'não', 'sem'];
+
+    const hasApproved = approvedKeywords.some(k => q6Answer.toLowerCase().includes(k));
+    const hasExploring = exploringKeywords.some(k => q6Answer.toLowerCase().includes(k));
+
+    if (hasApproved && !hasExploring) {
+      partialData.budgetStatus = 'approved';
+    } else if (hasExploring) {
+      partialData.budgetStatus = 'exploring';
+    }
+
+    console.log('[AI Router] Q6 budget extracted:', q6Metrics);
   }
 
-  // === NEW: Extract process and cycle time from Q4 ===
-  if (userMessages.length > 3) {
-    const q4Answer = userMessages[3].content.toLowerCase();
-
-    // Extract cycle time mentions
-    const timePatterns = [
-      /(\d+)\s*(?:semanas?|weeks?)/gi,
-      /(\d+)\s*(?:meses|months?)/gi,
-      /(\d+)\s*(?:dias?|days?)/gi
-    ];
-
-    for (const pattern of timePatterns) {
-      const match = q4Answer.match(pattern);
-      if (match) {
-        partialData.cycleTime = match[0];
-        break;
-      }
-    }
-
-    // Extract bottleneck mentions
-    const bottleneckKeywords = [
-      'review', 'teste', 'aprovação', 'deploy', 'manual',
-      'burocracia', 'lento', 'gargalo', 'demora', 'travado'
-    ];
-
-    const bottlenecks = bottleneckKeywords.filter(keyword => q4Answer.includes(keyword));
-    if (bottlenecks.length > 0) {
-      partialData.bottlenecks = bottlenecks;
-    }
-  }
-
-  // === NEW: Extract measurable impact from Q5 ===
-  if (userMessages.length > 4) {
-    const q5Answer = userMessages[4].content.toLowerCase();
-
-    // Check for measurable impact indicators
-    const impactKeywords = [
-      'perdemos', 'perda', 'atras', 'custo', 'cliente',
-      'oportunidade', 'competidor', 'mercado', 'receita'
-    ];
-
-    const impacts = impactKeywords.filter(keyword => q5Answer.includes(keyword));
-    if (impacts.length > 0) {
-      partialData.measurableImpact = impacts;
-    }
-
-    // Try to extract numbers (lost customers, delays, costs)
-    const numberMatches = q5Answer.match(/(\d+)\s*(?:clientes?|meses|dias|mil|k|reais)/gi);
-    if (numberMatches) {
-      partialData.impactNumbers = numberMatches;
-    }
-  }
-
-  // Extract company size
-  // First try to get from question #3 specifically (most reliable - "Quantos funcionários...")
-  const companySizeQuestionIndex = 2; // 0-indexed, question #3 is "Quantos funcionários..."
+  // Extract company size from Q4 (Team Context)
+  // Q4 now asks: "quantas pessoas tem no total na empresa?"
+  const companySizeQuestionIndex = 3; // 0-indexed, Q4 is Team Context
   let companySizeExtracted = false;
 
-  if (userMessages.length > companySizeQuestionIndex) {
+  if (userMessages.length > companySizeQuestionIndex && DISCOVERY_QUESTIONS.length > companySizeQuestionIndex) {
     const sizeAnswer = userMessages[companySizeQuestionIndex].content;
 
-    // Try to extract number from answer
+    // Try to extract employee count from answer
     const numberMatch = sizeAnswer.match(/(\d+)/);
     if (numberMatch) {
       const employeeCount = parseInt(numberMatch[1]);
@@ -486,15 +467,14 @@ export function extractPartialData(messages: ConversationMessage[]) {
         size: companySize
       };
       companySizeExtracted = true;
-      console.log('✅ [AI Router] Extracted company size from question #3:', {
-        answer: sizeAnswer,
+      console.log('✅ [AI Router] Extracted company size from Q4:', {
         employeeCount,
         mappedSize: companySize
       });
     }
   }
 
-  // Fallback: Try pattern matching if not extracted from question #3
+  // Fallback: Try pattern matching if not extracted from Q4
   if (!companySizeExtracted) {
     const sizePatterns = {
       startup: /startup|pequen[ao]|10-50|menos de 50/i,
@@ -514,85 +494,31 @@ export function extractPartialData(messages: ConversationMessage[]) {
     }
   }
 
-  // Extract industry
-  // First try to get from question #4 specifically (most reliable)
-  const industryQuestionIndex = 3; // 0-indexed, question #4 is "Em qual setor..."
-  if (userMessages.length > industryQuestionIndex) {
-    const industryAnswer = userMessages[industryQuestionIndex].content;
+  // Extract industry from Q4 (Team Context - board-executive variant asks for sector)
+  // NOTE: Enhanced Q4 doesn't explicitly ask for industry in base text, so we use fallback patterns
+  const industryPatterns = {
+    'fintech': /fintech|pagamento|banco|financ|criptomoeda/i,
+    'saas': /saas|software.*serviço|b2b/i,
+    'e-commerce': /e-commerce|marketplace|loja.*online|varejo.*online/i,
+    'healthtech': /health|saúde|hospital|médic|telemedicina/i,
+    'edtech': /edtech|educação|ensino|escola|curso/i,
+    'logistics': /logística|transporte|entrega|supply chain/i,
+    'retail': /varejo|retail|loja/i,
+    'agritech': /agro|agrícola|fazenda/i
+  };
 
-    // Try to match common industries
-    const industryPatterns = {
-      'fintech': /fintech|pagamento|banco|financ|criptomoeda/i,
-      'saas': /saas|software.*serviço|b2b/i,
-      'e-commerce': /e-commerce|marketplace|loja.*online|varejo.*online/i,
-      'healthtech': /health|saúde|hospital|médic|telemedicina/i,
-      'edtech': /edtech|educação|ensino|escola|curso/i,
-      'logistics': /logística|transporte|entrega|supply chain/i,
-      'retail': /varejo|retail|loja/i,
-      'agritech': /agro|agrícola|fazenda/i
-    };
-
-    let matched = false;
-    for (const [industry, pattern] of Object.entries(industryPatterns)) {
-      if (pattern.test(industryAnswer)) {
-        partialData.companyInfo = {
-          ...partialData.companyInfo,
-          industry
-        };
-        matched = true;
-        console.log('✅ [AI Router] Extracted industry from question #4:', industry);
-        break;
-      }
-    }
-
-    // If no pattern matched, use the raw answer (for other industries)
-    if (!matched && industryAnswer.trim()) {
+  for (const [industry, pattern] of Object.entries(industryPatterns)) {
+    if (pattern.test(fullText)) {
       partialData.companyInfo = {
         ...partialData.companyInfo,
-        industry: industryAnswer.trim().toLowerCase()
+        industry
       };
-      console.log('✅ [AI Router] Using raw industry answer:', industryAnswer);
+      console.log('✅ [AI Router] Extracted industry from patterns:', industry);
+      break;
     }
   }
 
-  // === NEW: Extract budget from Q6 ===
-  if (userMessages.length > 5) {
-    const q6Answer = userMessages[5].content.toLowerCase();
-
-    // Extract budget range more accurately
-    const budgetPatterns = {
-      'Entre R$ 20k-50k': /20.*50|vinte.*cinquenta|20k.*50k/i,
-      'Entre R$ 50k-100k': /50.*100|cinquenta.*cem|50k.*100k/i,
-      'Entre R$ 100k-300k': /100.*300|cem.*trezentos|100k.*300k/i,
-      'Entre R$ 300k-500k': /300.*500|trezentos.*quinhentos|300k.*500k/i,
-      'Acima de R$ 500k': /500k|quinhentos mil|acima.*500|mais.*500/i,
-      'Ainda sem orçamento': /ainda.*não|sem orçamento|não.*definido|explorando|analisando/i,
-      'Preciso justificar': /justificar|apresentar|board|aprovação pendente/i
-    };
-
-    for (const [range, pattern] of Object.entries(budgetPatterns)) {
-      if (pattern.test(q6Answer)) {
-        partialData.budget = range;
-        console.log('✅ [AI Router] Extracted budget from Q6:', range);
-        break;
-      }
-    }
-
-    // Check if budget is approved vs still analyzing
-    const approvedKeywords = ['aprovado', 'approved', 'sim', 'tenho', 'temos'];
-    const exploringKeywords = ['ainda', 'explorando', 'analisando', 'não', 'sem'];
-
-    const hasApproved = approvedKeywords.some(k => q6Answer.includes(k));
-    const hasExploring = exploringKeywords.some(k => q6Answer.includes(k));
-
-    if (hasApproved && !hasExploring) {
-      partialData.budgetStatus = 'approved';
-    } else if (hasExploring) {
-      partialData.budgetStatus = 'exploring';
-    }
-  }
-
-  // Extract pain points
+  // Extract pain points from full conversation (fallback/enhancement)
   const painKeywords = [
     'lento', 'slow', 'bugs', 'qualidade', 'quality', 'atraso', 'delay',
     'competidor', 'competitor', 'custo', 'cost', 'eficiência', 'efficiency'
@@ -604,21 +530,6 @@ export function extractPartialData(messages: ConversationMessage[]) {
 
   if (painPoints.length > 0) {
     partialData.painPoints = painPoints;
-  }
-
-  // Extract budget indicators
-  const budgetPatterns = {
-    'Menor que R$50k': /50k|cinquenta mil|baixo orçamento/i,
-    'R$100k-500k': /100k|500k|cem mil|quinhentos/i,
-    'R$500k-1M': /500k|1m|um milhão/i,
-    'Maior que R$1M': /milhão|milhões|large budget/i
-  };
-
-  for (const [range, pattern] of Object.entries(budgetPatterns)) {
-    if (pattern.test(fullText)) {
-      partialData.budget = range;
-      break;
-    }
   }
 
   return partialData;
@@ -660,16 +571,34 @@ export function analyzeConversation(messages: ConversationMessage[]): AIRouterRe
 
 /**
  * Get next question based on conversation so far
+ * NOW ENHANCED: Adapts question by persona + supports follow-ups
  */
 export function getNextQuestion(
   messages: ConversationMessage[],
-  questionsAsked: number
+  questionsAsked: number,
+  detectedPersona?: UserPersona | null
 ): string | null {
   if (questionsAsked >= DISCOVERY_QUESTIONS.length) {
     return null; // All questions asked
   }
 
-  return DISCOVERY_QUESTIONS[questionsAsked].text;
+  // Check if last answer triggered a follow-up
+  if (messages.length > 0 && questionsAsked > 0) {
+    const lastUserMessage = messages[messages.length - 1];
+    if (lastUserMessage.role === 'user') {
+      const lastQuestion = DISCOVERY_QUESTIONS[questionsAsked - 1];
+      const followUp = shouldAskFollowUp(lastQuestion, lastUserMessage.content);
+
+      if (followUp) {
+        console.log(`[AI Router] Triggered follow-up for ${lastQuestion.id}`);
+        return followUp;
+      }
+    }
+  }
+
+  // Get next question with persona variant
+  const question = DISCOVERY_QUESTIONS[questionsAsked];
+  return getQuestionForPersona(question, detectedPersona || null);
 }
 
 /**

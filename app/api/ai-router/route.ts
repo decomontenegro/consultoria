@@ -37,8 +37,11 @@ export async function POST(req: NextRequest) {
     const readyToRoute = canRoute(messages);
 
     if (!readyToRoute) {
-      // Not enough info yet, return next question
-      const nextQuestion = getNextQuestion(messages, questionsAsked);
+      // Detect persona early (even if not confident yet) to adapt questions
+      const result: AIRouterResult = analyzeConversation(messages);
+
+      // Get next question with persona adaptation
+      const nextQuestion = getNextQuestion(messages, questionsAsked, result.detectedPersona);
 
       return NextResponse.json({
         ready: false,
