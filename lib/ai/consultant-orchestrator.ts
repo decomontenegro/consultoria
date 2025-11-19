@@ -169,7 +169,7 @@ Analyze this answer deeply and return a JSON object with:
   console.log('[Orchestrator] Analyzing response via Claude...');
 
   const message = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-haiku-4-5-20251001', // Haiku 4.5: adequate for follow-up analysis
     max_tokens: 1024,
     temperature: 0.3, // Lower temp for more consistent analysis
     messages: [
@@ -280,7 +280,7 @@ Generate ONE powerful follow-up question that:
   console.log('[Orchestrator] Generating follow-up via Claude...');
 
   const message = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-haiku-4-5-20251001', // Haiku 4.5: good for generating questions
     max_tokens: 512,
     temperature: 0.7, // Slightly higher for more natural questions
     messages: [

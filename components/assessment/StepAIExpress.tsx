@@ -376,8 +376,31 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
   const submitAnswer = async (answer: string | string[]) => {
     if (isLoading || !currentQuestion) return;
 
-    // Validate answer
-    const answerText = Array.isArray(answer) ? answer.join(', ') : answer;
+    // Validate answer - map values to labels for display
+    let answerText: string;
+    if (Array.isArray(answer)) {
+      // For multi-choice, map values to labels
+      if (currentQuestion.options && currentQuestion.options.length > 0) {
+        const labels = answer
+          .map(value => {
+            const option = currentQuestion.options?.find(opt => opt.value === value);
+            return option?.label || value;
+          })
+          .filter(Boolean);
+        answerText = labels.join(', ');
+      } else {
+        answerText = answer.join(', ');
+      }
+    } else {
+      // For single-choice, map value to label
+      if (currentQuestion.options && currentQuestion.options.length > 0) {
+        const option = currentQuestion.options.find(opt => opt.value === answer);
+        answerText = option?.label || answer;
+      } else {
+        answerText = answer;
+      }
+    }
+
     if (!answerText.trim()) return;
 
     const userMessage: ConversationMessage = {
@@ -457,7 +480,8 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
       // 🧠 NEW: Check if should ask follow-up (only for essential questions)
       // Skip follow-ups for last 2 questions to speed up completion
-      const shouldCheckFollowUp = followUpsAsked < 3 && answeredQuestionIds.length < 6;
+      // DISABLED: Follow-ups causing repetitive questions - will be improved in Sprint 3
+      const shouldCheckFollowUp = false; // followUpsAsked < 3 && answeredQuestionIds.length < 6;
 
       if (shouldCheckFollowUp) {
         console.log('🧠 [Orchestrator] Checking if follow-up needed...');
@@ -655,7 +679,59 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
       console.log('✅ Complete data prepared:', completeData);
 
-      const report = generateReport(completeData);
+      // 🧠 FASE 3: Generate deep insights (conditional)
+      let deepInsights = null;
+      try {
+        console.log('🧠 [Deep Insights] Checking if should generate...');
+
+        const insightsResponse = await fetch('/api/insights/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assessmentData: completeData,
+            conversationHistory: conversationHistory,
+            forceGenerate: true // FASE 1.2: Always generate for personalization
+          })
+        });
+
+        if (insightsResponse.ok) {
+          const insightsData = await insightsResponse.json();
+
+          if (insightsData.generated && insightsData.insights) {
+            console.log('✅ [Deep Insights] Generated successfully');
+            console.log('   - Patterns:', insightsData.insights.patterns?.length || 0);
+            console.log('   - Recommendations:', insightsData.insights.recommendations?.length || 0);
+            console.log('   - Cost: R$', insightsData.cost);
+
+            deepInsights = insightsData.insights;
+          } else {
+            console.log('⏭️  [Deep Insights] Skipped:', insightsData.reason);
+          }
+        }
+      } catch (error) {
+        console.error('❌ [Deep Insights] Error (continuing without insights):', error);
+        // Continue without insights if API fails (graceful degradation)
+      }
+
+      // FASE 3.5+: Prepare conversation context for personalized report
+      const conversationContext = {
+        mode: 'express' as const,
+        rawConversation: conversationHistory.map((msg) => ({
+          question: msg.question,
+          answer: msg.answer,
+          timestamp: msg.timestamp
+        }))
+      };
+
+      console.log('📝 [Conversation] Preserving', conversationContext.rawConversation.length, 'messages for report personalization');
+
+      const report = generateReport(completeData, undefined, conversationContext);
+
+      // Add deep insights to report if generated
+      if (deepInsights) {
+        report.deepInsights = deepInsights;
+      }
+
       console.log('✅ Report generated:', report.id);
 
       saveReport(report);

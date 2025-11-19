@@ -25,6 +25,7 @@ import {
 // Import step components
 import StepAIRouter from "@/components/assessment/StepAIRouter";
 import StepAIExpress from "@/components/assessment/StepAIExpress";
+import StepAdaptiveAssessment from "@/components/assessment/StepAdaptiveAssessment";
 import Step0PersonaSelection from "@/components/assessment/Step0PersonaSelection";
 import Step1CompanyInfo from "@/components/assessment/Step1CompanyInfo";
 import Step2CurrentState from "@/components/assessment/Step2CurrentState";
@@ -60,9 +61,12 @@ function AssessmentPageContent() {
   const isTechPersona = persona ? isTechnicalPersona(persona) : true;
 
   // Load data from previous report if in duplicate mode
+  // Or start directly in adaptive mode if requested
   useEffect(() => {
     const mode = searchParams.get('mode');
     const fromReportId = searchParams.get('from');
+
+    console.log('🔧 [Page] URL params effect running:', { mode, fromReportId });
 
     if (mode === 'duplicate' && fromReportId) {
       const sourceReport = getReport(fromReportId);
@@ -86,6 +90,18 @@ function AssessmentPageContent() {
           }
         }
       }
+    } else if (mode === 'adaptive') {
+      // Go directly to Adaptive Assessment (conversational interview)
+      console.log('🚀 [Page] Activating Adaptive Assessment mode');
+      console.log('🚀 [Page] Setting assessmentMode to: adaptive');
+      console.log('🚀 [Page] Setting currentStep to: 101');
+      console.log('🚀 [Page] Setting useAIFirst to: false');
+
+      setAssessmentMode('adaptive');
+      setCurrentStep(101); // Step 101 = Adaptive Assessment
+      setUseAIFirst(false); // Skip AI Router
+
+      console.log('✅ [Page] Adaptive mode activated');
     }
   }, [searchParams]);
 
@@ -134,6 +150,10 @@ function AssessmentPageContent() {
     if (mode === 'express') {
       // Go to Express Mode (step 100 as special marker)
       setCurrentStep(100);
+    } else if (mode === 'adaptive') {
+      // Go to Adaptive Assessment (step 101 as special marker)
+      // Conversational interview with LLM-generated questions
+      setCurrentStep(101);
     } else if (mode === 'deep') {
       // Go directly to multi-specialist (step 5 in traditional flow)
       // But first need to complete basic info
@@ -384,6 +404,21 @@ function AssessmentPageContent() {
               <StepAIExpress
                 persona={persona}
                 partialData={aiRouterResult?.partialData}
+              />
+            </div>
+          )}
+
+          {/* Step 101: Adaptive Assessment (Conversational Interview with LLM) */}
+          {currentStep === 101 && (
+            <div className="animate-slide-up">
+              {console.log('🔧 [Page] Rendering StepAdaptiveAssessment at step 101')}
+              <StepAdaptiveAssessment
+                onPersonaDetected={(detectedPersona) => {
+                  console.log('🔧 [Page] Persona detected:', detectedPersona);
+                  if (detectedPersona && !persona) {
+                    setPersona(detectedPersona);
+                  }
+                }}
               />
             </div>
           )}

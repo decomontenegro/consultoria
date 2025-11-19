@@ -27,6 +27,7 @@ import EnterpriseROISection from '@/components/report/EnterpriseROISection';
 import CostOfInaction from '@/components/report/CostOfInaction';
 import RiskMatrixSection from '@/components/report/RiskMatrixSection';
 import AIInsightsSection from '@/components/report/AIInsightsSection';
+import ConsultantInsightsSection from '@/components/report/ConsultantInsightsSection';
 import ConfidenceIndicator, { ConfidenceBadge } from '@/components/report/ConfidenceIndicator';
 import BenchmarkCard from '@/components/report/BenchmarkCard';
 import FourPillarROISection from '@/components/report/FourPillarROISection';
@@ -130,6 +131,110 @@ export default function ReportLayoutWrapper({ report, benchmarkComparison }: Rep
         </div>
       </div>
 
+      {/* FASE 1.3: Your Data Section - Shows inputs used for ROI calculation */}
+      <div className="card-professional p-8 mb-12 border-l-4 border-neon-cyan">
+        <h3 className="text-xl font-bold text-tech-gray-100 mb-6 flex items-center gap-3">
+          <span className="text-2xl">📊</span>
+          Como Calculamos Isso Para Você
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Team Size */}
+          <div className="bg-tech-gray-900/50 p-4 rounded-lg">
+            <div className="text-xs text-tech-gray-500 uppercase tracking-wide mb-1">
+              Tamanho do Time
+            </div>
+            <div className="text-2xl font-bold text-neon-green">
+              {assessmentData.currentState.devTeamSize || 'N/A'}
+            </div>
+            <div className="text-xs text-tech-gray-400 mt-1">
+              desenvolvedores
+            </div>
+          </div>
+
+          {/* Cycle Time */}
+          <div className="bg-tech-gray-900/50 p-4 rounded-lg">
+            <div className="text-xs text-tech-gray-500 uppercase tracking-wide mb-1">
+              Ciclo Atual
+            </div>
+            <div className="text-2xl font-bold text-neon-cyan">
+              {assessmentData.currentState.avgCycleTime || 'N/A'}
+            </div>
+            <div className="text-xs text-tech-gray-400 mt-1">
+              dias (você informou)
+            </div>
+          </div>
+
+          {/* Deployment Frequency */}
+          <div className="bg-tech-gray-900/50 p-4 rounded-lg">
+            <div className="text-xs text-tech-gray-500 uppercase tracking-wide mb-1">
+              Frequência de Deploy
+            </div>
+            <div className="text-2xl font-bold text-tech-gray-100">
+              {assessmentData.currentState.deploymentFrequency === 'daily' ? 'Diário' :
+               assessmentData.currentState.deploymentFrequency === 'weekly' ? 'Semanal' :
+               assessmentData.currentState.deploymentFrequency === 'monthly' ? 'Mensal' :
+               assessmentData.currentState.deploymentFrequency === 'quarterly' ? 'Trimestral' :
+               assessmentData.currentState.deploymentFrequency || 'N/A'}
+            </div>
+            <div className="text-xs text-tech-gray-400 mt-1">
+              (você informou)
+            </div>
+          </div>
+
+          {/* Company Stage */}
+          <div className="bg-tech-gray-900/50 p-4 rounded-lg">
+            <div className="text-xs text-tech-gray-500 uppercase tracking-wide mb-1">
+              Estágio da Empresa
+            </div>
+            <div className="text-2xl font-bold text-tech-gray-100">
+              {assessmentData.companyInfo.size === 'startup' ? 'Startup' :
+               assessmentData.companyInfo.size === 'scaleup' ? 'Scaleup' :
+               assessmentData.companyInfo.size === 'enterprise' ? 'Enterprise' :
+               assessmentData.companyInfo.size || 'N/A'}
+            </div>
+            <div className="text-xs text-tech-gray-400 mt-1">
+              (você informou)
+            </div>
+          </div>
+
+          {/* Budget Range */}
+          <div className="bg-tech-gray-900/50 p-4 rounded-lg">
+            <div className="text-xs text-tech-gray-500 uppercase tracking-wide mb-1">
+              Orçamento
+            </div>
+            <div className="text-lg font-bold text-tech-gray-100">
+              {assessmentData.goals.budgetRange || 'Não informado'}
+            </div>
+            <div className="text-xs text-tech-gray-400 mt-1">
+              (você informou)
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="bg-tech-gray-900/50 p-4 rounded-lg">
+            <div className="text-xs text-tech-gray-500 uppercase tracking-wide mb-1">
+              Prazo de Implementação
+            </div>
+            <div className="text-2xl font-bold text-tech-gray-100">
+              {assessmentData.goals.timeline === '3-months' ? '3 meses' :
+               assessmentData.goals.timeline === '6-months' ? '6 meses' :
+               assessmentData.goals.timeline === '12-months' ? '12 meses' :
+               assessmentData.goals.timeline || 'N/A'}
+            </div>
+            <div className="text-xs text-tech-gray-400 mt-1">
+              (você informou)
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 p-4 bg-neon-cyan/5 border border-neon-cyan/20 rounded-lg">
+          <p className="text-sm text-tech-gray-300">
+            💡 <strong>Estes dados foram usados para calcular o ROI específico da sua empresa.</strong> Os números acima refletem exatamente o que você informou durante o assessment, garantindo que as projeções sejam personalizadas para sua realidade.
+          </p>
+        </div>
+      </div>
+
       {/* Continue with all other default layout sections... */}
       {/* (The rest of the default layout code from the original page.tsx) */}
 
@@ -163,6 +268,13 @@ export default function ReportLayoutWrapper({ report, benchmarkComparison }: Rep
       {/* AI Insights */}
       {report.aiInsights && report.aiInsights.length > 0 && (
         <AIInsightsSection insights={report.aiInsights} />
+      )}
+
+      {/* FASE 3: Deep Consultant Insights */}
+      {report.deepInsights && (
+        <div className="card-professional p-10 mb-12">
+          <ConsultantInsightsSection insights={report.deepInsights} />
+        </div>
       )}
 
       {/* Cost of Inaction */}

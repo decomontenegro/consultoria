@@ -81,11 +81,12 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
     const lastMessage = messages[messages.length - 1];
 
     // Only generate suggestions for NEW assistant messages during consultation phase
+    // ✅ FIX #2: Explicitly check phase is 'consultation' (not 'ready-to-finish')
     if (
       lastMessage &&
       lastMessage.role === 'assistant' &&
       currentSpecialist &&
-      phase === 'consultation' &&
+      phase === 'consultation' && // ✅ This prevents suggestions after finish
       lastMessage.content !== lastSuggestionMessageRef.current // Prevent duplicate calls
     ) {
       // Mark this message as processed
@@ -335,75 +336,9 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       }
       specialistInsights[currentSpecialist].push(textToSend);
 
-      // Check if we should move to next specialist or finish
-      const questionsForCurrentSpecialist = messages.filter(
-        m => m.role === 'user' && (!m.specialist || m.specialist === currentSpecialist)
-      ).length + 1;
-
-      // After 5 questions, ask if user wants to continue (don't force end)
-      if (questionsForCurrentSpecialist === MIN_QUESTIONS_PER_SPECIALIST) {
-        try {
-          const checkResponse = await fetch('/api/consult', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              messages: [
-                ...specialistMessages,
-                {
-                  role: 'user',
-                  content: '[SYSTEM: Você completou 5 perguntas essenciais. Agora, pergunte de forma calorosa e aberta se o usuário gostaria de compartilhar mais alguma informação relevante ou se já cobriu tudo que gostaria. NÃO force o encerramento - deixe o usuário decidir.]'
-                }
-              ],
-              assessmentData: data,
-              specialistType: currentSpecialist
-            }),
-          });
-
-          if (checkResponse.ok) {
-            const checkReader = checkResponse.body?.getReader();
-            const checkDecoder = new TextDecoder();
-            let checkMessage = '';
-
-            if (checkReader) {
-              while (true) {
-                const { done, value } = await checkReader.read();
-                if (done) break;
-
-                const chunk = checkDecoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                  if (line.startsWith('data: ')) {
-                    const dataStr = line.slice(6);
-                    if (dataStr === '[DONE]') break;
-
-                    try {
-                      const parsed = JSON.parse(dataStr);
-                      if (parsed.text) {
-                        checkMessage += parsed.text;
-                      }
-                    } catch (e) {
-                      // Ignore
-                    }
-                  }
-                }
-              }
-            }
-
-            // Add check-in message
-            setMessages(prev => [
-              ...prev,
-              {
-                role: 'assistant',
-                content: checkMessage || 'Cobrimos bastante! Há mais alguma informação que você gostaria de compartilhar, ou podemos concluir por aqui?',
-                specialist: currentSpecialist
-              }
-            ]);
-          }
-        } catch (error) {
-          console.error('Error generating check-in:', error);
-        }
-      }
+      // ✅ FIX #3: Removed automatic check-in after 5 questions
+      // This was causing race condition with 2 sequential questions without waiting for user response
+      // User can finish consultation using the "Finalizar Consulta" button that appears after MIN_QUESTIONS
 
     } catch (error) {
       console.error('Consultation error:', error);
@@ -425,6 +360,10 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
     if (!currentSpecialist) return;
 
     setIsLoading(true);
+
+    // ✅ FIX #2: Clear suggestions immediately to prevent showing during wrap-up
+    setSuggestions([]);
+    activeMessageContentRef.current = null;
 
     try {
       // Request specialist to wrap up naturally
@@ -450,6 +389,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         let wrapUpMessage = '';
 
         if (reader) {
+          // ✅ FIX #1: Use streaming message state (NOT messages array) during streaming
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -466,16 +406,11 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                   const parsed = JSON.parse(dataStr);
                   if (parsed.text) {
                     wrapUpMessage += parsed.text;
-                    setMessages(prev => {
-                      const filtered = prev.filter(m => m.content !== '[LOADING]');
-                      return [
-                        ...filtered,
-                        {
-                          role: 'assistant',
-                          content: wrapUpMessage,
-                          specialist: currentSpecialist
-                        }
-                      ];
+                    // ✅ Update streaming message during reception (NOT messages array)
+                    setStreamingMessage({
+                      role: 'assistant',
+                      content: wrapUpMessage,
+                      specialist: currentSpecialist
                     });
                   }
                 } catch (e) {
@@ -485,6 +420,17 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
             }
           }
         }
+
+        // ✅ Clear streaming and add final message ONCE to messages array
+        setStreamingMessage(null);
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: wrapUpMessage,
+            specialist: currentSpecialist
+          }
+        ]);
       }
 
       // Check if there are more specialists
@@ -508,7 +454,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
           ]);
         }, 500);
       } else {
-        // All specialists done
+        // ✅ FIX #2: Change phase to ready-to-finish BEFORE adding message (prevents suggestion generation)
         setCompletedSpecialists(prev => [...prev, currentSpecialist]);
         setPhase('ready-to-finish');
       }

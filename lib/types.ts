@@ -287,6 +287,20 @@ export interface BenchmarkComparison {
   unit: string;
 }
 
+// FASE 3.5+: Conversation context for personalized reports
+export interface ConversationMessage {
+  question: string;
+  answer: string;
+  timestamp: Date;
+}
+
+export interface ConversationContext {
+  mode: 'express' | 'adaptive' | 'guided';
+  rawConversation: ConversationMessage[];
+  // Future: keyQuotes for FASE 2
+  // Future: userScenarios for FASE 4
+}
+
 export interface Report {
   id: string;
   assessmentData: AssessmentData;
@@ -297,7 +311,9 @@ export interface Report {
   riskMatrix: RiskMatrix;
   recommendations: string[];
   roadmap: RoadmapPhase[];
-  aiInsights?: string[]; // Insights from AI consultation (optional)
+  aiInsights?: string[]; // Insights from AI consultation (optional - deprecated)
+  deepInsights?: any; // FASE 3: Deep insights from PhD consultant (DeepInsights type)
+  conversationContext?: ConversationContext; // FASE 3.5+: Preserve conversation for personalization
   generatedAt: Date;
 }
 
@@ -394,11 +410,12 @@ export interface RiskMatrix {
 
 /**
  * Assessment modes for AI-first journey
- * Simplified to 2 clear options after user research
+ * Simplified to 2 clear options after user research + adaptive conversational mode
  */
 export type AssessmentMode =
-  | 'express'  // 5-7 min: AI-powered essential questions, executive report
-  | 'deep';    // 15-20 min: Multi-specialist consultation, complete analysis
+  | 'express'   // 5-7 min: AI-powered essential questions, executive report
+  | 'deep'      // 15-20 min: Multi-specialist consultation, complete analysis
+  | 'adaptive'; // 5-10 min: Conversational interview with LLM-generated questions (FASE 3.5)
 
 /**
  * Urgency level detected by AI
@@ -456,4 +473,217 @@ export interface AIRouterState {
   maxQuestions: number;
   isComplete: boolean;
   result: AIRouterResult | null;
+}
+
+// ============================================
+// ADAPTIVE ASSESSMENT SYSTEM (FASE 3.5)
+// ============================================
+
+/**
+ * Question source tracking
+ */
+export interface QuestionSource {
+  type: 'pool' | 'follow-up' | 'custom-generated';
+  poolId?: string; // If from question pool
+  parentQuestionId?: string; // If follow-up to another question
+  generatedBy?: 'ai-router' | 'orchestrator' | 'adaptive-engine'; // If custom generated
+  generatedAt?: Date;
+}
+
+/**
+ * Weak signals detected in user responses
+ * Used to trigger follow-up questions
+ */
+export interface WeakSignals {
+  isVague: boolean; // Lack of specificity ("alguns", "meio que")
+  hasContradiction: boolean; // Contradictory statements
+  hasHesitation: boolean; // Hesitant language ("acho que", "talvez")
+  lacksMetrics: boolean; // No concrete numbers when relevant
+  hasEmotionalLanguage: boolean; // Strong emotion ("frustrado", "desesperado")
+  hasPressureIndicators: boolean; // Urgency signals ("ontem", "ASAP")
+}
+
+/**
+ * Insights extracted from conversation so far
+ */
+export interface ConversationInsights {
+  urgencyLevel: UrgencyLevel;
+  complexityLevel: ComplexityLevel;
+  detectedPatterns: string[]; // e.g., ['tech-debt-spiral', 'velocity-crisis']
+  mentionedTools: string[]; // Tools/technologies mentioned
+  mentionedCompetitors: string[];
+  hasQuantifiableImpact: boolean;
+  hasDecisionAuthority: boolean;
+  hasBudget: boolean;
+}
+
+/**
+ * Completion metrics for adaptive assessment
+ */
+export interface CompletionMetrics {
+  completenessScore: number; // 0-100
+  essentialFieldsCollected: number;
+  totalFieldsCollected: number;
+  topicsCovered: string[];
+  metricsCollected: string[];
+  gapsIdentified: string[]; // What's still missing
+}
+
+/**
+ * Conversation context for adaptive question routing
+ * Maintains complete state of the conversation
+ */
+export interface ConversationContext {
+  // Session identification
+  sessionId: string;
+  startTime: Date;
+  lastUpdated: Date;
+
+  // Persona detection
+  persona: UserPersona | null;
+  personaConfidence: number; // 0-1
+
+  // Assessment data collected so far
+  assessmentData: DeepPartial<AssessmentData>;
+
+  // Essential data for conversational interviewer (FASE 3.5)
+  essentialData?: any; // Will be EssentialData type from conversational-interviewer
+
+  // Questions tracking
+  questionsAsked: Array<{
+    id: string;
+    questionText: string;
+    answer: any;
+    source: QuestionSource;
+    askedAt: Date;
+  }>;
+  questionsAnsweredIds: string[]; // Just IDs for quick lookup
+
+  // Topic tracking (semantic, not just field tracking)
+  topicsCovered: Set<string>; // e.g., ['velocity', 'bugs', 'cost', 'team-size']
+
+  // Metrics tracking
+  metricsCollected: string[]; // e.g., ['cycle_time', 'bug_rate', 'team_size']
+
+  // Weak signals detected
+  weakSignals: WeakSignals;
+
+  // Insights extracted
+  insights: ConversationInsights;
+
+  // Completion tracking
+  completion: CompletionMetrics;
+
+  // Session metadata
+  questionsRemaining: number; // Target questions left (e.g., started with 15, now 7 left)
+  canFinish: boolean; // Whether assessment has enough data to finish
+}
+
+/**
+ * AI routing decision for next question
+ * Result from adaptive question router
+ */
+export interface RoutingDecision {
+  questionId: string;
+  reasoning: string; // 1-2 sentences explaining why this question is best
+  confidence: number; // 0-1
+  alternativeQuestions?: string[]; // Other good options considered
+}
+
+/**
+ * Sprint 2: Enhanced Types for Question Structure
+ */
+
+/**
+ * Question Block Type (4-block architecture from business-quiz)
+ */
+export type QuestionBlock = 'discovery' | 'expertise' | 'deep-dive' | 'risk-scan';
+
+/**
+ * Enhanced Routing Decision with Block Context
+ */
+export interface EnhancedRoutingDecision extends RoutingDecision {
+  currentBlock: QuestionBlock;
+  suggestedNextBlock?: QuestionBlock;
+  blockProgress: number; // 0-1, progress within current block
+  shouldTransition?: boolean; // Should transition to next block
+}
+
+/**
+ * Follow-up Question (LLM-generated)
+ */
+export interface FollowUpQuestion {
+  id: string; // Generated ID like "followup-disc-002-1"
+  text: string; // LLM-generated question
+  inputType: 'text' | 'single-choice' | 'multi-choice';
+  options?: Array<{ value: string; label: string }>;
+  placeholder?: string;
+
+  // Context
+  triggeredBy: string; // ID of question that triggered this
+  reason: string; // Why this follow-up was generated
+  targetGap: string; // What gap it's trying to fill
+
+  // Metadata
+  generatedAt: Date;
+  llmModel: string; // 'sonnet' | 'haiku'
+}
+
+/**
+ * Block Transition Event
+ */
+export interface BlockTransition {
+  from: QuestionBlock;
+  to: QuestionBlock;
+  reason: string; // Why transition happened
+  questionsAsked: number; // How many questions were asked in previous block
+  completenessAtTransition: number; // 0-100
+  timestamp: Date;
+}
+
+/**
+ * Question Prerequisites Check
+ */
+export interface QuestionPrerequisites {
+  questionId: string;
+  required: string[]; // Question IDs that must be answered first
+  allSatisfied: boolean;
+  missingSome?: string[]; // IDs of prerequisites not yet satisfied
+}
+
+/**
+ * Deep-Dive Area Detection
+ */
+export interface DeepDiveAreaDetection {
+  area: 'velocity' | 'quality' | 'onboarding' | 'documentation';
+  confidence: number; // 0-1
+  reasoning: string;
+  basedOn: string[]; // Question IDs that informed this detection
+}
+
+/**
+ * Request to adaptive question engine
+ */
+export interface AdaptiveQuestionRequest {
+  context: ConversationContext;
+  availableQuestions: string[]; // Question IDs
+  forceCategory?: string; // Force a specific category
+  maxQuestions?: number; // Max questions remaining
+}
+
+/**
+ * Response from adaptive question engine
+ */
+export interface AdaptiveQuestionResponse {
+  nextQuestion: {
+    id: string;
+    text: string;
+    inputType: string;
+    options?: any[];
+    placeholder?: string;
+  } | null; // null if should finish
+  routing: RoutingDecision | null;
+  shouldFinish: boolean;
+  finishReason?: 'completeness_reached' | 'max_questions' | 'all_essential_covered';
+  completion: CompletionMetrics;
 }

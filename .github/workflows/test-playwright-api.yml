@@ -1,0 +1,165 @@
+name: Playwright API Tests (FASE 2 & 3)
+
+on:
+  # Manual trigger only to control costs
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Which test suite to run?'
+        required: true
+        type: choice
+        options:
+          - 'all'
+          - 'followups-only'
+          - 'insights-only'
+          - 'health-checks-only'
+        default: 'health-checks-only'
+
+  # Scheduled runs (limited to save costs)
+  schedule:
+    # Run health checks daily at 9 AM UTC (6 AM Brazil)
+    - cron: '0 9 * * *'
+    # Run full tests weekly on Monday at 10 AM UTC
+    - cron: '0 10 * * 1'
+
+  # On PR to main (health checks only)
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'lib/ai/consultant-orchestrator.ts'
+      - 'lib/ai/insights-engine.ts'
+      - 'app/api/consultant-followup/**'
+      - 'app/api/insights/**'
+      - 'tests/**'
+
+jobs:
+  determine-suite:
+    name: Determine Test Suite
+    runs-on: ubuntu-latest
+    outputs:
+      suite: ${{ steps.set-suite.outputs.suite }}
+    steps:
+      - id: set-suite
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "suite=${{ github.event.inputs.test_suite }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            # Daily cron (9 AM): health checks only
+            # Weekly cron (10 AM Monday): all tests
+            if [[ "${{ github.event.schedule }}" == "0 9 * * *" ]]; then
+              echo "suite=health-checks-only" >> $GITHUB_OUTPUT
+            else
+              echo "suite=all" >> $GITHUB_OUTPUT
+            fi
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "suite=health-checks-only" >> $GITHUB_OUTPUT
+          else
+            echo "suite=health-checks-only" >> $GITHUB_OUTPUT
+          fi
+
+  playwright-api-tests:
+    name: Run API Tests (${{ needs.determine-suite.outputs.suite }})
+    needs: determine-suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Next.js server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000 --timeout 60000
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NODE_ENV: test
+
+      - name: Run Health Checks (Free)
+        if: ${{ needs.determine-suite.outputs.suite == 'health-checks-only' || needs.determine-suite.outputs.suite == 'all' }}
+        run: |
+          npx playwright test \
+            -g "GET health check" \
+            tests/fase2-followups tests/fase3-insights
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Run Follow-up API Tests (Cost ~R$0.90)
+        if: ${{ needs.determine-suite.outputs.suite == 'followups-only' || needs.determine-suite.outputs.suite == 'all' }}
+        run: |
+          npx playwright test tests/fase2-followups/followup-api.spec.ts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Run Insights API Tests (Cost ~R$2.40)
+        if: ${{ needs.determine-suite.outputs.suite == 'insights-only' || needs.determine-suite.outputs.suite == 'all' }}
+        run: |
+          npx playwright test tests/fase3-insights/insights-api.spec.ts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ needs.determine-suite.outputs.suite }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Calculate Estimated Cost
+        if: always()
+        run: |
+          echo "## 💰 Estimated Test Costs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.determine-suite.outputs.suite }}" == "all" ]]; then
+            echo "- Follow-ups: R$ 0.90" >> $GITHUB_STEP_SUMMARY
+            echo "- Insights: R$ 2.40" >> $GITHUB_STEP_SUMMARY
+            echo "- **Total: R$ 3.30**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.determine-suite.outputs.suite }}" == "followups-only" ]]; then
+            echo "- **Total: R$ 0.90**" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.determine-suite.outputs.suite }}" == "insights-only" ]]; then
+            echo "- **Total: R$ 2.40**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Total: R$ 0.00** (health checks only)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Monthly Budget Usage" >> $GITHUB_STEP_SUMMARY
+          echo "- Daily health checks: R$ 0.00" >> $GITHUB_STEP_SUMMARY
+          echo "- Weekly full tests: R$ 3.30 × 4 = R$ 13.20/month" >> $GITHUB_STEP_SUMMARY
+          echo "- **Budget: R$ 13.20 / R$ 127.00 = 10.4% used**" >> $GITHUB_STEP_SUMMARY
+
+  # Budget alert if costs are high
+  budget-alert:
+    name: Budget Alert
+    needs: playwright-api-tests
+    runs-on: ubuntu-latest
+    if: always() && needs.determine-suite.outputs.suite == 'all'
+    steps:
+      - name: Alert on High Cost Run
+        run: |
+          echo "⚠️  Full test suite executed (cost: R$ 3.30)"
+          echo "This should only run weekly. Check workflow triggers."
+          echo ""
+          echo "Monthly budget tracking:"
+          echo "- Target: ≤ 5 full runs/month = R$ 16.50/month"
+          echo "- Maximum safe: 38 runs/month = R$ 127/month"

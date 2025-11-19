@@ -16,6 +16,12 @@ const anthropic = new Anthropic({
 const suggestionCache = new Map<string, any>();
 const CACHE_TTL = 2 * 60 * 1000; // 2 minutes (reduced for faster iterations)
 
+// Clear cache on module reload (development hot reload)
+if (process.env.NODE_ENV === 'development') {
+  suggestionCache.clear();
+  console.log('🔄 [AI-SUGGESTIONS] Cache cleared on reload');
+}
+
 interface SuggestionRequest {
   question: string;
   context?: string; // Optional context about the conversation
@@ -69,12 +75,13 @@ export async function POST(request: NextRequest) {
     // Call Claude to generate suggestions
     const systemPrompt = `You are a helpful AI assistant generating quick response suggestions for users filling out an AI readiness assessment.
 
-Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC, OPERATIONAL, and DIVERSE response suggestions that:
-1. Focus on OPERATIONAL DETAILS not generic answers
-2. Include SPECIFIC numbers, metrics, or concrete examples when relevant
-3. Cover the full spectrum of possibilities with MEANINGFUL differences
+Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC, QUALITATIVE, and DIVERSE response suggestions that:
+1. Focus on QUALITATIVE DESCRIPTIONS not quantitative metrics
+2. AVOID specific numbers, values, timelines, or monetary amounts
+3. Cover the full spectrum of situations with MEANINGFUL differences
 4. Are concise but informative (3-15 words)
 5. Use Brazilian Portuguese
+6. Focus on context, situation, and characteristics rather than exact numbers
 
 Output format (JSON only, no other text):
 {
@@ -84,50 +91,70 @@ Output format (JSON only, no other text):
   ]
 }
 
-CRITICAL RULES - OPERATIONAL SPECIFICITY:
+CRITICAL RULES - QUALITATIVE SPECIFICITY:
 
 For URGENCY/PROBLEM questions:
-✅ GOOD: "Sim - decisão de Board em 30 dias"
-✅ GOOD: "Sim - perdendo clientes para concorrentes"
-✅ GOOD: "Não - explorando possibilidades"
-❌ BAD: "Sim", "Tenho problema", "É urgente"
+✅ GOOD: "Sim - decisão estratégica iminente do Board"
+✅ GOOD: "Sim - perdendo clientes para concorrentes mais ágeis"
+✅ GOOD: "Não - ainda em fase de exploração"
+❌ BAD: "Sim - decisão em 30 dias" (specific timeline)
+❌ BAD: "Sim", "Tenho problema" (too generic)
 
 For ROLE/RESPONSIBILITY questions:
-✅ GOOD: "CTO - responsável por velocidade de entrega"
-✅ GOOD: "Head de Produto - aumentar conversão"
-✅ GOOD: "VP Engineering - reduzir bugs em produção"
-❌ BAD: "CTO", "Gerente", "Líder"
+✅ GOOD: "CTO - responsável por velocidade e qualidade"
+✅ GOOD: "Head de Produto - foco em experiência do usuário"
+✅ GOOD: "VP Engineering - lidero várias squads"
+❌ BAD: "CTO" (too generic)
 
 For TEAM SIZE questions:
-✅ GOOD: "50 pessoas total, 8 em tech/produto"
-✅ GOOD: "20 funcionários, sem dev dedicado"
-✅ GOOD: "200 pessoas, 40 em engineering"
-❌ BAD: "50", "Pequeno", "Médio porte"
+✅ GOOD: "Equipe grande distribuída em múltiplas squads"
+✅ GOOD: "Time pequeno, todos fazem de tudo"
+✅ GOOD: "Equipe média com alguns especialistas"
+❌ BAD: "50 pessoas total" (specific numbers)
+❌ BAD: "Pequeno" (too vague)
 
 For PROCESS questions:
-✅ GOOD: "Ideias levam 2-3 meses para produção"
-✅ GOOD: "Deploys semanais mas cheios de bugs"
-✅ GOOD: "Processo todo manual - sem CI/CD"
-❌ BAD: "Lento", "Tem problemas", "Não é bom"
+✅ GOOD: "Ideias demoram bastante até chegarem em produção"
+✅ GOOD: "Deploys frequentes mas com muita instabilidade"
+✅ GOOD: "Processo totalmente manual - sem automação"
+❌ BAD: "2-3 meses" (specific timeline)
+❌ BAD: "Lento" (too vague)
 
 For IMPACT questions:
-✅ GOOD: "Sim - perdemos 3 clientes este trimestre"
-✅ GOOD: "Sim - lançamento atrasou 4 meses"
-✅ GOOD: "Sim - ~R$50k/mês em overtime"
-❌ BAD: "Sim", "Tem impacto", "É ruim"
+✅ GOOD: "Sim - perdendo clientes constantemente"
+✅ GOOD: "Sim - lançamentos sempre atrasam"
+✅ GOOD: "Sim - custos operacionais muito altos"
+❌ BAD: "Perdemos 3 clientes" (specific numbers)
+❌ BAD: "R$50k/mês" (monetary values)
+❌ BAD: "Sim" (too generic)
 
 For BUDGET questions:
-✅ GOOD: "Entre R$ 50k-100k aprovado"
-✅ GOOD: "R$ 300k+ para transformação completa"
-✅ GOOD: "Ainda sem orçamento - preciso justificar"
-❌ BAD: "Sim", "Temos budget", "Alto"
+✅ GOOD: "Budget aprovado para projeto piloto"
+✅ GOOD: "Budget significativo para transformação completa"
+✅ GOOD: "Ainda sem orçamento - preciso justificar valor"
+❌ BAD: "R$ 50k-100k" (specific amounts)
+❌ BAD: "Temos budget" (too vague)
+
+For METRICS questions:
+✅ GOOD: "Entregamos features com frequência"
+✅ GOOD: "Releases são raros e complexos"
+✅ GOOD: "Bugs aparecem ocasionalmente em produção"
+❌ BAD: "1 release por semana" (specific frequency)
+❌ BAD: "5 bugs por mês" (specific numbers)
 
 NEVER:
+- Include specific numbers, percentages, or monetary amounts
+- Use specific timelines or dates
 - Generate 3+ suggestions that are semantically similar
-- Use vague/generic answers when specific is possible
-- Ignore numbers, metrics, or concrete details mentioned in context
+- Use vague one-word answers when qualitative description is possible
+- Suggest values that only make sense for certain company sizes or industries
 
-Order from most to least common for the target audience.
+ALWAYS:
+- Use relative/qualitative terms (frequent/rare, fast/slow, many/few)
+- Describe situations and contexts
+- Make suggestions applicable across different company sizes and industries
+- Order from most to least common for diverse audiences
+
 ONLY output valid JSON, nothing else.`;
 
     const userPrompt = `Question from AI: "${question}"${contextPrompt}

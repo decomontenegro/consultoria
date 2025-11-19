@@ -3,7 +3,7 @@
  * Orchestrates all calculators to generate complete assessment report
  */
 
-import { AssessmentData, Report } from '@/lib/types';
+import { AssessmentData, Report, ConversationContext } from '@/lib/types';
 import { calculateROI } from '@/lib/calculators/roi-calculator';
 import { calculateEnterpriseROI } from '@/lib/calculators/enterprise-roi-calculator';
 import { generateBenchmarkComparisons } from '@/lib/calculators/benchmark-comparator';
@@ -23,8 +23,13 @@ function generateReportId(): string {
 
 /**
  * Generate complete assessment report
+ * @param conversationContext - FASE 3.5+: Conversation history for personalized reports
  */
-export function generateReport(assessmentData: AssessmentData, aiInsights?: string[]): Report {
+export function generateReport(
+  assessmentData: AssessmentData,
+  aiInsights?: string[],
+  conversationContext?: ConversationContext
+): Report {
   const reportId = generateReportId();
 
   // Calculate ROI (Engineering-focused)
@@ -87,6 +92,7 @@ export function generateReport(assessmentData: AssessmentData, aiInsights?: stri
     recommendations,
     roadmap,
     aiInsights, // AI consultation insights (optional)
+    conversationContext, // FASE 3.5+: Preserve conversation for personalization
     generatedAt: new Date(),
   };
 

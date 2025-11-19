@@ -20,6 +20,7 @@ import EnterpriseROISection from '@/components/report/EnterpriseROISection';
 import CostOfInaction from '@/components/report/CostOfInaction';
 import RiskMatrixSection from '@/components/report/RiskMatrixSection';
 import AIInsightsSection from '@/components/report/AIInsightsSection';
+import ConsultantInsightsSection from '@/components/report/ConsultantInsightsSection';
 import ConfidenceIndicator, { ConfidenceBadge } from '@/components/report/ConfidenceIndicator';
 import BenchmarkCard from '@/components/report/BenchmarkCard';
 import FourPillarROISection from '@/components/report/FourPillarROISection';
@@ -57,6 +58,7 @@ const navSections: NavSection[] = [
   { id: 'benchmark', label: 'Benchmark', icon: TrendingUp },
   { id: 'four-pillar', label: 'ROI 4 Pilares', icon: Grid3x3 },
   { id: 'ai-insights', label: 'Insights de IA', icon: Target },
+  { id: 'consultant-insights', label: 'Análise do Consultor', icon: Target },
   { id: 'cost-inaction', label: 'Custo de Inação', icon: DollarSign },
   { id: 'risk-matrix', label: 'Matriz de Risco', icon: Shield },
   { id: 'transformation', label: 'Prontidão para IA', icon: TrendingUp },
@@ -229,6 +231,15 @@ export default function Layout2Sidebar({ report, benchmarkComparison }: Layout2S
         {report.aiInsights && report.aiInsights.length > 0 && (
           <section ref={(el) => (sectionRefs.current['ai-insights'] = el)} id="ai-insights">
             <AIInsightsSection insights={report.aiInsights} />
+          </section>
+        )}
+
+        {/* FASE 3: Deep Consultant Insights */}
+        {report.deepInsights && (
+          <section ref={(el) => (sectionRefs.current['consultant-insights'] = el)} id="consultant-insights">
+            <div className="card-professional p-10 mb-12">
+              <ConsultantInsightsSection insights={report.deepInsights} />
+            </div>
           </section>
         )}
 
