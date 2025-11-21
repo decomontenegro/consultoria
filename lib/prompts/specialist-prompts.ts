@@ -56,11 +56,11 @@ export const SPECIALISTS: Record<SpecialistType, Specialist> = {
     ],
     questionStyle: 'técnicas, específicas, com métricas',
     exampleQuestions: [
-      'Qual a taxa de falha de builds no CI? Principais causas?',
-      'Tempo médio de rollback em produção? Processo é automatizado?',
-      'Code coverage atual vs meta? Ferramentas usadas?',
-      'Percentual do backlog é débito técnico vs features novas?',
-      'Infra as Code: qual ferramenta? Percentual de infra gerenciada?'
+      'Com que frequência seus builds falham no CI, e quais são as principais causas?',
+      'Quanto tempo leva em média para fazer rollback de algo que deu errado em produção?',
+      'Como está a cobertura de testes do projeto atualmente - conseguem medir isso?',
+      'Do backlog atual de trabalho, qual parte vocês estimam ser débito técnico versus features novas?',
+      'Vocês usam Infrastructure as Code, e qual ferramenta usam para isso?'
     ]
   },
 
@@ -136,7 +136,8 @@ export const SPECIALISTS: Record<SpecialistType, Specialist> = {
  */
 export function generateSpecialistSystemPrompt(
   specialistType: SpecialistType,
-  assessmentData: AssessmentData
+  assessmentData: AssessmentData,
+  userExpertiseAreas?: string[] // ✅ Optional: user's areas of knowledge
 ): string {
   const specialist = SPECIALISTS[specialistType];
   const { companyInfo, currentState, goals, persona } = assessmentData;
@@ -179,11 +180,28 @@ ${goals.budgetRange ? `- Budget: ${goals.budgetRange}` : ''}
 
 ## Perfil do Interlocutor
 ${getPersonaDescription(persona)}
+${userExpertiseAreas && userExpertiseAreas.length > 0
+  ? `\n**Áreas de conhecimento do usuário**: ${getUserExpertiseDescription(userExpertiseAreas)}\n\n⚠️ **ADAPTE SUAS PERGUNTAS**: O usuário indicou ter conhecimento em: ${userExpertiseAreas.map(a => getExpertiseLabel(a)).join(', ')}. ${getAdaptationGuidance(userExpertiseAreas, specialistType)}`
+  : ''
+}
 
 # SUA MISSÃO
 Conduzir uma consulta especializada fazendo **UMA PERGUNTA POR VEZ** e **ESPERANDO A RESPOSTA** antes de prosseguir.
 
 Você fará um total de 3-5 perguntas **${specialist.questionStyle}** para aprofundar sua análise especializada.
+
+**IMPORTANTE - O QUE SIGNIFICA "UMA PERGUNTA"**:
+✅ CORRETO (UMA pergunta clara com ou sem contexto):
+- "Com que frequência seus builds falham no CI?"
+- "Sobre deploys: quanto tempo leva em média para subir algo em produção?"
+- "Entendi sobre o CI. Agora sobre testes: como está a cobertura de testes atual?"
+
+❌ ERRADO (Múltiplas perguntas na mesma mensagem):
+- "Qual a taxa de builds? E o tempo de rollback?" ← 2 perguntas diferentes
+- "Vocês usam CI/CD? Qual ferramenta? Quantos deploys por dia?" ← 3 perguntas
+- "Me fale sobre builds, deploys e testes de qualidade" ← Muito amplo, várias perguntas
+
+Regra de ouro: **UMA mensagem = UMA interrogação principal**. Pode ter contexto antes, mas apenas UMA pergunta de cada vez.
 
 ## Exemplos do seu estilo de perguntas:
 ${specialist.exampleQuestions.map((q, i) => `${i + 1}. "${q}"`).join('\n')}
@@ -233,6 +251,67 @@ ${getJargonGuidelines(specialistType, persona)}
 Comece agora fazendo sua primeira pergunta especializada.`;
 
   return basePrompt;
+}
+
+/**
+ * Get label for expertise area ID
+ */
+function getExpertiseLabel(areaId: string): string {
+  const labels: Record<string, string> = {
+    'strategy-business': 'Estratégia e Negócios',
+    'engineering-tech': 'Tecnologia e Engenharia',
+    'product-ux': 'Produto e UX',
+    'finance-ops': 'Finanças e Operações',
+    'marketing-sales': 'Marketing e Vendas',
+    'people-hr': 'Recursos Humanos'
+  };
+  return labels[areaId] || areaId;
+}
+
+/**
+ * Get description of user's expertise areas
+ */
+function getUserExpertiseDescription(areas: string[]): string {
+  if (areas.length === 0) return 'Não especificadas';
+  return areas.map(a => getExpertiseLabel(a)).join(', ');
+}
+
+/**
+ * Get adaptation guidance based on user's expertise and specialist type
+ */
+function getAdaptationGuidance(userExpertise: string[], specialistType: SpecialistType): string {
+  const hasEngineering = userExpertise.includes('engineering-tech');
+  const hasFinance = userExpertise.includes('finance-ops');
+  const hasStrategy = userExpertise.includes('strategy-business');
+
+  // Engineering specialist
+  if (specialistType === 'engineering') {
+    if (hasEngineering) {
+      return `Como o usuário tem conhecimento técnico, você PODE aprofundar em detalhes técnicos, métricas DORA, arquitetura, ferramentas específicas. Use jargão técnico livremente.`;
+    } else {
+      return `O usuário NÃO indicou conhecimento técnico. Seja mais estratégico: pergunte sobre IMPACTOS e PROBLEMAS (velocidade, qualidade, riscos) ao invés de métricas técnicas detalhadas. Se precisar perguntar algo técnico, ofereça opção "não sei" nas sugestões.`;
+    }
+  }
+
+  // Finance specialist
+  if (specialistType === 'finance') {
+    if (hasFinance) {
+      return `Como o usuário tem conhecimento financeiro, você pode aprofundar em ROI, payback, custos detalhados, orçamentos específicos.`;
+    } else {
+      return `O usuário pode não ter acesso a dados financeiros detalhados. Pergunte sobre IMPACTOS PERCEBIDOS (atrasos custam caro? perdas de receita?) ao invés de valores exatos. Ofereça opções "não sei" quando apropriado.`;
+    }
+  }
+
+  // Strategy specialist
+  if (specialistType === 'strategy') {
+    if (hasStrategy) {
+      return `Como o usuário tem visão estratégica, você pode aprofundar em competitividade, posicionamento de mercado, decisões de Board.`;
+    } else {
+      return `O usuário pode ter perspectiva mais operacional. Pergunte sobre PERCEPÇÕES do mercado e competidores ao invés de estratégias formais de Board.`;
+    }
+  }
+
+  return '';
 }
 
 /**

@@ -209,6 +209,12 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       const questionId = currentQuestion.id;
       activeQuestionIdRef.current = questionId;
 
+      console.log('🔍 [Express] Generating suggestions for question:', {
+        id: questionId,
+        text: questionText.substring(0, 80) + '...',
+        answeredCount: answeredQuestionIds.length
+      });
+
       // Get previous answers for context
       const previousAnswers = messages
         .filter(m => m.role === 'user')
@@ -223,16 +229,17 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
       }).then(newSuggestions => {
         // ✅ Only update suggestions if this is still the active question
         if (activeQuestionIdRef.current === questionId) {
+          console.log('✅ [Express] Setting suggestions for question:', questionId, '- Count:', newSuggestions.length);
           setSuggestions(newSuggestions);
         } else {
-          console.log('⚠️ [Express] Ignoring stale suggestions for:', questionId);
+          console.log('⚠️ [Express] Ignoring stale suggestions for:', questionId, '- Active is:', activeQuestionIdRef.current);
         }
       });
     } else {
       setSuggestions([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestion, answeredQuestionIds.length]);
+  }, [currentQuestion?.id]); // ✅ Only depend on question ID, not on answeredQuestionIds.length
 
   // Focus input helper (only for text questions)
   const focusInput = useCallback(() => {
@@ -334,6 +341,11 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
       return [...prev, questionMsg];
     });
+
+    // ✅ CRITICAL: Clear suggestions IMMEDIATELY before changing question
+    console.log('🧹 [Express] Clearing suggestions before changing to question:', nextQuestion.id);
+    setSuggestions([]);
+    activeQuestionIdRef.current = null;
 
     // Set current question and reset answer
     setCurrentQuestion(nextQuestion);
@@ -679,39 +691,10 @@ export default function StepAIExpress({ persona, partialData, onComplete }: Step
 
       console.log('✅ Complete data prepared:', completeData);
 
-      // 🧠 FASE 3: Generate deep insights (conditional)
+      // 🧠 FASE 3: Generate deep insights (DISABLED - causing JSON parse errors)
+      // TODO: Re-enable when insights API is fixed to handle invalid JSON gracefully
       let deepInsights = null;
-      try {
-        console.log('🧠 [Deep Insights] Checking if should generate...');
-
-        const insightsResponse = await fetch('/api/insights/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            assessmentData: completeData,
-            conversationHistory: conversationHistory,
-            forceGenerate: true // FASE 1.2: Always generate for personalization
-          })
-        });
-
-        if (insightsResponse.ok) {
-          const insightsData = await insightsResponse.json();
-
-          if (insightsData.generated && insightsData.insights) {
-            console.log('✅ [Deep Insights] Generated successfully');
-            console.log('   - Patterns:', insightsData.insights.patterns?.length || 0);
-            console.log('   - Recommendations:', insightsData.insights.recommendations?.length || 0);
-            console.log('   - Cost: R$', insightsData.cost);
-
-            deepInsights = insightsData.insights;
-          } else {
-            console.log('⏭️  [Deep Insights] Skipped:', insightsData.reason);
-          }
-        }
-      } catch (error) {
-        console.error('❌ [Deep Insights] Error (continuing without insights):', error);
-        // Continue without insights if API fails (graceful degradation)
-      }
+      console.log('⏭️  [Deep Insights] Skipped in Express Mode (temporarily disabled due to API issues)');
 
       // FASE 3.5+: Prepare conversation context for personalized report
       const conversationContext = {

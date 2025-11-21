@@ -45,6 +45,8 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
   const [completedSpecialists, setCompletedSpecialists] = useState<SpecialistType[]>([]);
   const [questionCount, setQuestionCount] = useState(0);
   const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
+  const [isWrappingUp, setIsWrappingUp] = useState(false); // ✅ Detect when specialist is concluding
+  const [userExpertiseAreas, setUserExpertiseAreas] = useState<string[]>([]); // ✅ User's areas of knowledge
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageCountRef = useRef<number>(0);
   const activeMessageContentRef = useRef<string | null>(null); // ✅ Track active message to prevent race conditions
@@ -95,6 +97,59 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       // ✅ CLEAR old suggestions IMMEDIATELY to avoid showing wrong suggestions
       setSuggestions([]);
 
+      // ✅ UX FIX: Don't show suggestions during wrap-up/conclusion or transitions
+      const messageContentLower = lastMessage.content.toLowerCase();
+
+      // Keywords that indicate wrap-up/conclusion (MORE SPECIFIC to avoid false positives)
+      // ❌ REMOVED generic keywords that appear in normal follow-up questions:
+      //    - 'algo mais a acrescentar' (appears in follow-ups)
+      //    - 'mais alguma informação' (appears in follow-ups)
+      //    - 'gostaria de compartilhar' (appears in follow-ups)
+      const wrapUpKeywords = [
+        'agradeço pelas respostas',
+        'agradeço pela conversa',
+        'obrigado pelas informações',
+        'obrigado pela conversa',
+        'foi um prazer conversar',
+        'principais insights que descobri',
+        'principais insights identificados',
+        'em resumo, descobrimos',
+        'em resumo, identificamos',
+        'conclusão da consulta',
+        'conclusão da nossa conversa',
+        'finalizando nossa consulta',
+        'finalizando a conversa',
+        'encerrando a consulta',
+        'encerrando nossa conversa',
+        'análise está completa',
+        'análise completa',
+        'boa sorte com',
+        'desejo sucesso'
+      ];
+
+      // Keywords that indicate transition between specialists
+      const transitionKeywords = [
+        'próximo especialista',
+        'vamos para o próximo',
+        'agora vamos para',
+        'passando para'
+      ];
+
+      const matchedWrapUpKeyword = wrapUpKeywords.find(keyword => messageContentLower.includes(keyword));
+      const matchedTransitionKeyword = transitionKeywords.find(keyword => messageContentLower.includes(keyword));
+
+      if (matchedWrapUpKeyword) {
+        console.log('🎯 [UX] Wrap-up detected - skipping suggestions (qualitative moment)');
+        console.log('   Matched keyword:', matchedWrapUpKeyword);
+        return; // No suggestions during wrap-up
+      }
+
+      if (matchedTransitionKeyword) {
+        console.log('🎯 [UX] Transition detected - skipping suggestions (auto-continuing)');
+        console.log('   Matched keyword:', matchedTransitionKeyword);
+        return; // No suggestions during transitions
+      }
+
       // ✅ Track current message to prevent race conditions
       const messageContent = lastMessage.content;
       activeMessageContentRef.current = messageContent;
@@ -121,6 +176,46 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       });
     }
   }, [messages, currentSpecialist, phase, questionCount]);
+
+  // ✅ Detect when specialist is wrapping up (concluding conversation)
+  useEffect(() => {
+    const lastMessage = messages[messages.length - 1];
+
+    if (
+      lastMessage &&
+      lastMessage.role === 'assistant' &&
+      currentSpecialist &&
+      phase === 'consultation' &&
+      questionCount >= MIN_QUESTIONS_PER_SPECIALIST
+    ) {
+      // Keywords that indicate wrap-up/conclusion
+      const wrapUpKeywords = [
+        'agradeço',
+        'obrigado',
+        'foi um prazer',
+        'principais insights',
+        'resumo',
+        'conclus',
+        'finalizando',
+        'encerr',
+        'importante que você',
+        'próximos passos',
+        'boa sorte',
+        'sucesso'
+      ];
+
+      const messageContent = lastMessage.content.toLowerCase();
+      const isWrapUp = wrapUpKeywords.some(keyword => messageContent.includes(keyword));
+
+      if (isWrapUp && !isWrappingUp) {
+        console.log('🎯 [UX] Specialist is wrapping up - highlighting finish button');
+        setIsWrappingUp(true);
+      }
+    } else if (isWrappingUp && phase !== 'consultation') {
+      // Reset if phase changes
+      setIsWrappingUp(false);
+    }
+  }, [messages, currentSpecialist, phase, questionCount, isWrappingUp]);
 
   // Toggle specialist selection
   const toggleSpecialist = (specialist: SpecialistType) => {
@@ -152,7 +247,8 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         body: JSON.stringify({
           messages: [], // Empty - start of conversation
           assessmentData: data,
-          specialistType: firstSpecialist
+          specialistType: firstSpecialist,
+          userExpertiseAreas // ✅ Pass user's areas of knowledge
         }),
       });
 
@@ -264,7 +360,8 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         body: JSON.stringify({
           messages: specialistMessages,
           assessmentData: data,
-          specialistType: currentSpecialist // Pass specialist type to API
+          specialistType: currentSpecialist, // Pass specialist type to API
+          userExpertiseAreas // ✅ Pass user's areas of knowledge
         }),
       });
 
@@ -379,7 +476,8 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
             }
           ],
           assessmentData: data,
-          specialistType: currentSpecialist
+          specialistType: currentSpecialist,
+          userExpertiseAreas // ✅ Pass user's areas of knowledge
         }),
       });
 
@@ -452,6 +550,93 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
               specialist: currentSpecialist
             }
           ]);
+
+          // ✅ UX FIX: Auto-transition to next specialist after 3 seconds
+          console.log('⏱️ [UX] Auto-transition in 3 seconds...');
+          setTimeout(async () => {
+            console.log('🚀 [UX] Auto-starting next specialist:', nextSpecialist);
+
+            try {
+              setIsLoading(true);
+
+              // Call API to get first question from next specialist
+              const response = await fetch('/api/consult', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  messages: [], // Empty - start of new specialist conversation
+                  assessmentData: data,
+                  specialistType: nextSpecialist,
+                  userExpertiseAreas // ✅ Pass user's areas of knowledge
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+              }
+
+              // Handle streaming response
+              const reader = response.body?.getReader();
+              const decoder = new TextDecoder();
+              let firstQuestion = '';
+
+              if (reader) {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+
+                  const chunk = decoder.decode(value);
+                  const lines = chunk.split('\n');
+
+                  for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                      const dataStr = line.slice(6);
+                      if (dataStr === '[DONE]') break;
+
+                      try {
+                        const parsed = JSON.parse(dataStr);
+                        if (parsed.text) {
+                          firstQuestion += parsed.text;
+                          // Update streaming message during reception
+                          setStreamingMessage({
+                            role: 'assistant',
+                            content: firstQuestion,
+                            specialist: nextSpecialist
+                          });
+                        }
+                      } catch (e) {
+                        // Ignore parse errors
+                      }
+                    }
+                  }
+                }
+              }
+
+              // Clear streaming and add first question to messages
+              setStreamingMessage(null);
+              setMessages(prev => [
+                ...prev,
+                {
+                  role: 'assistant',
+                  content: firstQuestion || 'Olá! Vamos começar nossa consulta.',
+                  specialist: nextSpecialist
+                }
+              ]);
+            } catch (error) {
+              console.error('❌ [UX] Auto-transition error:', error);
+              // Fallback: just show a generic greeting
+              setMessages(prev => [
+                ...prev,
+                {
+                  role: 'assistant',
+                  content: 'Olá! Vamos começar nossa consulta.',
+                  specialist: nextSpecialist
+                }
+              ]);
+            } finally {
+              setIsLoading(false);
+            }
+          }, 3000); // Wait 3 seconds before auto-starting next specialist
         }, 500);
       } else {
         // ✅ FIX #2: Change phase to ready-to-finish BEFORE adding message (prevents suggestion generation)
@@ -500,6 +685,67 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         {/* PHASE 1: Specialist Selection */}
         {phase === 'specialist-selection' && (
           <div className="space-y-6 animate-slide-up">
+            {/* ✅ NEW: User Expertise Areas Selection */}
+            <div className="card-dark p-6">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 rounded-lg bg-neon-blue/20 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-6 h-6 text-neon-blue" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Suas Áreas de Conhecimento
+                  </h3>
+                  <p className="text-sm text-tech-gray-400 leading-relaxed">
+                    Para adaptar as perguntas ao seu perfil, indique em quais áreas você tem conhecimento:
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { id: 'strategy-business', label: 'Estratégia e Negócios', description: 'Visão de mercado, competitividade' },
+                  { id: 'engineering-tech', label: 'Tecnologia e Engenharia', description: 'Arquitetura, DevOps, desenvolvimento' },
+                  { id: 'product-ux', label: 'Produto e UX', description: 'Experiência do usuário, roadmap' },
+                  { id: 'finance-ops', label: 'Finanças e Operações', description: 'ROI, custos, orçamento' },
+                  { id: 'marketing-sales', label: 'Marketing e Vendas', description: 'Go-to-market, crescimento' },
+                  { id: 'people-hr', label: 'Recursos Humanos', description: 'Cultura, talentos, engajamento' },
+                ].map((area) => (
+                  <label
+                    key={area.id}
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      userExpertiseAreas.includes(area.id)
+                        ? 'border-neon-blue bg-neon-blue/10'
+                        : 'border-tech-gray-800 hover:border-tech-gray-700'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={userExpertiseAreas.includes(area.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setUserExpertiseAreas(prev => [...prev, area.id]);
+                        } else {
+                          setUserExpertiseAreas(prev => prev.filter(a => a !== area.id));
+                        }
+                      }}
+                      className="mt-1 w-4 h-4 accent-neon-blue"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-white">{area.label}</div>
+                      <div className="text-xs text-tech-gray-400 mt-1">{area.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 bg-tech-gray-900/50 border border-tech-gray-800 rounded-lg">
+                <p className="text-xs text-tech-gray-400">
+                  💡 <strong className="text-white">Por que isso importa:</strong> Os especialistas adaptarão as perguntas baseado no seu conhecimento.
+                  Se você não tiver conhecimento técnico, receberá perguntas mais estratégicas e terá mais opções "não sei" disponíveis.
+                </p>
+              </div>
+            </div>
+
             <div className="card-dark p-6">
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 rounded-lg bg-neon-purple/20 flex items-center justify-center flex-shrink-0">
@@ -720,11 +966,15 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                     <button
                       onClick={finishConsultation}
                       disabled={isLoading}
-                      className="btn-secondary text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50"
-                      title="Finalizar consulta com este especialista"
+                      className={`text-sm px-4 py-2 flex items-center gap-2 disabled:opacity-50 rounded-lg font-medium transition-all ${
+                        isWrappingUp
+                          ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-black hover:from-yellow-400 hover:to-amber-400 shadow-lg shadow-yellow-500/50 animate-pulse-glow'
+                          : 'btn-secondary'
+                      }`}
+                      title={isWrappingUp ? "✨ O especialista está finalizando - clique aqui para concluir!" : "Finalizar consulta com este especialista"}
                     >
-                      <Check className="w-4 h-4" />
-                      Finalizar Consulta
+                      <Check className={`w-4 h-4 ${isWrappingUp ? 'animate-bounce' : ''}`} />
+                      {isWrappingUp ? '✨ Clique Para Concluir' : 'Finalizar Consulta'}
                     </button>
                     <div className="flex-1 h-px bg-tech-gray-800"></div>
                   </div>

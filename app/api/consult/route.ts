@@ -14,6 +14,7 @@ interface ConsultRequestBody {
   messages: Message[];
   assessmentData: AssessmentData;
   specialistType?: SpecialistType; // Optional: for multi-specialist consultations
+  userExpertiseAreas?: string[]; // ✅ Optional: user's areas of knowledge to adapt questions
 }
 
 // Jargon validation: terms to avoid and their replacements by persona
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body: ConsultRequestBody = await req.json();
-    const { messages, assessmentData, specialistType } = body;
+    const { messages, assessmentData, specialistType, userExpertiseAreas } = body;
 
     // Validate input
     if (!messages || !Array.isArray(messages)) {
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     // Generate system prompt based on specialist type or default consultation
     const systemPrompt = specialistType
-      ? generateSpecialistSystemPrompt(specialistType, assessmentData as AssessmentData)
+      ? generateSpecialistSystemPrompt(specialistType, assessmentData as AssessmentData, userExpertiseAreas)
       : generateConsultationSystemPrompt(assessmentData);
 
     // If messages array is empty (start of conversation), add initial user message
@@ -132,6 +133,7 @@ export async function POST(req: NextRequest) {
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929', // Sonnet 4.5: best for complex consulting
       max_tokens: 1024,
+      temperature: 0.5, // ✅ More deterministic - reduces multiple questions in one message
       system: systemPrompt,
       messages: conversationMessages,
       stream: true,

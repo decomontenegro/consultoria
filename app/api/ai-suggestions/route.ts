@@ -39,6 +39,12 @@ export async function POST(request: NextRequest) {
     console.log('   Question:', question?.substring(0, 80));
     console.log('   Context:', context || 'none');
     console.log('   Previous answers count:', previousAnswers?.length || 0);
+    if (previousAnswers && previousAnswers.length > 0) {
+      console.log('   📝 Previous answers:');
+      previousAnswers.forEach((ans, i) => {
+        console.log(`      ${i+1}. ${ans.substring(0, 100)}${ans.length > 100 ? '...' : ''}`);
+      });
+    }
 
     if (!question || question.trim() === '') {
       console.error('   ❌ No question provided');
@@ -75,13 +81,17 @@ export async function POST(request: NextRequest) {
     // Call Claude to generate suggestions
     const systemPrompt = `You are a helpful AI assistant generating quick response suggestions for users filling out an AI readiness assessment.
 
-Your task: Analyze the question and generate 4-6 SHORT, SPECIFIC, QUALITATIVE, and DIVERSE response suggestions that:
-1. Focus on QUALITATIVE DESCRIPTIONS not quantitative metrics
-2. AVOID specific numbers, values, timelines, or monetary amounts
-3. Cover the full spectrum of situations with MEANINGFUL differences
-4. Are concise but informative (3-15 words)
-5. Use Brazilian Portuguese
-6. Focus on context, situation, and characteristics rather than exact numbers
+Your task: Analyze the question AND the previous conversation context to generate 4-6 SHORT, SPECIFIC, QUALITATIVE, and CONTEXTUAL response suggestions that:
+1. **USE THE CONTEXT**: If previous answers are provided, generate suggestions that make sense given what the user already said
+2. **SPECIFIC TO THE QUESTION**: Generate suggestions that directly answer the current question, not generic responses
+3. Focus on QUALITATIVE DESCRIPTIONS not quantitative metrics
+4. AVOID specific numbers, values, timelines, or monetary amounts
+5. Cover the full spectrum of situations with MEANINGFUL differences
+6. Are concise but informative (3-15 words)
+7. Use Brazilian Portuguese
+8. Focus on context, situation, and characteristics rather than exact numbers
+
+**CRITICAL**: Read the "Previous answers" section carefully and tailor your suggestions to match the user's situation and problems they mentioned.
 
 Output format (JSON only, no other text):
 {
@@ -90,6 +100,25 @@ Output format (JSON only, no other text):
     { "text": "Another suggestion" }
   ]
 }
+
+CONTEXTUAL EXAMPLES - HOW TO USE PREVIOUS ANSWERS:
+
+Example 1: Question about "What problem to solve?"
+Previous answers: "Bugs in production", "Deployments are manual", "Tech debt is high"
+❌ BAD (generic): "Melhorar qualidade", "Aumentar velocidade"
+✅ GOOD (contextual): "Reduzir bugs em produção que impactam clientes", "Automatizar deployments para reduzir erros", "Pagar débito técnico acumulado"
+
+Example 2: Question about "What problem to solve in 3-6 months?"
+Previous answers: "CTO at enterprise", "Losing clients to competitors", "Releases take months"
+❌ BAD (generic): "Contratar mais pessoas", "Melhorar processos"
+✅ GOOD (contextual): "Acelerar time-to-market para competir melhor", "Reduzir cycle time de meses para semanas", "Recuperar competitividade no mercado"
+
+Example 3: Question about "AI tools currently used?"
+Previous answers: "Startup early stage", "Manual processes everywhere", "No automation"
+❌ BAD (generic): "GitHub Copilot", "ChatGPT", "Claude"
+✅ GOOD (contextual): "Nenhuma - tudo ainda é manual", "Apenas experimentos individuais com ChatGPT", "Começando a testar GitHub Copilot"
+
+**RULE**: Always read previous answers and tailor suggestions to match the user's ACTUAL situation, problems, and context.
 
 CRITICAL RULES - QUALITATIVE SPECIFICITY:
 
@@ -154,6 +183,30 @@ ALWAYS:
 - Describe situations and contexts
 - Make suggestions applicable across different company sizes and industries
 - Order from most to least common for diverse audiences
+
+SPECIAL RULE - "I Don't Know" Option (CONTEXTUAL):
+- When the question asks for TECHNICAL METRICS, SPECIFIC TOOLS, or DETAILED PROCESSES that user might not know
+- ALWAYS include ONE "escape hatch" suggestion
+- Examples of when to include:
+  ✅ "Qual é o code coverage atual?"
+  ✅ "Que ferramenta usam para CI/CD?"
+  ✅ "Qual o tempo médio de deploy?"
+  ✅ "Quantos bugs em produção por sprint?"
+
+- "Don't know" suggestion examples (pick one that fits context):
+  ✅ "Não sei ao certo - preciso verificar"
+  ✅ "Não tenho esse dado disponível agora"
+  ✅ "Não acompanho essa métrica"
+  ✅ "Desconheço - não é minha área"
+  ✅ "Não tenho acesso a essa informação"
+
+- When to include: Technical questions about metrics, tools, or specific numbers
+- When NOT to include: General questions about problems, urgency, strategy, budget approval
+
+If you include the "don't know" option:
+- Total suggestions: 4-5 (3-4 specific + 1 "don't know")
+- Place "don't know" as the LAST suggestion
+- Still provide 3-4 strong contextual suggestions first
 
 ONLY output valid JSON, nothing else.`;
 
