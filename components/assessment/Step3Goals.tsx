@@ -1,5 +1,8 @@
 import { Goals } from "@/lib/types";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { AISuggestedResponsesAnimated } from "./AISuggestedResponses";
+import { ResponseSuggestion } from "@/lib/ai/response-suggestions";
 
 interface Props {
   data: Partial<Goals>;
@@ -9,6 +12,111 @@ interface Props {
 }
 
 export default function Step3Goals({ data, onUpdate, onNext, onBack }: Props) {
+  // AI Suggestions State
+  const [goalSuggestions, setGoalSuggestions] = useState<ResponseSuggestion[]>([]);
+  const [metricSuggestions, setMetricSuggestions] = useState<ResponseSuggestion[]>([]);
+  const [isLoadingGoals, setIsLoadingGoals] = useState(false);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
+
+  // Fetch AI suggestions on component mount
+  useEffect(() => {
+    const fetchGoalSuggestions = async () => {
+      setIsLoadingGoals(true);
+
+      try {
+        // Build context from assessment data available in localStorage
+        const context = [];
+
+        // Try to get previous step data from localStorage
+        const assessmentData = localStorage.getItem('culturabuilder-assessment-data');
+        if (assessmentData) {
+          const parsed = JSON.parse(assessmentData);
+          if (parsed.companyInfo?.size) context.push(`Company size: ${parsed.companyInfo.size}`);
+          if (parsed.companyInfo?.industry) context.push(`Industry: ${parsed.companyInfo.industry}`);
+          if (parsed.currentState?.painPoints && parsed.currentState.painPoints.length > 0) {
+            context.push(`Pain points: ${parsed.currentState.painPoints.slice(0, 3).join(', ')}`);
+          }
+          if (parsed.currentState?.aiToolsUsage) {
+            context.push(`AI adoption: ${parsed.currentState.aiToolsUsage}`);
+          }
+        }
+
+        const response = await fetch('/api/ai-suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: 'Quais são os principais objetivos da sua iniciativa de transformação AI? Selecione 2-4 objetivos primários.',
+            context: context.join(', '),
+            previousAnswers: context,
+            specialistType: 'strategy'
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setGoalSuggestions(result.suggestions || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch goal suggestions:', error);
+        // Fail silently - form still works without suggestions
+      } finally {
+        setIsLoadingGoals(false);
+      }
+    };
+
+    const fetchMetricSuggestions = async () => {
+      setIsLoadingMetrics(true);
+
+      try {
+        // Build context including selected goals
+        const context = [];
+        if (data.primaryGoals && data.primaryGoals.length > 0) {
+          context.push(`Goals: ${data.primaryGoals.join(', ')}`);
+        }
+
+        // Add data from localStorage
+        const assessmentData = localStorage.getItem('culturabuilder-assessment-data');
+        if (assessmentData) {
+          const parsed = JSON.parse(assessmentData);
+          if (parsed.currentState?.painPoints && parsed.currentState.painPoints.length > 0) {
+            context.push(`Pain points: ${parsed.currentState.painPoints.slice(0, 2).join(', ')}`);
+          }
+        }
+
+        const response = await fetch('/api/ai-suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: 'Quais métricas você vai usar para medir o sucesso? Selecione 3-5 métricas.',
+            context: context.join(', '),
+            previousAnswers: context,
+            specialistType: 'engineering'
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setMetricSuggestions(result.suggestions || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch metric suggestions:', error);
+        // Fail silently - form still works without suggestions
+      } finally {
+        setIsLoadingMetrics(false);
+      }
+    };
+
+    // Fetch goal suggestions once on mount
+    if (goalSuggestions.length === 0 && !isLoadingGoals) {
+      fetchGoalSuggestions();
+    }
+
+    // Fetch metric suggestions once on mount
+    if (metricSuggestions.length === 0 && !isLoadingMetrics) {
+      fetchMetricSuggestions();
+    }
+  }, []); // Empty dependency array - only run once on mount
+
   const handleChange = (field: keyof Goals, value: any) => {
     onUpdate({ ...data, [field]: value });
   };
@@ -39,6 +147,32 @@ export default function Step3Goals({ data, onUpdate, onNext, onBack }: Props) {
       onUpdate({
         ...data,
         successMetrics: [...current, metric],
+      });
+    }
+  };
+
+  // Handle AI suggestion selection for goals
+  const handleGoalSuggestionSelect = (suggestionText: string) => {
+    const current = data.primaryGoals || [];
+
+    // Check if this suggestion is already selected
+    if (!current.includes(suggestionText)) {
+      onUpdate({
+        ...data,
+        primaryGoals: [...current, suggestionText],
+      });
+    }
+  };
+
+  // Handle AI suggestion selection for metrics
+  const handleMetricSuggestionSelect = (suggestionText: string) => {
+    const current = data.successMetrics || [];
+
+    // Check if this suggestion is already selected
+    if (!current.includes(suggestionText)) {
+      onUpdate({
+        ...data,
+        successMetrics: [...current, suggestionText],
       });
     }
   };
@@ -93,6 +227,19 @@ export default function Step3Goals({ data, onUpdate, onNext, onBack }: Props) {
           <label className="block text-sm font-medium text-tech-gray-300 mb-3">
             Objetivos Primários de Transformação * (Selecione 2-4)
           </label>
+
+          {/* AI-Powered Suggestions for Goals */}
+          {goalSuggestions.length > 0 && (
+            <div className="mb-4">
+              <AISuggestedResponsesAnimated
+                suggestions={goalSuggestions}
+                onSelect={handleGoalSuggestionSelect}
+                isLoading={isLoadingGoals}
+              />
+            </div>
+          )}
+
+          {/* Static Options Grid */}
           <div className="grid grid-cols-2 gap-3">
             {goalOptions.map((goal) => (
               <button
@@ -185,6 +332,19 @@ export default function Step3Goals({ data, onUpdate, onNext, onBack }: Props) {
           <label className="block text-sm font-medium text-tech-gray-300 mb-3">
             Métricas de Sucesso * (Selecione 3-5)
           </label>
+
+          {/* AI-Powered Suggestions for Metrics */}
+          {metricSuggestions.length > 0 && (
+            <div className="mb-4">
+              <AISuggestedResponsesAnimated
+                suggestions={metricSuggestions}
+                onSelect={handleMetricSuggestionSelect}
+                isLoading={isLoadingMetrics}
+              />
+            </div>
+          )}
+
+          {/* Static Options Grid */}
           <div className="grid grid-cols-2 gap-3">
             {metricOptions.map((metric) => (
               <button

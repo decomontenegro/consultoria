@@ -321,6 +321,7 @@ function AssessmentPageContent() {
                 selected={persona}
                 onUpdate={setPersona}
                 onNext={nextStep}
+                aiDetected={aiRouterResult?.detectedPersona != null}
               />
             </div>
           )}
@@ -333,6 +334,7 @@ function AssessmentPageContent() {
                 onUpdate={setCompanyInfo}
                 onNext={nextStep}
                 onBack={prevStep}
+                aiDetected={aiRouterResult?.partialData.companyInfo != null}
               />
             </div>
           )}

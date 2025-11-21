@@ -1,6 +1,8 @@
 import { CurrentState } from "@/lib/types";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { AISuggestedResponsesAnimated } from "./AISuggestedResponses";
+import { ResponseSuggestion } from "@/lib/ai/response-suggestions";
 
 interface Props {
   data: Partial<CurrentState>;
@@ -15,6 +17,60 @@ export default function Step2CurrentState({
   onNext,
   onBack,
 }: Props) {
+  // AI Suggestions State
+  const [painPointSuggestions, setPainPointSuggestions] = useState<ResponseSuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+  // Fetch AI suggestions on component mount
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      setIsLoadingSuggestions(true);
+
+      try {
+        // Build context from existing data
+        const context = [];
+        if (data.devTeamSize) {
+          context.push(`Team size: ${data.devTeamSize} developers`);
+        }
+        if (data.deploymentFrequency) {
+          context.push(`Deployment frequency: ${data.deploymentFrequency}`);
+        }
+        if (data.avgCycleTime) {
+          context.push(`Average cycle time: ${data.avgCycleTime} days`);
+        }
+        if (data.aiToolsUsage) {
+          context.push(`AI tools adoption: ${data.aiToolsUsage}`);
+        }
+
+        const response = await fetch('/api/ai-suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: 'Quais são os principais pain points ou desafios que seu time de desenvolvimento enfrenta no dia a dia?',
+            context: context.join(', '),
+            previousAnswers: context,
+            specialistType: 'engineering'
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          setPainPointSuggestions(result.suggestions || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch AI suggestions:', error);
+        // Fail silently - form still works without suggestions
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    // Only fetch suggestions once when component mounts
+    if (painPointSuggestions.length === 0 && !isLoadingSuggestions) {
+      fetchSuggestions();
+    }
+  }, []); // Empty dependency array - only run once on mount
+
   const handleChange = (field: keyof CurrentState, value: any) => {
     onUpdate({ ...data, [field]: value });
   };
@@ -44,6 +100,19 @@ export default function Step2CurrentState({
       onUpdate({
         ...data,
         painPoints: [...current, point],
+      });
+    }
+  };
+
+  // Handle AI suggestion selection for pain points
+  const handleSuggestionSelect = (suggestionText: string) => {
+    const current = data.painPoints || [];
+
+    // Check if this suggestion is already in the pain points
+    if (!current.includes(suggestionText)) {
+      onUpdate({
+        ...data,
+        painPoints: [...current, suggestionText],
       });
     }
   };
@@ -252,6 +321,19 @@ export default function Step2CurrentState({
           <label className="block text-sm font-medium text-tech-gray-300 mb-3">
             Pain Points Atuais (Selecione todos que se aplicam)
           </label>
+
+          {/* AI-Powered Suggestions */}
+          {painPointSuggestions.length > 0 && (
+            <div className="mb-4">
+              <AISuggestedResponsesAnimated
+                suggestions={painPointSuggestions}
+                onSelect={handleSuggestionSelect}
+                isLoading={isLoadingSuggestions}
+              />
+            </div>
+          )}
+
+          {/* Static Options Grid */}
           <div className="grid grid-cols-2 gap-3">
             {painPointOptions.map((point) => (
               <button

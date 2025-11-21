@@ -1,5 +1,5 @@
 import { CompanyInfo } from "@/lib/types";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import industries from "@/data/industries.json";
 
 interface Props {
@@ -7,9 +7,10 @@ interface Props {
   onUpdate: (data: Partial<CompanyInfo>) => void;
   onNext: () => void;
   onBack?: () => void;
+  aiDetected?: boolean; // NEW: Flag to show AI pre-filled this data
 }
 
-export default function Step1CompanyInfo({ data, onUpdate, onNext, onBack }: Props) {
+export default function Step1CompanyInfo({ data, onUpdate, onNext, onBack, aiDetected = false }: Props) {
   const handleChange = (field: keyof CompanyInfo, value: string) => {
     onUpdate({ ...data, [field]: value });
   };
@@ -18,14 +19,42 @@ export default function Step1CompanyInfo({ data, onUpdate, onNext, onBack }: Pro
     return data.name && data.industry && data.size && data.revenue;
   };
 
+  // Count how many fields were pre-filled by AI
+  const preFilledFields = [];
+  if (data.name) preFilledFields.push('nome da empresa');
+  if (data.industry) preFilledFields.push('indústria');
+  if (data.size) preFilledFields.push('tamanho');
+
   return (
     <div className="card-professional p-8">
       <h2 className="text-3xl font-bold text-tech-gray-100 mb-2 font-display">
         <span className="text-gradient-neon">01.</span> Company Information
       </h2>
-      <p className="text-tech-gray-400 mb-8">
+      <p className="text-tech-gray-400 mb-4">
         Ajude-nos a entender sua organização para fornecer benchmarks precisos.
       </p>
+
+      {/* AI Detection Banner */}
+      {aiDetected && preFilledFields.length > 0 && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-neon-cyan/10 to-neon-green/10 border-2 border-neon-cyan/40 rounded-xl animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <div className="relative">
+                <Sparkles className="w-5 h-5 text-neon-cyan animate-pulse" />
+                <div className="absolute inset-0 blur-md bg-neon-cyan opacity-50"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-neon-cyan mb-1">
+                IA preencheu alguns campos automaticamente
+              </p>
+              <p className="text-xs text-tech-gray-300">
+                Baseado na nossa conversa: {preFilledFields.join(', ')}. Você pode confirmar ou alterar abaixo.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Company Name */}

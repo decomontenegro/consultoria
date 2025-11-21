@@ -1,13 +1,14 @@
 import { UserPersona } from "@/lib/types";
-import { Target, Briefcase, BarChart3, Code2, Wrench, Lightbulb, ArrowRight, CheckCircle } from "lucide-react";
+import { Target, Briefcase, BarChart3, Code2, Wrench, Lightbulb, ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 
 interface Props {
   selected: UserPersona | null;
   onUpdate: (persona: UserPersona) => void;
   onNext: () => void;
+  aiDetected?: boolean; // NEW: Flag to show AI detected this persona
 }
 
-export default function Step0PersonaSelection({ selected, onUpdate, onNext }: Props) {
+export default function Step0PersonaSelection({ selected, onUpdate, onNext, aiDetected = false }: Props) {
   const personas = [
     {
       value: 'board-executive' as UserPersona,
@@ -51,9 +52,31 @@ export default function Step0PersonaSelection({ selected, onUpdate, onNext }: Pr
       <h2 className="text-3xl font-bold text-tech-gray-100 mb-2 font-display">
         <span className="text-gradient-neon">00.</span> Sobre Você
       </h2>
-      <p className="text-tech-gray-400 mb-8">
+      <p className="text-tech-gray-400 mb-4">
         Selecione sua função para personalizar as perguntas do assessment de acordo com sua perspectiva.
       </p>
+
+      {/* AI Detection Banner */}
+      {aiDetected && selected && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-neon-cyan/10 to-neon-green/10 border-2 border-neon-cyan/40 rounded-xl animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <div className="relative">
+                <Sparkles className="w-5 h-5 text-neon-cyan animate-pulse" />
+                <div className="absolute inset-0 blur-md bg-neon-cyan opacity-50"></div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-neon-cyan mb-1">
+                IA detectou seu perfil automaticamente
+              </p>
+              <p className="text-xs text-tech-gray-300">
+                Baseado na nossa conversa, você pode confirmar ou alterar abaixo
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {personas.map((persona) => (
