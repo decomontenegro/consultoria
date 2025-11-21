@@ -72,7 +72,22 @@ Sistema de avaliação de AI readiness para empresas, com **múltiplos modos de 
 
 ### 🐛 Bugs Críticos Resolvidos Hoje (19 Nov 2025)
 
-#### Bug #1: Values Técnicos ao Invés de Labels (Express Mode)
+#### Bug #1: Relatório Não Sendo Gerado (Express Mode) 🔴 CRÍTICO
+**Arquivo**: `docs/BUGFIX_EXPRESS_REPORT_GENERATION.md`
+
+**Problema**:
+```
+Express Mode completava perguntas, mostrava "Vou gerar seu relatório..."
+mas TRAVAVA - relatório nunca era gerado
+```
+
+**Causa**: API de insights gerando JSON inválido do Claude, travando o fluxo
+**Correção**: Desabilitados deep insights temporariamente no Express Mode
+**Impacto**: ✅ 100% resolvido, Express Mode agora funciona completamente
+
+---
+
+#### Bug #2: Values Técnicos ao Invés de Labels (Express Mode)
 **Arquivo**: `docs/BUGFIX_EXPRESS_MODE_UX.md`
 
 **Problema**:
@@ -428,7 +443,7 @@ Para 100 assessments/mês: ~$25-50/mês
 
 1. ✅ **Sistema funcionando** com 3 modos de assessment
 2. ✅ **Sprint 2 completo** (question bank + router inteligente)
-3. ✅ **5 bugs corrigidos hoje** (sistema estável)
+3. ✅ **6 bugs corrigidos hoje** (sistema estável)
 4. ✅ **9/9 testes passing** (100% de cobertura crítica)
 5. ✅ **Geração de relatórios** personalizados com múltiplos layouts
 6. ✅ **Sugestões AI qualitativas** (aplicável a qualquer empresa)
