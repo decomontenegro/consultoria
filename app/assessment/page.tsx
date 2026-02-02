@@ -23,6 +23,7 @@ import {
 } from "@/lib/utils/persona-mapping";
 
 // Import step components
+import StepExpertiseDetection from "@/components/assessment/StepExpertiseDetection";
 import StepAIRouter from "@/components/assessment/StepAIRouter";
 import StepAIExpress from "@/components/assessment/StepAIExpress";
 import StepAdaptiveAssessment from "@/components/assessment/StepAdaptiveAssessment";
@@ -44,7 +45,8 @@ function AssessmentPageContent() {
   const [assessmentMode, setAssessmentMode] = useState<AssessmentMode | null>(null);
   const [aiRouterResult, setAIRouterResult] = useState<AIRouterResult | null>(null);
 
-  const [currentStep, setCurrentStep] = useState(-1); // Start at -1 for AI router
+  const [currentStep, setCurrentStep] = useState(-2); // Start at -2 for Expertise Detection
+  const [userExpertise, setUserExpertise] = useState<string[]>([]); // NEW: User's areas of knowledge
   const [persona, setPersona] = useState<UserPersona | null>(null);
   const [companyInfo, setCompanyInfo] = useState<Partial<CompanyInfo>>({});
   const [currentState, setCurrentState] = useState<Partial<CurrentState>>({});
@@ -57,7 +59,7 @@ function AssessmentPageContent() {
   const [nonTechCurrentState, setNonTechCurrentState] = useState<Partial<NonTechCurrentState>>({});
   const [nonTechGoals, setNonTechGoals] = useState<Partial<NonTechGoals>>({});
 
-  const totalSteps = 7; // AI Router + Persona + Company + State + Goals + Review + AI Consult
+  const totalSteps = 8; // Expertise + AI Router + Persona + Company + State + Goals + Review + AI Consult
   const isTechPersona = persona ? isTechnicalPersona(persona) : true;
 
   // Load data from previous report if in duplicate mode
@@ -106,14 +108,17 @@ function AssessmentPageContent() {
   }, [searchParams]);
 
   const nextStep = () => {
-    if (currentStep < totalSteps) {
+    // ✅ UNIFIED FLOW: Step -2 (Expertise) → Step 101 (Adaptive)
+    if (currentStep === -2) {
+      setCurrentStep(101); // Go directly to Adaptive Assessment
+    } else if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const prevStep = () => {
-    if (currentStep > 1) {
+    if (currentStep > -2) { // Can go back to Step -2 (Expertise Detection)
       setCurrentStep(currentStep - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -304,117 +309,32 @@ function AssessmentPageContent() {
       {/* Main Content */}
       <main className="container-professional py-12">
         <div className="max-w-3xl mx-auto">
-          {/* Step -1: AI Router (Discovery) */}
-          {currentStep === -1 && useAIFirst && (
+          {/* Step -2: Expertise Detection (FIRST QUESTION) */}
+          {currentStep === -2 && (
             <div className="animate-slide-up">
-              <StepAIRouter
-                onComplete={handleAIRouterComplete}
-                onSelectMode={handleModeSelection}
-              />
-            </div>
-          )}
-
-          {/* Step 0: Persona Selection */}
-          {currentStep === 0 && (
-            <div className="animate-slide-up">
-              <Step0PersonaSelection
-                selected={persona}
-                onUpdate={setPersona}
+              <StepExpertiseDetection
+                selected={userExpertise}
+                onUpdate={setUserExpertise}
                 onNext={nextStep}
-                aiDetected={aiRouterResult?.detectedPersona != null}
               />
             </div>
           )}
 
-          {/* Step 1: Company Info */}
-          {currentStep === 1 && (
-            <div className="animate-slide-up">
-              <Step1CompanyInfo
-                data={companyInfo}
-                onUpdate={setCompanyInfo}
-                onNext={nextStep}
-                onBack={prevStep}
-                aiDetected={aiRouterResult?.partialData.companyInfo != null}
-              />
-            </div>
-          )}
-
-          {/* Step 2: Current State - Branching based on persona */}
-          {currentStep === 2 && (
-            <div className="animate-slide-up">
-              {isTechPersona ? (
-                <Step2CurrentState
-                  data={currentState}
-                  onUpdate={setCurrentState}
-                  onNext={nextStep}
-                  onBack={prevStep}
-                />
-              ) : (
-                <Step2CurrentStateNonTech
-                  data={nonTechCurrentState}
-                  onUpdate={setNonTechCurrentState}
-                  onNext={nextStep}
-                  onBack={prevStep}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Step 3: Goals - Branching based on persona */}
-          {currentStep === 3 && (
-            <div className="animate-slide-up">
-              {isTechPersona ? (
-                <Step3Goals
-                  data={goals}
-                  onUpdate={setGoals}
-                  onNext={nextStep}
-                  onBack={prevStep}
-                />
-              ) : (
-                <Step3GoalsNonTech
-                  data={nonTechGoals}
-                  onUpdate={setNonTechGoals}
-                  onNext={nextStep}
-                  onBack={prevStep}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Step 4: Review & Contact */}
-          {currentStep === 4 && (
-            <div className="animate-slide-up">
-              <Step4Review
-                persona={persona as UserPersona}
-                companyInfo={companyInfo}
-                currentState={isTechPersona ? currentState : mapNonTechCurrentState(
-                  nonTechCurrentState as NonTechCurrentState,
-                  companyInfo.size as 'startup' | 'scaleup' | 'enterprise'
-                )}
-                goals={isTechPersona ? goals : mapNonTechGoals(nonTechGoals as NonTechGoals)}
-                contactInfo={contactInfo}
-                onUpdateContact={setContactInfo}
-                onBack={prevStep}
-                onSubmit={nextStep}
-              />
-            </div>
-          )}
-
-          {/* Step 100: Express Mode (AI-driven 5-7 min assessment) */}
-          {currentStep === 100 && persona && (
-            <div className="animate-slide-up">
-              <StepAIExpress
-                persona={persona}
-                partialData={aiRouterResult?.partialData}
-              />
-            </div>
-          )}
+          {/* ✅ REMOVED: AI Router, Guided Forms, Express Mode */}
+          {/* Unified flow: Step -2 → Step 101 only */}
 
           {/* Step 101: Adaptive Assessment (Conversational Interview with LLM) */}
           {currentStep === 101 && (
             <div className="animate-slide-up">
               {console.log('🔧 [Page] Rendering StepAdaptiveAssessment at step 101')}
               <StepAdaptiveAssessment
+                partialData={{
+                  userExpertise: userExpertise, // ✅ Pass expertise from Step -2
+                  persona: persona || undefined,
+                  companyInfo: companyInfo,
+                  currentState: currentState,
+                  goals: goals
+                }}
                 onPersonaDetected={(detectedPersona) => {
                   console.log('🔧 [Page] Persona detected:', detectedPersona);
                   if (detectedPersona && !persona) {
@@ -431,6 +351,7 @@ function AssessmentPageContent() {
               <Step5AIConsultMulti
                 data={{
                   persona: persona as UserPersona,
+                  userExpertise: userExpertise, // ✅ Pass expertise for automatic specialist routing
                   companyInfo: companyInfo as CompanyInfo,
                   currentState: isTechPersona ? currentState as CurrentState : mapNonTechCurrentState(
                     nonTechCurrentState as NonTechCurrentState,

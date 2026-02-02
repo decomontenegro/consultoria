@@ -171,7 +171,9 @@ export async function POST(request: NextRequest) {
       console.log('📝 [Next Question] Using question from bank:', {
         questionId: questionFromBank.id,
         block: questionFromBank.block,
-        phase: questionFromBank.phase
+        phase: questionFromBank.phase,
+        persona: session.persona,
+        questionPersonas: questionFromBank.personas || 'all'
       });
 
       nextQuestion = {

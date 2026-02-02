@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession, updateSession, addAnswer } from '@/lib/sessions/unified-session-manager';
 import { getQuestionForRouting } from '@/lib/ai/adaptive-question-router-v2';
 import { calculateDetailedCompletion } from '@/lib/ai/completeness-scorer';
+import { detectUncertainty } from '@/lib/utils/uncertainty-detector';
 import type { AssessmentData, ConversationContext } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -57,6 +58,24 @@ export async function POST(request: NextRequest) {
     console.log('📝 [Answer - Router v2] Submitting answer for session:', sessionId);
     console.log('   Question ID:', questionId);
     console.log('   Answer:', typeof answer === 'string' && answer.length > 100 ? answer.substring(0, 100) + '...' : answer);
+
+    // ✅ Detect uncertainty signals in text answers
+    if (typeof answer === 'string') {
+      const uncertaintySignals = detectUncertainty(answer);
+      if (uncertaintySignals.hasUncertainty) {
+        console.warn('⚠️  [Answer] Uncertainty detected:', {
+          category: uncertaintySignals.category,
+          confidence: uncertaintySignals.confidence,
+          phrases: uncertaintySignals.detectedPhrases,
+          questionId
+        });
+
+        // If user explicitly said "não sei" with high confidence
+        if (uncertaintySignals.confidence >= 0.8) {
+          console.warn('🚨 [Answer] User explicitly lacks knowledge - possible persona mismatch!');
+        }
+      }
+    }
 
     // Get session context
     const session = getSession(sessionId);

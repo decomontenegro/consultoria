@@ -570,13 +570,64 @@ export function analyzeConversation(messages: ConversationMessage[]): AIRouterRe
 }
 
 /**
+ * Adapt question based on user's expertise areas
+ * Makes technical questions more strategic for non-technical users
+ */
+function adaptQuestionForExpertise(
+  baseQuestion: string,
+  userExpertise: string[],
+  detectedPersona?: UserPersona | null
+): string {
+  const hasTechExpertise = userExpertise.includes('engineering-tech');
+  const hasFinanceExpertise = userExpertise.includes('finance-ops');
+
+  // If user has technical expertise OR is technical persona, ask technical questions
+  if (hasTechExpertise || detectedPersona === 'engineering-tech' || detectedPersona === 'it-devops') {
+    // Can ask about technical details
+    return baseQuestion;
+  }
+
+  // If user doesn't have technical expertise, make questions more strategic
+  // Replace technical terms with business impact terms
+  let adapted = baseQuestion;
+
+  // Technical → Business translations
+  const translations: Record<string, string> = {
+    'deployment frequency': 'frequência de lançamento de features',
+    'DORA metrics': 'métricas de produtividade',
+    'CI/CD': 'processo de entregas',
+    'pipeline': 'processo de lançamento',
+    'code coverage': 'qualidade do código',
+    'technical debt': 'problemas técnicos acumulados',
+    'architecture': 'estrutura tecnológica',
+    'bugs escapam': 'problemas chegam aos clientes',
+    'quantos bugs': 'quanta qualidade de problemas',
+  };
+
+  for (const [technical, business] of Object.entries(translations)) {
+    adapted = adapted.replace(new RegExp(technical, 'gi'), business);
+  }
+
+  // If question asks for specific metrics and user doesn't have finance expertise,
+  // make it more qualitative
+  if (!hasFinanceExpertise) {
+    adapted = adapted.replace(/quantos reais/gi, 'qual o impacto financeiro');
+    adapted = adapted.replace(/R\$ X mil/gi, 'investimento significativo');
+    adapted = adapted.replace(/orçamento de/gi, 'recursos para');
+  }
+
+  return adapted;
+}
+
+/**
  * Get next question based on conversation so far
- * NOW ENHANCED: Adapts question by persona + supports follow-ups
+ * NOW ENHANCED: Adapts question by persona + expertise + supports follow-ups
  */
 export function getNextQuestion(
   messages: ConversationMessage[],
   questionsAsked: number,
-  detectedPersona?: UserPersona | null
+  detectedPersona?: UserPersona | null,
+  userExpertise?: string[]
 ): string | null {
   if (questionsAsked >= DISCOVERY_QUESTIONS.length) {
     return null; // All questions asked
@@ -596,9 +647,12 @@ export function getNextQuestion(
     }
   }
 
-  // Get next question with persona variant
+  // Get next question with persona AND expertise variant
   const question = DISCOVERY_QUESTIONS[questionsAsked];
-  return getQuestionForPersona(question, detectedPersona || null);
+  const baseQuestion = getQuestionForPersona(question, detectedPersona || null);
+
+  // Adapt question based on expertise
+  return adaptQuestionForExpertise(baseQuestion, userExpertise || [], detectedPersona);
 }
 
 /**

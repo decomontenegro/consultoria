@@ -26,16 +26,22 @@ interface SpecialistSelectorProps {
   onToggle: (specialist: SpecialistType) => void;
   recommendedSpecialist?: SpecialistType;
   mode: 'single' | 'multiple';
+  availableSpecialists?: SpecialistType[]; // NEW: Filter specialists based on persona
 }
 
 export default function SpecialistSelector({
   selectedSpecialists,
   onToggle,
   recommendedSpecialist,
-  mode = 'multiple'
+  mode = 'multiple',
+  availableSpecialists // NEW
 }: SpecialistSelectorProps) {
 
-  const specialists = Object.values(SPECIALISTS);
+  // Filter specialists if availableSpecialists is provided
+  // Otherwise show all (fallback for backward compatibility)
+  const specialists = availableSpecialists
+    ? Object.values(SPECIALISTS).filter(s => availableSpecialists.includes(s.id))
+    : Object.values(SPECIALISTS);
 
   return (
     <div className="space-y-4">

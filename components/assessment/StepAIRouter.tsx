@@ -18,11 +18,12 @@ import { generateAIPoweredSuggestions } from '@/lib/ai/ai-powered-suggestions';
 import { AISuggestedResponsesAnimated } from './AISuggestedResponses';
 
 interface StepAIRouterProps {
+  userExpertise: string[]; // NEW: User's areas of expertise from Step -2
   onComplete: (result: AIRouterResult) => void;
   onSelectMode: (mode: AssessmentMode, persona: UserPersona | null, partialData: any) => void;
 }
 
-export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterProps) {
+export default function StepAIRouter({ userExpertise, onComplete, onSelectMode }: StepAIRouterProps) {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -112,7 +113,8 @@ export default function StepAIRouter({ onComplete, onSelectMode }: StepAIRouterP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: updatedMessages,
-          questionsAsked: questionsAsked + 1
+          questionsAsked: questionsAsked + 1,
+          userExpertise: userExpertise // NEW: Pass expertise to adapt questions
         }),
       });
 

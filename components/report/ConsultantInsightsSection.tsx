@@ -1,10 +1,12 @@
 /**
  * Consultant Insights Section - Display deep insights from PhD consultant
+ *
+ * UPDATED: Now displays confidence levels prominently and adjusts language based on confidence
  */
 
 'use client';
 
-import { AlertTriangle, TrendingUp, DollarSign, Target, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertTriangle, TrendingUp, DollarSign, Target, CheckCircle2, XCircle, Info } from 'lucide-react';
 
 interface Pattern {
   type: string;
@@ -189,14 +191,47 @@ export default function ConsultantInsightsSection({ insights }: Props) {
       {/* Financial Impact */}
       {insights.financialImpact && (
         <div>
-          <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-green-400" />
-            Impacto Financeiro Real
-          </h3>
-          <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-6">
+          {/* Header with Confidence Badge */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-400" />
+              {/* UPDATED: Change title based on confidence */}
+              {insights.financialImpact.confidence >= 0.8
+                ? 'Impacto Financeiro Real'
+                : insights.financialImpact.confidence >= 0.6
+                ? 'Impacto Financeiro Estimado'
+                : 'Impacto Financeiro Projetado'}
+            </h3>
+
+            {/* UPDATED: Prominent confidence badge */}
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
+              insights.financialImpact.confidence >= 0.8
+                ? 'bg-neon-green/20 border-neon-green/40 text-neon-green'
+                : insights.financialImpact.confidence >= 0.6
+                ? 'bg-yellow-400/20 border-yellow-400/40 text-yellow-400'
+                : 'bg-orange-400/20 border-orange-400/40 text-orange-400'
+            }`}>
+              <Info className="w-4 h-4" />
+              <span className="text-sm font-semibold">
+                {(insights.financialImpact.confidence * 100).toFixed(0)}% confiança
+              </span>
+            </div>
+          </div>
+
+          <div className={`border rounded-lg p-6 ${
+            insights.financialImpact.confidence >= 0.8
+              ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/30'
+              : insights.financialImpact.confidence >= 0.6
+              ? 'bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border-yellow-500/30'
+              : 'bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/30'
+          }`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
-                <p className="text-xs uppercase tracking-wider text-green-400 mb-2">
+                <p className={`text-xs uppercase tracking-wider mb-2 ${
+                  insights.financialImpact.confidence >= 0.8 ? 'text-green-400' :
+                  insights.financialImpact.confidence >= 0.6 ? 'text-yellow-400' :
+                  'text-orange-400'
+                }`}>
                   Custo Mensal Direto
                 </p>
                 <p className="text-3xl font-bold text-white">
@@ -206,7 +241,11 @@ export default function ConsultantInsightsSection({ insights }: Props) {
               </div>
 
               <div>
-                <p className="text-xs uppercase tracking-wider text-green-400 mb-2">
+                <p className={`text-xs uppercase tracking-wider mb-2 ${
+                  insights.financialImpact.confidence >= 0.8 ? 'text-green-400' :
+                  insights.financialImpact.confidence >= 0.6 ? 'text-yellow-400' :
+                  'text-orange-400'
+                }`}>
                   Custo de Oportunidade (Anual)
                 </p>
                 <p className="text-3xl font-bold text-white">
@@ -216,22 +255,52 @@ export default function ConsultantInsightsSection({ insights }: Props) {
               </div>
 
               <div>
-                <p className="text-xs uppercase tracking-wider text-green-400 mb-2">
+                <p className={`text-xs uppercase tracking-wider mb-2 ${
+                  insights.financialImpact.confidence >= 0.8 ? 'text-green-400' :
+                  insights.financialImpact.confidence >= 0.6 ? 'text-yellow-400' :
+                  'text-orange-400'
+                }`}>
                   Impacto Total (Anual)
                 </p>
                 <p className="text-3xl font-bold text-white">
                   R$ {(insights.financialImpact.totalAnnualImpact / 1000000).toFixed(2)}M
                 </p>
                 <p className="text-xs text-tech-gray-400 mt-1">
-                  Confiança: {(insights.financialImpact.confidence * 100).toFixed(0)}%
+                  {insights.financialImpact.confidence >= 0.8
+                    ? 'Alta precisão'
+                    : insights.financialImpact.confidence >= 0.6
+                    ? 'Precisão moderada'
+                    : 'Estimativa conservadora'}
                 </p>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-green-500/20">
+            <div className={`pt-4 border-t ${
+              insights.financialImpact.confidence >= 0.8 ? 'border-green-500/20' :
+              insights.financialImpact.confidence >= 0.6 ? 'border-yellow-500/20' :
+              'border-orange-500/20'
+            }`}>
               <p className="text-sm text-tech-gray-300 leading-relaxed">
                 <strong>Como calculamos:</strong> {insights.financialImpact.breakdown}
               </p>
+
+              {/* UPDATED: Add disclaimer for low confidence */}
+              {insights.financialImpact.confidence < 0.8 && (
+                <div className={`mt-3 p-3 rounded border ${
+                  insights.financialImpact.confidence >= 0.6
+                    ? 'bg-yellow-500/5 border-yellow-500/20'
+                    : 'bg-orange-500/5 border-orange-500/20'
+                }`}>
+                  <p className="text-xs text-tech-gray-400 flex items-start gap-2">
+                    <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>
+                      {insights.financialImpact.confidence >= 0.6
+                        ? 'Dados parciais disponíveis. Forneça métricas adicionais (receita, tamanho do time, custos) para aumentar precisão.'
+                        : 'Estimativa baseada em perfil genérico. Valores reais podem variar significativamente. Forneça dados específicos da empresa para análise precisa.'}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

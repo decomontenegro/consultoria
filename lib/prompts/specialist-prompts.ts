@@ -9,6 +9,7 @@
  */
 
 import { AssessmentData, UserPersona } from '../types';
+import { isTechnicalPersona } from '../utils/persona-mapping';
 
 export type SpecialistType = 'engineering' | 'finance' | 'strategy';
 
@@ -501,6 +502,35 @@ export function getRecommendedSpecialist(assessmentData: AssessmentData): Specia
 
   // Default to strategy for high-level stakeholders
   return 'strategy';
+}
+
+/**
+ * Get available specialists based on user persona
+ * Non-technical personas should NOT access Engineering specialist
+ */
+export function getAvailableSpecialists(persona: UserPersona): SpecialistType[] {
+  const technical = isTechnicalPersona(persona);
+
+  // Technical personas can access ALL specialists
+  if (technical) {
+    return ['engineering', 'finance', 'strategy'];
+  }
+
+  // Non-technical personas: EXCLUDE engineering specialist
+  // They should focus on strategic and financial aspects they can understand
+
+  if (persona === 'board-executive' || persona === 'product-business') {
+    // CEOs and Business Leaders: Strategy + Finance (NO Engineering)
+    return ['strategy', 'finance'];
+  }
+
+  if (persona === 'finance-ops') {
+    // Finance/Ops: Finance + Strategy (NO Engineering)
+    return ['finance', 'strategy'];
+  }
+
+  // Fallback: only strategy (safest for any unknown persona)
+  return ['strategy'];
 }
 
 /**

@@ -32,6 +32,9 @@ import QuestionRenderer from './QuestionRenderer';
 import { QuestionTemplate } from '@/lib/ai/dynamic-questions';
 import { QuestionProgressCompact } from './QuestionProgress';
 import type { CompletionMetrics } from '@/lib/types';
+import { ResponseSuggestion } from '@/lib/ai/response-suggestions';
+import { generateAIPoweredSuggestions } from '@/lib/ai/ai-powered-suggestions';
+import AISuggestedResponses from './AISuggestedResponses';
 
 interface StepAdaptiveAssessmentProps {
   persona?: UserPersona; // Optional - will be detected during conversation if not provided
@@ -76,7 +79,9 @@ export default function StepAdaptiveAssessment({ persona, partialData, onComplet
   const [sessionId, setSessionId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const [hasLoadedFirstQuestion, setHasLoadedFirstQuestion] = useState(false);
+
+  // ✅ FIX: Use ref instead of state to prevent double initialization on Strict Mode remounts
+  const hasInitialized = useRef(false);
 
   // Progress tracking
   const [completenessScore, setCompletenessScore] = useState(0);
@@ -94,6 +99,10 @@ export default function StepAdaptiveAssessment({ persona, partialData, onComplet
   // Routing insights
   const [lastRoutingReasoning, setLastRoutingReasoning] = useState<string>('');
   const [routingConfidence, setRoutingConfidence] = useState<number>(0);
+
+  // ✅ AI-powered suggestions
+  const [suggestions, setSuggestions] = useState<ResponseSuggestion[]>([]);
+  const lastQuestionForSuggestions = useRef<string>('');
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -137,18 +146,52 @@ export default function StepAdaptiveAssessment({ persona, partialData, onComplet
     }
   }, [currentQuestion, isLoading, isComplete, focusInput]);
 
+  // ✅ Generate AI-powered suggestions when new question appears
+  useEffect(() => {
+    if (!currentQuestion || isLoading || isComplete) return;
+
+    // Avoid regenerating for same question
+    if (currentQuestion.text === lastQuestionForSuggestions.current) return;
+
+    lastQuestionForSuggestions.current = currentQuestion.text;
+
+    // Clear old suggestions immediately
+    setSuggestions([]);
+
+    // Get previous answers for context
+    const previousAnswers = conversationHistory
+      .map(h => h.answer)
+      .filter(a => a && typeof a === 'string')
+      .slice(-3);
+
+    // Generate suggestions (async, ~2s)
+    generateAIPoweredSuggestions({
+      question: currentQuestion.text,
+      context: `Adaptive Assessment, pergunta ${questionsAsked + 1}`,
+      previousAnswers
+    }).then(newSuggestions => {
+      // Only update if still on same question
+      if (currentQuestion.text === lastQuestionForSuggestions.current) {
+        setSuggestions(newSuggestions);
+      }
+    }).catch(error => {
+      console.error('❌ Error generating suggestions:', error);
+    });
+  }, [currentQuestion, isLoading, isComplete, conversationHistory, questionsAsked]);
+
   // Initialize session and load first question
   useEffect(() => {
     console.log('🔧 [StepAdaptiveAssessment] Init useEffect triggered', {
-      hasLoadedFirstQuestion
+      hasInitialized: hasInitialized.current
     });
 
-    if (!hasLoadedFirstQuestion) {
+    // ✅ FIX: Use ref to prevent double init on React Strict Mode remounts
+    if (!hasInitialized.current) {
       console.log('🚀 [StepAdaptiveAssessment] Initializing session...');
-      setHasLoadedFirstQuestion(true);
+      hasInitialized.current = true;
       initializeSession();
     } else {
-      console.log('⏭️ [StepAdaptiveAssessment] Already loaded, skipping init');
+      console.log('⏭️ [StepAdaptiveAssessment] Already initialized, skipping');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -540,16 +583,21 @@ export default function StepAdaptiveAssessment({ persona, partialData, onComplet
             {/* Welcome message */}
             {messages.length === 0 && (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-neon-cyan/20 to-neon-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-neon-cyan/20 to-neon-green/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                   <Brain className="w-8 h-8 text-neon-cyan" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  Avaliação Inteligente
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Conversa Inteligente de 10-12 Minutos
                 </h3>
-                <p className="text-sm text-tech-gray-400 max-w-md mx-auto">
-                  Vou fazer perguntas personalizadas baseadas nas suas respostas.
-                  Cada pergunta é escolhida por IA para obter o máximo de informação relevante.
+                <p className="text-sm text-tech-gray-400 max-w-lg mx-auto leading-relaxed">
+                  Vou conduzir uma <strong className="text-white">conversa adaptativa</strong> para entender seu cenário completo.
+                  Cada pergunta é escolhida pela IA baseada nas suas respostas anteriores e expertise,
+                  garantindo um <strong className="text-white">relatório personalizado e acionável</strong> no final.
                 </p>
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-tech-gray-500">
+                  <span className="inline-block w-2 h-2 bg-neon-green rounded-full animate-pulse"></span>
+                  <span>Sistema detectará automaticamente o melhor especialista para você</span>
+                </div>
               </div>
             )}
 
@@ -612,6 +660,19 @@ export default function StepAdaptiveAssessment({ persona, partialData, onComplet
               {currentQuestionTemplate.inputType === 'text' ? (
                 // Text input
                 <div className="space-y-3">
+                  {/* ✅ AI-Powered Suggestions */}
+                  <AISuggestedResponses
+                    suggestions={suggestions}
+                    onSelect={(text) => {
+                      setInput(text);
+                      // Auto-send after brief delay
+                      setTimeout(() => {
+                        sendMessage();
+                      }, 100);
+                    }}
+                    isLoading={isLoading}
+                  />
+
                   <div className="flex gap-3">
                     <input
                       ref={inputRef}

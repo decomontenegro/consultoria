@@ -228,12 +228,34 @@ async function selectQuestionFromBlock(
   // Get all questions for this block
   let candidates = getQuestionsByBlock(block);
 
+  // ✅ FILTER BY PERSONA - Show only questions matching user's persona
+  const userPersona = context.persona;
+  candidates = candidates.filter(q => {
+    // If question has no personas field, it's available to all
+    if (!q.personas || q.personas.length === 0) {
+      return true;
+    }
+    // Otherwise, check if user's persona is in the allowed list
+    return q.personas.includes(userPersona as any);
+  });
+
+  console.log('🎯 [Router v2] Filtered questions by persona:', {
+    persona: userPersona,
+    totalInBlock: getQuestionsByBlock(block).length,
+    afterPersonaFilter: candidates.length
+  });
+
   // For deep-dive, detect which area to focus on
   if (block === 'deep-dive') {
     const detectedArea = await detectDeepDiveArea(context);
     if (detectedArea) {
       console.log('🎯 [Router v2] Deep-dive area detected:', detectedArea.area);
       candidates = getDeepDiveQuestions(detectedArea.area);
+      // Re-apply persona filter after getting deep-dive questions
+      candidates = candidates.filter(q => {
+        if (!q.personas || q.personas.length === 0) return true;
+        return q.personas.includes(userPersona as any);
+      });
     }
   }
 
@@ -241,6 +263,7 @@ async function selectQuestionFromBlock(
   candidates = candidates.filter(q => !answeredIds.includes(q.id));
 
   if (candidates.length === 0) {
+    console.warn('⚠️ [Router v2] No questions available after filtering');
     return undefined;
   }
 
@@ -354,37 +377,142 @@ async function generateFollowUpQuestion(
   reason: string,
   context: AssessmentSessionContext
 ): Promise<FollowUpQuestion> {
-  // For now, return a structured follow-up without LLM call
-  // TODO: Sprint 3 will add actual LLM generation with Anthropic API
-
   const followUpId = `followup-${originalQuestion.id}-${Date.now()}`;
+  const userAnswer = String(answer.answer || answer);
 
-  // Simple rule-based follow-ups for common scenarios
-  let followUpText = '';
-  let targetGap = '';
+  // ✅ Use intelligent signal detection + LLM generation
+  try {
+    const { detectInterestingSignals, isAnswerSubstantive, shouldGenerateFollowUp } =
+      await import('@/lib/utils/signal-detection');
+    const { generateFollowUpPrompt, getFallbackFollowUp } =
+      await import('@/lib/prompts/followup-prompts');
 
-  if (reason.includes('quality metrics')) {
-    followUpText = 'Com que frequência sua equipe encontra bugs críticos em produção?';
-    targetGap = 'currentState.bugFrequency';
-  } else if (reason.includes('team size')) {
-    followUpText = 'Esses desenvolvedores trabalham full-time no produto ou dividem atenção com outros projetos?';
-    targetGap = 'team.dedicationLevel';
-  } else {
-    followUpText = `Pode elaborar mais sobre: "${String(answer.answer).substring(0, 50)}..."?`;
-    targetGap = 'general.followUp';
+    // Detect signals in answer
+    const signals = detectInterestingSignals(userAnswer);
+    const isSubstantive = isAnswerSubstantive(userAnswer);
+
+    console.log('🔍 [Follow-up Generation] Analysis:', {
+      hasSignals: signals.hasSignals,
+      category: signals.category,
+      confidence: signals.confidence,
+      isSubstantive,
+      keywords: signals.keywords.slice(0, 3)
+    });
+
+    // Check if we should generate follow-up
+    const dynamicFollowupsUsed = context.answers.filter(
+      a => a.questionId.startsWith('followup-') && a.metadata?.llmGenerated
+    ).length;
+
+    const decision = shouldGenerateFollowUp(
+      signals,
+      isSubstantive,
+      dynamicFollowupsUsed,
+      3 // max 3 LLM follow-ups per session
+    );
+
+    if (!decision.should) {
+      console.log('⏭️  [Follow-up Generation] Skipping:', decision.reason);
+
+      // Fallback to generic follow-up
+      return {
+        id: followUpId,
+        text: getFallbackFollowUp(userAnswer),
+        inputType: 'text',
+        placeholder: 'Sua resposta...',
+        triggeredBy: originalQuestion.id,
+        reason,
+        targetGap: 'general.followUp',
+        generatedAt: new Date(),
+        llmModel: 'fallback'
+      };
+    }
+
+    // ✅ Generate intelligent follow-up using LLM (Haiku 4.5)
+    console.log('🤖 [Follow-up Generation] Calling Claude Haiku for intelligent follow-up...');
+
+    const Anthropic = (await import('@anthropic-ai/sdk')).default;
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY || ''
+    });
+
+    // Build conversation history
+    const conversationHistory = context.answers
+      .slice(-3) // Last 3 Q&As
+      .map(a => ({
+        question: a.questionText || '',
+        answer: String(a.answer)
+      }));
+
+    // Generate prompt
+    const prompt = generateFollowUpPrompt({
+      originalQuestion: originalQuestion.text,
+      userAnswer,
+      persona: context.persona,
+      category: signals.category,
+      keywords: signals.keywords,
+      conversationHistory
+    });
+
+    // Call Claude Haiku
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001', // Fast and cheap
+      max_tokens: 512,
+      temperature: 0.7, // Higher for natural questions
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    });
+
+    const responseText = message.content[0].type === 'text'
+      ? message.content[0].text
+      : '';
+
+    // Parse JSON response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Failed to parse LLM response - no JSON found');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    console.log('✅ [Follow-up Generation] LLM generated:', {
+      question: parsed.question.substring(0, 80) + '...',
+      reasoning: parsed.reasoning
+    });
+
+    return {
+      id: followUpId,
+      text: parsed.question,
+      inputType: 'text',
+      placeholder: 'Sua resposta...',
+      triggeredBy: originalQuestion.id,
+      reason: parsed.reasoning,
+      targetGap: parsed.expectedInsight,
+      generatedAt: new Date(),
+      llmModel: 'claude-haiku-4-5'
+    };
+
+  } catch (error: any) {
+    console.error('❌ [Follow-up Generation] Error:', error.message);
+
+    // Fallback to generic follow-up
+    const { getFallbackFollowUp } = await import('@/lib/prompts/followup-prompts');
+    return {
+      id: followUpId,
+      text: getFallbackFollowUp(userAnswer),
+      inputType: 'text',
+      placeholder: 'Sua resposta...',
+      triggeredBy: originalQuestion.id,
+      reason: 'LLM error - using fallback',
+      targetGap: 'general.followUp',
+      generatedAt: new Date(),
+      llmModel: 'fallback-error'
+    };
   }
-
-  return {
-    id: followUpId,
-    text: followUpText,
-    inputType: 'text',
-    placeholder: 'Sua resposta...',
-    triggeredBy: originalQuestion.id,
-    reason,
-    targetGap,
-    generatedAt: new Date(),
-    llmModel: 'rule-based' // Will be 'haiku' or 'sonnet' in Sprint 3
-  };
 }
 
 // ============================================================================

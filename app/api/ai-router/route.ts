@@ -18,12 +18,13 @@ import {
 interface RouteRequestBody {
   messages: ConversationMessage[];
   questionsAsked: number;
+  userExpertise?: string[]; // NEW: User's areas of expertise
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body: RouteRequestBody = await req.json();
-    const { messages, questionsAsked } = body;
+    const { messages, questionsAsked, userExpertise = [] } = body;
 
     // Validate input
     if (!messages || !Array.isArray(messages)) {
@@ -40,8 +41,8 @@ export async function POST(req: NextRequest) {
       // Detect persona early (even if not confident yet) to adapt questions
       const result: AIRouterResult = analyzeConversation(messages);
 
-      // Get next question with persona adaptation
-      const nextQuestion = getNextQuestion(messages, questionsAsked, result.detectedPersona);
+      // Get next question with persona AND expertise adaptation
+      const nextQuestion = getNextQuestion(messages, questionsAsked, result.detectedPersona, userExpertise);
 
       return NextResponse.json({
         ready: false,

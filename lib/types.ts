@@ -133,6 +133,7 @@ export interface OperationsState {
 
 export interface AssessmentData {
   persona: UserPersona;
+  userExpertise?: string[]; // NEW: Areas of expertise detected in Step -2 (e.g., ['strategy-business', 'finance-ops'])
   companyInfo: CompanyInfo;
 
   // AI Application Scope - which departments to assess

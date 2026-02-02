@@ -1,6 +1,7 @@
 import { EnterpriseROI, DepartmentROI } from '@/lib/types';
 import { formatCurrency } from '@/lib/calculators/enterprise-roi-calculator';
 import { DataQualityBadge } from './DataQualityBadge';
+import TransparentMetric, { CompactTransparentMetric } from './shared/TransparentMetric';
 import {
   Code2,
   Headphones,
@@ -11,12 +12,15 @@ import {
   Check,
   AlertTriangle,
   ArrowRight,
-  Lightbulb
+  Lightbulb,
+  ExternalLink,
+  Info
 } from 'lucide-react';
 
 interface Props {
   enterpriseROI: EnterpriseROI;
   isMockData?: boolean;
+  isIndustryBenchmark?: boolean; // NEW: distinguish industry benchmark vs real data
 }
 
 /**
@@ -35,9 +39,14 @@ function getDepartmentIcon(department: string): React.ReactNode {
 }
 
 /**
- * Department ROI Card Component
+ * Department ROI Card Component - Enhanced with Transparency
  */
-function DepartmentROICard({ dept }: { dept: DepartmentROI }) {
+function DepartmentROICard({ dept, showTransparency = false }: { dept: DepartmentROI; showTransparency?: boolean }) {
+  // Type guard to check if department has V2 transparency data
+  const hasTransparencyData = 'confidence' in dept || 'sources' in dept;
+  const confidence = 'confidence' in dept ? (dept as any).confidence : undefined;
+  const sources = 'sources' in dept ? (dept as any).sources : [];
+
   return (
     <div className="p-6 bg-background-card/50 border border-tech-gray-700 rounded-lg hover:border-neon-green/30 transition-all duration-300">
       <div className="flex justify-between items-start mb-4">
@@ -48,8 +57,20 @@ function DepartmentROICard({ dept }: { dept: DepartmentROI }) {
             </div>
             {dept.department}
           </h3>
-          <div className="text-sm text-tech-gray-400">
-            Payback em <span className="text-neon-green font-semibold">{dept.paybackMonths.toFixed(1)}</span> meses
+          <div className="flex items-center gap-2">
+            <div className="text-sm text-tech-gray-400">
+              Payback em <span className="text-neon-green font-semibold">{dept.paybackMonths.toFixed(1)}</span> meses
+            </div>
+            {/* Confidence Badge */}
+            {showTransparency && confidence !== undefined && (
+              <div className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                confidence >= 70 ? 'bg-neon-green/20 text-neon-green' :
+                confidence >= 50 ? 'bg-yellow-400/20 text-yellow-400' :
+                'bg-orange-400/20 text-orange-400'
+              }`}>
+                {confidence}% confiança
+              </div>
+            )}
           </div>
         </div>
         <div className="text-right">
@@ -77,7 +98,7 @@ function DepartmentROICard({ dept }: { dept: DepartmentROI }) {
       </div>
 
       {/* Key Metrics */}
-      <div className="space-y-2">
+      <div className="space-y-2 mb-4">
         {dept.keyMetrics.map((metric, idx) => (
           <div key={idx} className="flex items-start gap-2 text-sm">
             <Check className="w-4 h-4 text-neon-green flex-shrink-0 mt-0.5" />
@@ -85,6 +106,41 @@ function DepartmentROICard({ dept }: { dept: DepartmentROI }) {
           </div>
         ))}
       </div>
+
+      {/* Sources (V2 only) */}
+      {showTransparency && hasTransparencyData && sources.length > 0 && (
+        <div className="pt-4 border-t border-tech-gray-800">
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="w-3 h-3 text-neon-cyan" />
+            <span className="text-xs font-semibold text-tech-gray-400 uppercase tracking-wide">
+              Fontes
+            </span>
+          </div>
+          <div className="space-y-1">
+            {sources.slice(0, 2).map((source: any, idx: number) => (
+              <div key={idx} className="text-xs text-tech-gray-500 flex items-start gap-1">
+                <span className="text-neon-cyan">•</span>
+                <span>{source.source?.name || source.metric}</span>
+                {source.source?.url && (
+                  <a
+                    href={source.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neon-cyan hover:text-neon-cyan/80"
+                  >
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                )}
+              </div>
+            ))}
+            {sources.length > 2 && (
+              <div className="text-xs text-tech-gray-600 italic">
+                + {sources.length - 2} fontes adicionais
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -92,7 +148,11 @@ function DepartmentROICard({ dept }: { dept: DepartmentROI }) {
 /**
  * Enterprise ROI Section Component
  */
-export default function EnterpriseROISection({ enterpriseROI, isMockData = false }: Props) {
+export default function EnterpriseROISection({
+  enterpriseROI,
+  isMockData = false,
+  isIndustryBenchmark = false
+}: Props) {
   const enabledDepartments = [
     enterpriseROI.engineering,
     enterpriseROI.customerService,
@@ -101,6 +161,9 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
     enterpriseROI.meetingIntelligence,
     enterpriseROI.operations,
   ].filter((dept): dept is DepartmentROI => dept?.enabled === true);
+
+  // Show transparency features when using industry benchmarks (V2) but not mock data
+  const showTransparency = isIndustryBenchmark && !isMockData;
 
   return (
     <div className="card-glow p-8 mb-8">
@@ -117,40 +180,59 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
         </p>
       </div>
 
-      {/* Mock Data Disclaimer */}
-      {isMockData && (
-        <div className="mb-6 p-6 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-500/40 rounded-lg">
+      {/* Industry Benchmark / Mock Data Disclaimer */}
+      {(isMockData || isIndustryBenchmark) && (
+        <div className="mb-6 p-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30 rounded-lg">
           <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="w-7 h-7 text-amber-400" />
+            <div className="flex-shrink-0 w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Info className="w-7 h-7 text-blue-400" />
             </div>
             <div className="flex-1">
-              <h4 className="text-lg font-bold text-amber-200 mb-2 flex items-center gap-2">
-                Estimativas Baseadas em Perfil Genérico
+              <h4 className="text-lg font-bold text-blue-200 mb-2 flex items-center gap-2">
+                {isIndustryBenchmark && !isMockData
+                  ? 'Projeções Baseadas em Benchmarks da Indústria'
+                  : 'Estimativas Baseadas em Perfil Genérico'}
               </h4>
-              <div className="space-y-2 text-sm text-amber-100/90 mb-4">
-                <p className="font-semibold">
-                  Importante: Estes números são <strong className="text-amber-200">projeções aproximadas</strong> baseadas
-                  apenas no porte da empresa e indústria.
-                </p>
-                <p>
-                  <strong className="text-amber-200">Não use estes valores para decisões de investimento.</strong> Eles servem
-                  apenas como referência inicial para entender a ordem de magnitude do impacto potencial.
-                </p>
-                <p>
-                  Para análise precisa com seus números reais, veja os <strong className="text-neon-green">casos verificados
-                  acima</strong> que mostram resultados comprovados de empresas similares.
-                </p>
+              <div className="space-y-2 text-sm text-blue-100/90 mb-4">
+                {isIndustryBenchmark && !isMockData ? (
+                  <>
+                    <p>
+                      Estes valores são <strong className="text-blue-200">projeções otimistas</strong> baseadas em benchmarks
+                      verificados de fontes tier-1 (McKinsey, DORA, Forrester) aplicados ao perfil da sua empresa.
+                    </p>
+                    <p>
+                      Cada métrica departamental inclui <strong className="text-neon-cyan">fonte citada</strong> e{' '}
+                      <strong className="text-neon-cyan">nível de confiança</strong>. Valores estão no 75º percentil
+                      (cenário otimista mas defensável).
+                    </p>
+                    <p className="text-xs text-blue-200 font-semibold mt-3">
+                      ✅ Adequado para decisões estratégicas de C-level quando combinado com análise de contexto da empresa.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold">
+                      Importante: Estes números são <strong className="text-amber-200">projeções aproximadas</strong> baseadas
+                      apenas no porte da empresa e indústria.
+                    </p>
+                    <p>
+                      <strong className="text-amber-200">Não use estes valores para decisões de investimento.</strong> Eles servem
+                      apenas como referência inicial para entender a ordem de magnitude do impacto potencial.
+                    </p>
+                  </>
+                )}
               </div>
-              <div className="p-3 bg-amber-500/20 rounded border border-amber-400/30">
-                <p className="text-xs text-amber-100 font-semibold flex items-start gap-2">
-                  <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span>
-                    Recomendação: Use os casos reais verificados como referência principal. Complete o assessment
-                    multi-departamental para obter cálculos personalizados baseados nos seus dados reais.
-                  </span>
-                </p>
-              </div>
+              {!isIndustryBenchmark && (
+                <div className="p-3 bg-blue-500/20 rounded border border-blue-400/30">
+                  <p className="text-xs text-blue-100 font-semibold flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Para análise precisa: forneça dados específicos da empresa (receita, tamanho do time, métricas atuais)
+                      para obter projeções baseadas em benchmarks verificados.
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -220,10 +302,19 @@ export default function EnterpriseROISection({ enterpriseROI, isMockData = false
         <h3 className="text-lg font-semibold text-tech-gray-100 mb-4 flex items-center gap-2">
           <span className="w-1 h-6 bg-neon-green rounded-full"></span>
           Detalhamento por Departamento
+          {showTransparency && (
+            <span className="text-xs text-tech-gray-400 font-normal ml-2">
+              (com fontes e confiança)
+            </span>
+          )}
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {enabledDepartments.map((dept) => (
-            <DepartmentROICard key={dept.department} dept={dept} />
+            <DepartmentROICard
+              key={dept.department}
+              dept={dept}
+              showTransparency={showTransparency}
+            />
           ))}
         </div>
       </div>

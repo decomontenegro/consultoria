@@ -42,6 +42,7 @@ export interface QuestionTemplate {
   text: string;
   category: 'company' | 'pain-points' | 'goals' | 'context' | 'urgency';
   personas: UserPersona[]; // Which personas should see this
+  requiresExpertise?: string[]; // NEW: Required expertise areas (e.g., ['engineering-tech']). Empty = everyone can answer
   priority: 'essential' | 'important' | 'optional';
   inputType: QuestionInputType;
   options?: QuestionOption[]; // For choice-based questions

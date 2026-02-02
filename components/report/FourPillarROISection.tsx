@@ -3,14 +3,29 @@
 import { FourPillarROI } from '@/lib/types';
 import { formatPillarValue, getPillarColor } from '@/lib/calculators/four-pillar-roi-calculator';
 import { DataQualityBadge } from './DataQualityBadge';
-import { TrendingUp, DollarSign, Shield, Zap, Check } from 'lucide-react';
+import TransparentMetric from './shared/TransparentMetric';
+import { TrendingUp, DollarSign, Shield, Zap, Check, Info, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 
 interface FourPillarROISectionProps {
   fourPillarROI: FourPillarROI;
   isMockData?: boolean;
+  isIndustryBenchmark?: boolean; // NEW: V2 with verified benchmarks
 }
 
-export default function FourPillarROISection({ fourPillarROI, isMockData = false }: FourPillarROISectionProps) {
+export default function FourPillarROISection({
+  fourPillarROI,
+  isMockData = false,
+  isIndustryBenchmark = false
+}: FourPillarROISectionProps) {
+  const [expandedPillar, setExpandedPillar] = useState<string | null>(null);
+
+  // Type guard to check if fourPillarROI has V2 transparency data
+  const hasTransparencyData = 'sources' in fourPillarROI || 'overallConfidence' in fourPillarROI;
+  const sources = 'sources' in fourPillarROI ? (fourPillarROI as any).sources : [];
+  const overallConfidence = 'overallConfidence' in fourPillarROI ? (fourPillarROI as any).overallConfidence : undefined;
+  const ranges = 'ranges' in fourPillarROI ? (fourPillarROI as any).ranges : undefined;
+
   const pillars = [
     {
       id: 'efficiency',
@@ -145,6 +160,17 @@ export default function FourPillarROISection({ fourPillarROI, isMockData = false
                     <p className="text-xs text-tech-gray-500">{pillar.description}</p>
                   </div>
                 </div>
+
+                {/* Confidence badge for this pillar (V2 only) */}
+                {isIndustryBenchmark && ranges && ranges[pillar.id] && (
+                  <div className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    ranges[pillar.id].primaryScenario?.percentile === 75 ? 'bg-neon-cyan/20 text-neon-cyan' :
+                    ranges[pillar.id].primaryScenario?.percentile === 50 ? 'bg-yellow-400/20 text-yellow-400' :
+                    'bg-orange-400/20 text-orange-400'
+                  }`}>
+                    p{ranges[pillar.id].primaryScenario?.percentile || 75}
+                  </div>
+                )}
               </div>
 
               {/* Annual Value */}
@@ -242,6 +268,54 @@ export default function FourPillarROISection({ fourPillarROI, isMockData = false
                   </div>
                 </div>
               )}
+
+              {/* Sources section (V2 only) - show relevant sources for this pillar */}
+              {isIndustryBenchmark && hasTransparencyData && sources.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-tech-gray-700">
+                  <button
+                    onClick={() => setExpandedPillar(expandedPillar === pillar.id ? null : pillar.id)}
+                    className="flex items-center gap-2 text-xs text-tech-gray-400 hover:text-neon-cyan transition-colors mb-2"
+                  >
+                    <Info className="w-3 h-3" />
+                    <span>Ver fontes ({sources.filter((s: any) =>
+                      s.metric.toLowerCase().includes(pillar.id) ||
+                      pillar.name.toLowerCase().includes(s.metric.toLowerCase().split(' ')[0])
+                    ).length || sources.length} benchmarks)</span>
+                  </button>
+
+                  {expandedPillar === pillar.id && (
+                    <div className="space-y-1 animate-fade-in">
+                      {sources
+                        .filter((s: any) =>
+                          s.metric.toLowerCase().includes(pillar.id) ||
+                          pillar.name.toLowerCase().includes(s.metric.toLowerCase().split(' ')[0])
+                        )
+                        .slice(0, 3)
+                        .map((source: any, idx: number) => (
+                          <div key={idx} className="text-xs text-tech-gray-500 flex items-start gap-1">
+                            <span className="text-neon-cyan">•</span>
+                            <div className="flex-1">
+                              <span>{source.source?.name || source.metric}</span>
+                              {source.source?.url && (
+                                <a
+                                  href={source.source.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-1 text-neon-cyan hover:text-neon-cyan/80"
+                                >
+                                  <ExternalLink className="w-2.5 h-2.5 inline" />
+                                </a>
+                              )}
+                              {source.notes && (
+                                <div className="text-tech-gray-600 mt-0.5">{source.notes}</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -249,11 +323,39 @@ export default function FourPillarROISection({ fourPillarROI, isMockData = false
 
       {/* Methodology Note */}
       <div className="mt-8 p-6 bg-gradient-to-r from-cyan-500/10 to-neon-green/10 border border-neon-cyan/30 rounded-xl">
-        <p className="text-base text-tech-gray-200 leading-relaxed">
-          <strong className="text-neon-cyan">4-Pillar Framework:</strong> Inspired by Writer AI's Agentic ROI Matrix,
-          this comprehensive analysis evaluates AI impact across multiple strategic dimensions. Calculations based on
-          McKinsey GenAI Report 2024, Forrester TEI studies, and GitHub Developer Productivity research.
-        </p>
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-neon-cyan flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-base text-tech-gray-200 leading-relaxed mb-2">
+              <strong className="text-neon-cyan">4-Pillar Framework:</strong> Inspired by Writer AI's Agentic ROI Matrix,
+              this comprehensive analysis evaluates AI impact across multiple strategic dimensions.
+            </p>
+            {isIndustryBenchmark && hasTransparencyData ? (
+              <>
+                <p className="text-sm text-tech-gray-300 mb-2">
+                  <strong>Fontes Verificadas (Tier-1):</strong> McKinsey GenAI Report 2024, Forrester TEI studies,
+                  DORA State of DevOps, GitHub Developer Productivity research.
+                </p>
+                <p className="text-xs text-tech-gray-400">
+                  Valores apresentados no percentil 75 (otimista mas defensável). Cada pilar inclui fontes específicas
+                  e ranges de variação. Confiança geral: <strong className="text-neon-cyan">{overallConfidence}%</strong>.
+                </p>
+                {overallConfidence !== undefined && ranges && (
+                  <div className="mt-3 p-3 bg-neon-cyan/5 border border-neon-cyan/20 rounded">
+                    <p className="text-xs text-tech-gray-300">
+                      <strong>Metodologia:</strong> {(fourPillarROI as any).methodology?.description ||
+                        'Cálculos baseados em benchmarks verificados aplicados ao perfil da empresa.'}
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-tech-gray-400">
+                Calculations based on McKinsey GenAI Report 2024, Forrester TEI studies, and GitHub Developer Productivity research.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

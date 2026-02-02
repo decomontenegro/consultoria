@@ -27,9 +27,30 @@ export async function POST(request: NextRequest) {
     const body = bodyText.trim() ? JSON.parse(bodyText) : {};
     const { persona: providedPersona, partialData = {} } = body;
 
-    // Use provided persona or default to engineering-tech
-    // Persona will be detected during conversation if not provided
-    const persona = providedPersona || 'engineering-tech';
+    // ✅ FIX: Infer persona from userExpertise (from Step -2) instead of defaulting to technical
+    const userExpertise: string[] = (partialData as any).userExpertise || [];
+
+    let inferredPersona: UserPersona = 'board-executive'; // Default non-technical
+
+    if (userExpertise.includes('engineering-tech')) {
+      inferredPersona = 'engineering-tech';
+    } else if (userExpertise.includes('product-ux')) {
+      inferredPersona = 'product-business';
+    } else if (userExpertise.includes('finance-ops')) {
+      inferredPersona = 'finance-ops';
+    } else if (userExpertise.includes('strategy-business')) {
+      inferredPersona = 'board-executive';
+    }
+
+    // Use provided persona, or inferred from expertise, or default to board-executive
+    const persona = providedPersona || inferredPersona;
+
+    console.log('🎯 [Adaptive] Persona selection:', {
+      provided: providedPersona,
+      userExpertise,
+      inferred: inferredPersona,
+      final: persona
+    });
 
     const validPersonas = ['board-executive', 'engineering-tech', 'product-business', 'finance-ops', 'it-devops'];
 
@@ -41,13 +62,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🚀 [Adaptive Assessment] Initializing session for persona:', persona, providedPersona ? '(provided)' : '(default)');
+    console.log('🚀 [Adaptive Assessment] Initializing session for persona:', persona, providedPersona ? '(provided)' : userExpertise.length > 0 ? '(inferred from expertise)' : '(default non-technical)');
 
     // Calculate initial persona confidence based on how we got here
     // If we have partialData from AI Router, confidence is higher
-    // If persona not provided, confidence is low (will be detected during conversation)
+    // If inferred from userExpertise (Step -2), confidence is high (explicit user selection)
+    // If persona not provided and no expertise, confidence is low (will be detected during conversation)
     const hasPartialData = Object.keys(partialData).length > 0;
-    const personaConfidence = providedPersona ? (hasPartialData ? 0.8 : 0.6) : 0.3;
+    const hasExpertise = userExpertise.length > 0;
+
+    let personaConfidence = 0.3; // Default low (will detect)
+    if (providedPersona) {
+      personaConfidence = hasPartialData ? 0.8 : 0.6;
+    } else if (hasExpertise) {
+      personaConfidence = 0.75; // High confidence from explicit expertise selection
+    }
 
     // Create session using unified session manager
     const context = createSession({

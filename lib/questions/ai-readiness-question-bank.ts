@@ -40,6 +40,9 @@ export interface EnhancedQuestion {
   tags: string[]; // e.g., ['technical', 'team-size', 'metrics']
   requiredFor: string[]; // Fields this question fills: ['currentState.devTeamSize']
 
+  // Persona Targeting (NEW)
+  personas?: ('engineering-tech' | 'product-business' | 'board-executive' | 'finance-ops' | 'it-devops')[]; // Se undefined, pergunta serve para todos
+
   // Data Extraction
   dataExtractor: (answer: any, context: Partial<AssessmentSessionContext>) => Partial<AssessmentData>;
 
@@ -58,12 +61,144 @@ export interface EnhancedQuestion {
 // ============================================================================
 
 const discoveryQuestions: EnhancedQuestion[] = [
+  // ========== BUSINESS-FOCUSED QUESTIONS ==========
   {
-    id: 'disc-001-team-size',
+    id: 'disc-biz-001-company-size',
+    text: 'Qual o tamanho da sua empresa?',
+    inputType: 'single-choice',
+    block: 'discovery',
+    phase: 'discovery',
+    personas: ['product-business', 'board-executive', 'finance-ops'],
+    options: [
+      { value: 'startup', label: 'Startup (até 50 pessoas)', description: 'Empresa pequena' },
+      { value: 'scaleup', label: 'Scale-up (51-500 pessoas)', description: 'Crescimento acelerado' },
+      { value: 'enterprise', label: 'Enterprise (500+ pessoas)', description: 'Grande empresa' }
+    ],
+    tags: ['company-size', 'business', 'context'],
+    requiredFor: ['companyInfo.size'],
+    dataExtractor: (answer) => ({
+      companyInfo: {
+        size: answer
+      }
+    })
+  },
+
+  {
+    id: 'disc-biz-002-main-business-challenge',
+    text: 'Qual é o principal desafio estratégico da empresa hoje?',
+    inputType: 'text',
+    block: 'discovery',
+    phase: 'discovery',
+    personas: ['product-business', 'board-executive', 'finance-ops'],
+    placeholder: 'Ex: Crescimento lento, custos operacionais altos, perda de competitividade...',
+    tags: ['pain-points', 'business', 'strategic'],
+    requiredFor: ['currentState.challengeDescription', 'currentState.painPoints'],
+    dataExtractor: (answer) => ({
+      currentState: {
+        challengeDescription: answer,
+        painPoints: [answer]
+      }
+    }),
+    followUpTriggers: [
+      {
+        condition: (answer) => {
+          const text = String(answer).toLowerCase();
+          // Trigger on interesting keywords
+          const keywords = ['inovar', 'inovação', 'inovacao', 'novo produto', 'competidor', 'concorrência', 'concorrencia', 'crescimento', 'custo', 'custos'];
+          return keywords.some(k => text.includes(k)) && text.length > 20;
+        },
+        reason: 'User mentioned strategic challenge with interesting keywords - explore deeper with LLM follow-up'
+      }
+    ]
+  },
+
+  {
+    id: 'disc-biz-003-revenue-impact',
+    text: 'Esse desafio tem impactado a receita ou crescimento da empresa?',
+    inputType: 'single-choice',
+    block: 'discovery',
+    phase: 'discovery',
+    personas: ['product-business', 'board-executive', 'finance-ops'],
+    options: [
+      { value: 'high', label: 'Sim, impacto alto', description: 'Perdendo receita ou clientes' },
+      { value: 'medium', label: 'Impacto moderado', description: 'Crescimento mais lento' },
+      { value: 'low', label: 'Impacto baixo', description: 'Ainda não crítico' },
+      { value: 'unknown', label: 'Não medimos ainda', description: 'Sem visibilidade' }
+    ],
+    tags: ['impact', 'business', 'metrics'],
+    requiredFor: ['goals.businessImpact'],
+    dataExtractor: (answer) => ({
+      goals: {
+        businessImpact: answer
+      }
+    })
+  },
+
+  {
+    id: 'disc-biz-004-ai-maturity',
+    text: 'A empresa já usa IA ou automação em alguma área?',
+    inputType: 'single-choice',
+    block: 'discovery',
+    phase: 'discovery',
+    personas: ['product-business', 'board-executive', 'finance-ops'],
+    options: [
+      { value: 'none', label: 'Não usamos ainda', description: 'Começando do zero' },
+      { value: 'experiments', label: 'Experimentos pontuais', description: 'Testes isolados' },
+      { value: 'some-areas', label: 'Sim, em algumas áreas', description: 'Adoção parcial' },
+      { value: 'widespread', label: 'Uso disseminado', description: 'Várias áreas usando' }
+    ],
+    tags: ['ai-maturity', 'business', 'current-state'],
+    requiredFor: ['currentState.aiMaturity'],
+    dataExtractor: (answer) => ({
+      currentState: {
+        aiMaturity: answer,
+        hasAIExperience: answer !== 'none'
+      }
+    })
+  },
+
+  {
+    id: 'disc-biz-005-primary-goal',
+    text: 'Se você pudesse resolver UM problema estratégico com IA, qual seria?',
+    inputType: 'single-choice',
+    block: 'discovery',
+    phase: 'discovery',
+    personas: ['product-business', 'board-executive', 'finance-ops'],
+    options: [
+      { value: 'growth', label: 'Acelerar crescimento', description: 'Ganhar mais clientes' },
+      { value: 'efficiency', label: 'Reduzir custos operacionais', description: 'Fazer mais com menos' },
+      { value: 'quality', label: 'Melhorar qualidade do produto', description: 'Menos problemas' },
+      { value: 'speed', label: 'Aumentar velocidade de entrega', description: 'Time-to-market' },
+      { value: 'innovation', label: 'Inovar mais rápido', description: 'Competitividade' },
+      { value: 'experience', label: 'Melhorar experiência do cliente', description: 'Satisfação' }
+    ],
+    tags: ['goals', 'priorities', 'strategic'],
+    requiredFor: ['goals.primaryGoal'],
+    dataExtractor: (answer) => ({
+      goals: {
+        primaryGoal: answer,
+        primaryGoals: [answer]
+      }
+    }),
+    followUpTriggers: [
+      {
+        condition: (answer) => {
+          // Always trigger follow-up for strategic goals
+          return answer && answer !== 'unknown';
+        },
+        reason: 'User selected strategic goal - explore specific tactics and timeline'
+      }
+    ]
+  },
+
+  // ========== TECHNICAL QUESTIONS (ONLY FOR TECH PERSONAS) ==========
+  {
+    id: 'disc-tech-001-team-size',
     text: 'Quantas pessoas compõem sua equipe de desenvolvimento?',
     inputType: 'single-choice',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: '1-5', label: '1-5 pessoas', description: 'Time pequeno' },
       { value: '6-15', label: '6-15 pessoas', description: 'Time médio' },
@@ -90,11 +225,12 @@ const discoveryQuestions: EnhancedQuestion[] = [
   },
 
   {
-    id: 'disc-002-main-challenge',
+    id: 'disc-tech-002-main-challenge',
     text: 'Qual é o principal desafio técnico que sua equipe enfrenta hoje?',
     inputType: 'text',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     placeholder: 'Ex: Dívida técnica, bugs frequentes, releases lentas...',
     tags: ['pain-points', 'technical', 'challenges'],
     requiredFor: ['currentState.challengeDescription', 'currentState.painPoints'],
@@ -123,13 +259,15 @@ const discoveryQuestions: EnhancedQuestion[] = [
     inputType: 'multi-choice',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'copilot', label: 'GitHub Copilot' },
       { value: 'cursor', label: 'Cursor' },
       { value: 'chatgpt', label: 'ChatGPT' },
       { value: 'claude', label: 'Claude' },
       { value: 'tabnine', label: 'Tabnine' },
-      { value: 'none', label: 'Não usamos ainda' }
+      { value: 'none', label: 'Não usamos ainda' },
+      { value: 'unknown', label: 'Não tenho informações sobre isso', description: 'Sem visibilidade técnica' }
     ],
     tags: ['ai-tools', 'current-state', 'technical'],
     requiredFor: ['currentState.aiToolsUsed'],
@@ -151,6 +289,7 @@ const discoveryQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'velocity', label: 'Aumentar velocidade de desenvolvimento', description: 'Entregar mais rápido' },
       { value: 'quality', label: 'Melhorar qualidade do código', description: 'Menos bugs, melhor arquitetura' },
@@ -175,6 +314,7 @@ const discoveryQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'hours', label: 'Algumas horas', description: 'Deploy rápido' },
       { value: 'days', label: '1-3 dias', description: 'Deploy moderado' },
@@ -213,6 +353,7 @@ const discoveryQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'rare', label: 'Raramente (< 1 por mês)', description: 'Alta qualidade' },
       { value: 'monthly', label: '1-3 por mês', description: 'Qualidade boa' },
@@ -235,7 +376,8 @@ const discoveryQuestions: EnhancedQuestion[] = [
     inputType: 'text',
     block: 'discovery',
     phase: 'discovery',
-    placeholder: 'Ex: Python/Django, TypeScript/React, Java/Spring...',
+    personas: ['engineering-tech', 'it-devops'],
+    placeholder: 'Ex: Python/Django, TypeScript/React, Java/Spring... ou "Não sei"',
     tags: ['technical', 'tech-stack'],
     requiredFor: ['currentState.techStack'],
     dataExtractor: (answer) => ({
@@ -251,12 +393,14 @@ const discoveryQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'discovery',
     phase: 'discovery',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'always', label: 'Sempre, é obrigatório' },
       { value: 'most', label: 'Na maioria das vezes' },
       { value: 'sometimes', label: 'Às vezes' },
       { value: 'rarely', label: 'Raramente' },
-      { value: 'never', label: 'Não fazemos code review' }
+      { value: 'never', label: 'Não fazemos code review' },
+      { value: 'unknown', label: 'Não tenho informações sobre isso', description: 'Sem visibilidade' }
     ],
     tags: ['process', 'quality', 'code-review'],
     requiredFor: ['currentState.hasCodeReview'],
@@ -312,6 +456,7 @@ const expertiseQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'expertise',
     phase: 'expertise',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'lead', label: 'Sim, eu lidero essas decisões' },
       { value: 'participate', label: 'Sim, eu participo' },
@@ -333,6 +478,7 @@ const expertiseQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'expertise',
     phase: 'expertise',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'yes-use', label: 'Sim, uso regularmente' },
       { value: 'yes-occasional', label: 'Sim, olho ocasionalmente' },
@@ -387,12 +533,14 @@ const deepDiveVelocityQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'deep-dive',
     phase: 'deep-dive',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'coding', label: 'Escrita de código' },
       { value: 'review', label: 'Code review' },
       { value: 'testing', label: 'Testes (escrever e rodar)' },
       { value: 'ci-cd', label: 'CI/CD / Deploy' },
-      { value: 'communication', label: 'Comunicação / Alinhamento' }
+      { value: 'communication', label: 'Comunicação / Alinhamento' },
+      { value: 'unknown', label: 'Não tenho informações sobre isso', description: 'Sem visibilidade' }
     ],
     tags: ['velocity', 'bottleneck', 'deep-dive'],
     requiredFor: [],
@@ -409,11 +557,13 @@ const deepDiveVelocityQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'deep-dive',
     phase: 'deep-dive',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'hours', label: 'Algumas horas' },
       { value: 'day', label: '1 dia' },
       { value: 'days', label: '2-3 dias' },
-      { value: 'week', label: 'Mais de 1 semana' }
+      { value: 'week', label: 'Mais de 1 semana' },
+      { value: 'unknown', label: 'Não sei', description: 'Sem tracking' }
     ],
     tags: ['velocity', 'code-review', 'metrics'],
     requiredFor: [],
@@ -430,6 +580,7 @@ const deepDiveVelocityQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'deep-dive',
     phase: 'deep-dive',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'high', label: 'Alta (> 80%)' },
       { value: 'medium', label: 'Média (50-80%)' },
@@ -457,12 +608,14 @@ const deepDiveQualityQuestions: EnhancedQuestion[] = [
     inputType: 'multi-choice',
     block: 'deep-dive',
     phase: 'deep-dive',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'edge-cases', label: 'Edge cases não testados' },
       { value: 'integration', label: 'Integração entre sistemas' },
       { value: 'business-logic', label: 'Lógica de negócio complexa' },
       { value: 'performance', label: 'Performance / Timeout' },
-      { value: 'ui', label: 'Interface / UX' }
+      { value: 'ui', label: 'Interface / UX' },
+      { value: 'unknown', label: 'Não tenho informações sobre isso', description: 'Sem visibilidade' }
     ],
     tags: ['quality', 'bugs', 'root-cause'],
     requiredFor: [],
@@ -479,11 +632,13 @@ const deepDiveQualityQuestions: EnhancedQuestion[] = [
     inputType: 'single-choice',
     block: 'deep-dive',
     phase: 'deep-dive',
+    personas: ['engineering-tech', 'it-devops'],
     options: [
       { value: 'low', label: 'Baixo - código limpo e manutenível' },
       { value: 'medium', label: 'Médio - algumas áreas precisam refactoring' },
       { value: 'high', label: 'Alto - dívida está atrasando desenvolvimento' },
-      { value: 'critical', label: 'Crítico - sistema quase impossível de manter' }
+      { value: 'critical', label: 'Crítico - sistema quase impossível de manter' },
+      { value: 'unknown', label: 'Não tenho informações sobre isso', description: 'Sem visibilidade' }
     ],
     tags: ['quality', 'technical-debt', 'maintainability'],
     requiredFor: ['currentState.technicalDebtLevel'],

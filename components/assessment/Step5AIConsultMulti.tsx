@@ -11,6 +11,7 @@ import { AssessmentData } from '@/lib/types';
 import {
   SpecialistType,
   getRecommendedSpecialist,
+  getAvailableSpecialists,
   generateAggregatedInsightsSummary
 } from '@/lib/prompts/specialist-prompts';
 import SpecialistSelector, { SpecialistIndicator } from './SpecialistSelector';
@@ -53,6 +54,184 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
 
   const MIN_QUESTIONS_PER_SPECIALIST = 5;
   const recommendedSpecialist = data.persona ? getRecommendedSpecialist(data as AssessmentData) : undefined;
+
+  // Filter specialists based on persona (non-technical users cannot access Engineering specialist)
+  const availableSpecialists = data.persona ? getAvailableSpecialists(data.persona) : undefined;
+
+  /**
+   * AUTOMATIC SPECIALIST ROUTING
+   * Intelligently selects ONE specialist based on multiple signals
+   */
+  const selectSpecialistAutomatically = (assessmentData: Partial<AssessmentData>): SpecialistType => {
+    const scores: Record<SpecialistType, number> = {
+      engineering: 0,
+      finance: 0,
+      strategy: 0
+    };
+
+    const persona = assessmentData.persona;
+    const expertise = assessmentData.userExpertise || [];
+    const goals = assessmentData.goals?.primaryGoals || [];
+    const painPoints = assessmentData.currentState?.painPoints || [];
+
+    // --- SIGNAL 1: Persona (Weight: 30 points) ---
+    if (persona === 'engineering-tech' || persona === 'it-devops') {
+      scores.engineering += 30;
+    } else if (persona === 'finance-ops') {
+      scores.finance += 30;
+    } else if (persona === 'board-executive' || persona === 'product-business') {
+      scores.strategy += 30;
+    }
+
+    // --- SIGNAL 2: User Expertise (Weight: 25 points) ---
+    if (expertise.includes('engineering-tech')) {
+      scores.engineering += 25;
+    }
+    if (expertise.includes('finance-ops')) {
+      scores.finance += 25;
+    }
+    if (expertise.includes('strategy-business')) {
+      scores.strategy += 25;
+    }
+
+    // Mixed expertise boosts strategy (cross-functional)
+    if (expertise.length >= 3) {
+      scores.strategy += 10;
+    }
+
+    // --- SIGNAL 3: Primary Goals (Weight: 20 points) ---
+    goals.forEach(goal => {
+      const lowerGoal = goal.toLowerCase();
+
+      // Engineering signals
+      if (
+        lowerGoal.includes('velocidade') ||
+        lowerGoal.includes('produtividade') ||
+        lowerGoal.includes('qualidade') ||
+        lowerGoal.includes('automação')
+      ) {
+        scores.engineering += 20;
+      }
+
+      // Finance signals
+      if (
+        lowerGoal.includes('custo') ||
+        lowerGoal.includes('roi') ||
+        lowerGoal.includes('eficiência') ||
+        lowerGoal.includes('orçamento')
+      ) {
+        scores.finance += 20;
+      }
+
+      // Strategy signals
+      if (
+        lowerGoal.includes('competitiv') ||
+        lowerGoal.includes('mercado') ||
+        lowerGoal.includes('crescimento') ||
+        lowerGoal.includes('inovação')
+      ) {
+        scores.strategy += 20;
+      }
+    });
+
+    // --- SIGNAL 4: Pain Points (Weight: 15 points) ---
+    painPoints.forEach(pain => {
+      const lowerPain = pain.toLowerCase();
+
+      if (
+        lowerPain.includes('lento') ||
+        lowerPain.includes('bug') ||
+        lowerPain.includes('deploy') ||
+        lowerPain.includes('técnico')
+      ) {
+        scores.engineering += 15;
+      }
+
+      if (
+        lowerPain.includes('caro') ||
+        lowerPain.includes('desperdício') ||
+        lowerPain.includes('budget')
+      ) {
+        scores.finance += 15;
+      }
+
+      if (
+        lowerPain.includes('competidor') ||
+        lowerPain.includes('atrasado') ||
+        lowerPain.includes('perder')
+      ) {
+        scores.strategy += 15;
+      }
+    });
+
+    // --- SIGNAL 5: Competitive Threats (Weight: 10 points) ---
+    if (assessmentData.goals?.competitiveThreats) {
+      scores.strategy += 10;
+    }
+
+    // --- SIGNAL 6: Availability Filter ---
+    // Remove specialists not available for this persona
+    const available = persona ? getAvailableSpecialists(persona) : ['engineering', 'finance', 'strategy'] as SpecialistType[];
+
+    (['engineering', 'finance', 'strategy'] as SpecialistType[]).forEach(spec => {
+      if (!available.includes(spec)) {
+        scores[spec] = -999; // Impossible to select
+      }
+    });
+
+    // --- SELECT WINNER ---
+    let winner = (Object.keys(scores) as SpecialistType[]).reduce((best, current) =>
+      scores[current] > scores[best] ? current : best
+    );
+
+    // Handle tie - prefer strategy (most universal)
+    if (scores.strategy === scores[winner] && winner !== 'strategy' && scores.strategy > -999) {
+      winner = 'strategy';
+    }
+
+    // Fallback if all scores are zero (use persona-based recommendation)
+    if (Math.max(...Object.values(scores)) === 0 && recommendedSpecialist) {
+      winner = recommendedSpecialist;
+    }
+
+    // --- DEBUG LOGGING ---
+    console.log('🎯 [AutoRouting] Specialist Selection:', {
+      persona,
+      expertise,
+      goals,
+      painPoints,
+      scores,
+      winner,
+      available
+    });
+
+    return winner;
+  };
+
+  // ✅ AUTO-START: Automatically select specialist and start consultation on mount
+  useEffect(() => {
+    // Only auto-start if we have assessment data and haven't started yet
+    if (data && phase === 'specialist-selection' && !currentSpecialist) {
+      console.log('🚀 [AutoRouting] Auto-starting consultation...');
+
+      // Populate userExpertiseAreas from assessment data
+      if (data.userExpertise && data.userExpertise.length > 0) {
+        setUserExpertiseAreas(data.userExpertise);
+      }
+
+      // Automatically select specialist
+      const selectedSpecialist = selectSpecialistAutomatically(data);
+
+      // Set selected specialist and auto-start
+      setSelectedSpecialists([selectedSpecialist]);
+      setCurrentSpecialist(selectedSpecialist);
+
+      // Start consultation immediately
+      setTimeout(() => {
+        startConsultationWithSpecialist(selectedSpecialist);
+      }, 100);
+    }
+  }, [data, phase, currentSpecialist]);
 
   // Smart scroll - only scroll when NEW ASSISTANT message appears (new question)
   const scrollToBottom = useCallback(() => {
@@ -217,28 +396,16 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
     }
   }, [messages, currentSpecialist, phase, questionCount, isWrappingUp]);
 
-  // Toggle specialist selection
-  const toggleSpecialist = (specialist: SpecialistType) => {
-    setSelectedSpecialists(prev =>
-      prev.includes(specialist)
-        ? prev.filter(s => s !== specialist)
-        : [...prev, specialist]
-    );
-  };
-
-  // Start consultation with selected specialists
-  const startConsultation = async () => {
-    if (selectedSpecialists.length === 0) return;
-
-    const firstSpecialist = selectedSpecialists[0];
-    setCurrentSpecialist(firstSpecialist);
+  // Start consultation with automatically selected specialist
+  const startConsultationWithSpecialist = async (specialist: SpecialistType) => {
+    if (!specialist) return;
 
     // Start consultation immediately with first question
     setPhase('consultation');
     setIsLoading(true);
 
     try {
-      console.log('[Step5AIConsultMulti] Starting consultation with:', firstSpecialist);
+      console.log('[Step5AIConsultMulti] Starting consultation with:', specialist);
 
       // Call API to get first question from specialist
       const response = await fetch('/api/consult', {
@@ -247,7 +414,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         body: JSON.stringify({
           messages: [], // Empty - start of conversation
           assessmentData: data,
-          specialistType: firstSpecialist,
+          specialistType: specialist,
           userExpertiseAreas // ✅ Pass user's areas of knowledge
         }),
       });
@@ -289,7 +456,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                   setStreamingMessage({
                     role: 'assistant',
                     content: firstQuestion,
-                    specialist: firstSpecialist
+                    specialist: specialist
                   });
                 }
               } catch (e) {
@@ -305,7 +472,7 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       const assistantMessage: Message = {
         role: 'assistant',
         content: firstQuestion || 'Olá! Vamos começar nossa consulta.',
-        specialist: firstSpecialist
+        specialist: specialist
       };
 
       // Clear streaming message and add final message to array
@@ -316,10 +483,8 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
       // Fallback message
       const fallbackMessage: Message = {
         role: 'assistant',
-        content: selectedSpecialists.length === 1
-          ? `Ótimo! Vou consultar com nosso especialista.`
-          : `Perfeito! Vou consultar com ${selectedSpecialists.length} especialistas diferentes.`,
-        specialist: firstSpecialist
+        content: `Ótimo! Vou consultar com nosso especialista.`,
+        specialist: specialist
       };
       setMessages([fallbackMessage]);
     } finally {
@@ -531,118 +696,9 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         ]);
       }
 
-      // Check if there are more specialists
-      const currentIndex = selectedSpecialists.indexOf(currentSpecialist);
-      if (currentIndex < selectedSpecialists.length - 1) {
-        // Move to next specialist
-        const nextSpecialist = selectedSpecialists[currentIndex + 1];
-        setCompletedSpecialists(prev => [...prev, currentSpecialist]);
-        setCurrentSpecialist(nextSpecialist);
-        setQuestionCount(0);
-
-        // Add transition message
-        setTimeout(() => {
-          setMessages(prev => [
-            ...prev,
-            {
-              role: 'assistant',
-              content: `Perfeito! Agora vamos para o próximo especialista.`,
-              specialist: currentSpecialist
-            }
-          ]);
-
-          // ✅ UX FIX: Auto-transition to next specialist after 3 seconds
-          console.log('⏱️ [UX] Auto-transition in 3 seconds...');
-          setTimeout(async () => {
-            console.log('🚀 [UX] Auto-starting next specialist:', nextSpecialist);
-
-            try {
-              setIsLoading(true);
-
-              // Call API to get first question from next specialist
-              const response = await fetch('/api/consult', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  messages: [], // Empty - start of new specialist conversation
-                  assessmentData: data,
-                  specialistType: nextSpecialist,
-                  userExpertiseAreas // ✅ Pass user's areas of knowledge
-                }),
-              });
-
-              if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-              }
-
-              // Handle streaming response
-              const reader = response.body?.getReader();
-              const decoder = new TextDecoder();
-              let firstQuestion = '';
-
-              if (reader) {
-                while (true) {
-                  const { done, value } = await reader.read();
-                  if (done) break;
-
-                  const chunk = decoder.decode(value);
-                  const lines = chunk.split('\n');
-
-                  for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                      const dataStr = line.slice(6);
-                      if (dataStr === '[DONE]') break;
-
-                      try {
-                        const parsed = JSON.parse(dataStr);
-                        if (parsed.text) {
-                          firstQuestion += parsed.text;
-                          // Update streaming message during reception
-                          setStreamingMessage({
-                            role: 'assistant',
-                            content: firstQuestion,
-                            specialist: nextSpecialist
-                          });
-                        }
-                      } catch (e) {
-                        // Ignore parse errors
-                      }
-                    }
-                  }
-                }
-              }
-
-              // Clear streaming and add first question to messages
-              setStreamingMessage(null);
-              setMessages(prev => [
-                ...prev,
-                {
-                  role: 'assistant',
-                  content: firstQuestion || 'Olá! Vamos começar nossa consulta.',
-                  specialist: nextSpecialist
-                }
-              ]);
-            } catch (error) {
-              console.error('❌ [UX] Auto-transition error:', error);
-              // Fallback: just show a generic greeting
-              setMessages(prev => [
-                ...prev,
-                {
-                  role: 'assistant',
-                  content: 'Olá! Vamos começar nossa consulta.',
-                  specialist: nextSpecialist
-                }
-              ]);
-            } finally {
-              setIsLoading(false);
-            }
-          }, 3000); // Wait 3 seconds before auto-starting next specialist
-        }, 500);
-      } else {
-        // ✅ FIX #2: Change phase to ready-to-finish BEFORE adding message (prevents suggestion generation)
-        setCompletedSpecialists(prev => [...prev, currentSpecialist]);
-        setPhase('ready-to-finish');
-      }
+      // ✅ Single specialist mode - go directly to ready-to-finish
+      setCompletedSpecialists(prev => [...prev, currentSpecialist]);
+      setPhase('ready-to-finish');
     } catch (error) {
       console.error('Error finishing consultation:', error);
     } finally {
@@ -664,14 +720,18 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-medium text-white">
-              {phase === 'specialist-selection' && 'Escolha Seus Especialistas'}
-              {phase === 'consultation' && `Consulta com Especialistas (${completedSpecialists.length + 1}/${selectedSpecialists.length})`}
+              {phase === 'specialist-selection' && 'Preparando Consulta...'}
+              {phase === 'consultation' && currentSpecialist && `Consulta com ${
+                currentSpecialist === 'engineering' ? 'Dr. Tech (Engenharia)' :
+                currentSpecialist === 'finance' ? 'Dr. ROI (Finanças)' :
+                'Dr. Strategy (Estratégia)'
+              }`}
               {phase === 'ready-to-finish' && 'Consulta Completa'}
             </h2>
             <p className="text-sm text-tech-gray-400 mt-1">
-              {phase === 'specialist-selection' && 'Múltiplas perspectivas para análise mais completa'}
-              {phase === 'consultation' && `${questionCount}/${MIN_QUESTIONS_PER_SPECIALIST}+ perguntas com ${currentSpecialist}`}
-              {phase === 'ready-to-finish' && `${selectedSpecialists.length} especialista${selectedSpecialists.length > 1 ? 's' : ''} consultado${selectedSpecialists.length > 1 ? 's' : ''}`}
+              {phase === 'specialist-selection' && 'Selecionando especialista ideal baseado no seu perfil'}
+              {phase === 'consultation' && `${questionCount}/${MIN_QUESTIONS_PER_SPECIALIST}+ perguntas respondidas`}
+              {phase === 'ready-to-finish' && 'Especialista consultado com sucesso'}
             </p>
           </div>
           <button onClick={onSkip} className="btn-ghost text-sm">
@@ -682,113 +742,23 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* PHASE 1: Specialist Selection */}
+        {/* ✅ AUTOMATIC ROUTING: No manual selection - goes directly to consultation */}
         {phase === 'specialist-selection' && (
-          <div className="space-y-6 animate-slide-up">
-            {/* ✅ NEW: User Expertise Areas Selection */}
-            <div className="card-dark p-6">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-lg bg-neon-blue/20 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-6 h-6 text-neon-blue" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    Suas Áreas de Conhecimento
-                  </h3>
-                  <p className="text-sm text-tech-gray-400 leading-relaxed">
-                    Para adaptar as perguntas ao seu perfil, indique em quais áreas você tem conhecimento:
-                  </p>
-                </div>
+          <div className="card-dark p-6 min-h-[300px] flex flex-col items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-neon-cyan/20 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-neon-cyan animate-pulse" />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[
-                  { id: 'strategy-business', label: 'Estratégia e Negócios', description: 'Visão de mercado, competitividade' },
-                  { id: 'engineering-tech', label: 'Tecnologia e Engenharia', description: 'Arquitetura, DevOps, desenvolvimento' },
-                  { id: 'product-ux', label: 'Produto e UX', description: 'Experiência do usuário, roadmap' },
-                  { id: 'finance-ops', label: 'Finanças e Operações', description: 'ROI, custos, orçamento' },
-                  { id: 'marketing-sales', label: 'Marketing e Vendas', description: 'Go-to-market, crescimento' },
-                  { id: 'people-hr', label: 'Recursos Humanos', description: 'Cultura, talentos, engajamento' },
-                ].map((area) => (
-                  <label
-                    key={area.id}
-                    className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      userExpertiseAreas.includes(area.id)
-                        ? 'border-neon-blue bg-neon-blue/10'
-                        : 'border-tech-gray-800 hover:border-tech-gray-700'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={userExpertiseAreas.includes(area.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setUserExpertiseAreas(prev => [...prev, area.id]);
-                        } else {
-                          setUserExpertiseAreas(prev => prev.filter(a => a !== area.id));
-                        }
-                      }}
-                      className="mt-1 w-4 h-4 accent-neon-blue"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-white">{area.label}</div>
-                      <div className="text-xs text-tech-gray-400 mt-1">{area.description}</div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              <div className="mt-4 p-3 bg-tech-gray-900/50 border border-tech-gray-800 rounded-lg">
-                <p className="text-xs text-tech-gray-400">
-                  💡 <strong className="text-white">Por que isso importa:</strong> Os especialistas adaptarão as perguntas baseado no seu conhecimento.
-                  Se você não tiver conhecimento técnico, receberá perguntas mais estratégicas e terá mais opções "não sei" disponíveis.
-                </p>
-              </div>
-            </div>
-
-            <div className="card-dark p-6">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-12 h-12 rounded-lg bg-neon-purple/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-6 h-6 text-neon-purple" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    Consultoria Multi-Especialista
-                  </h3>
-                  <p className="text-sm text-tech-gray-400 leading-relaxed">
-                    Inspirado em equipes médicas multidisciplinares, oferecemos diferentes especialistas AI para analisar seu caso de múltiplos ângulos.
-                    <strong className="text-white"> Escolha um ou mais:</strong>
-                  </p>
-                </div>
-              </div>
-
-              <SpecialistSelector
-                selectedSpecialists={selectedSpecialists}
-                onToggle={toggleSpecialist}
-                recommendedSpecialist={recommendedSpecialist}
-                mode="multiple"
-              />
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={startConsultation}
-                  disabled={selectedSpecialists.length === 0}
-                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Começar Consulta
-                  {selectedSpecialists.length > 0 && ` (${selectedSpecialists.length} ${selectedSpecialists.length === 1 ? 'especialista' : 'especialistas'})`}
-                </button>
-                {recommendedSpecialist && !selectedSpecialists.includes(recommendedSpecialist) && (
-                  <button
-                    onClick={() => {
-                      setSelectedSpecialists([recommendedSpecialist]);
-                      setTimeout(startConsultation, 100);
-                    }}
-                    className="btn-secondary"
-                  >
-                    Usar Recomendado
-                  </button>
-                )}
+              <h3 className="text-xl font-semibold text-white">
+                Selecionando Especialista Ideal...
+              </h3>
+              <p className="text-sm text-tech-gray-400 max-w-md">
+                Analisando seu perfil, expertise e objetivos para direcionar você ao especialista mais adequado.
+              </p>
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -802,27 +772,21 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
               <div className="mb-6 p-4 bg-tech-gray-900/50 border border-tech-gray-800 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-tech-gray-300">
-                    Progresso: Especialista {completedSpecialists.length + 1}/{selectedSpecialists.length}
+                    {currentSpecialist === 'engineering' && '🔧 Dr. Tech - Especialista em Engenharia'}
+                    {currentSpecialist === 'finance' && '💰 Dr. ROI - Especialista em Finanças'}
+                    {currentSpecialist === 'strategy' && '🎯 Dr. Strategy - Especialista em Estratégia'}
                   </span>
                   <span className="text-xs text-tech-gray-400">
                     {questionCount}/{MIN_QUESTIONS_PER_SPECIALIST}+ perguntas
                   </span>
                 </div>
 
-                {/* Specialists Progress */}
-                <div className="flex gap-2">
-                  {selectedSpecialists.map((spec, idx) => (
-                    <div
-                      key={spec}
-                      className={`flex-1 h-2 rounded-full ${
-                        completedSpecialists.includes(spec)
-                          ? 'bg-neon-green'
-                          : spec === currentSpecialist
-                          ? 'bg-neon-cyan'
-                          : 'bg-tech-gray-800'
-                      }`}
-                    />
-                  ))}
+                {/* Progress Bar */}
+                <div className="h-2 rounded-full bg-tech-gray-800 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-neon-cyan to-neon-green transition-all duration-500"
+                    style={{ width: `${Math.min((questionCount / MIN_QUESTIONS_PER_SPECIALIST) * 100, 100)}%` }}
+                  />
                 </div>
               </div>
             )}
@@ -893,23 +857,17 @@ export default function Step5AIConsultMulti({ data, onSkip, onComplete }: Step5A
                   </div>
                   <div>
                     <h4 className="font-semibold text-neon-green mb-2">
-                      Consulta Multi-Especialista Completa!
+                      Consulta com Especialista Completa!
                     </h4>
                     <p className="text-sm text-tech-gray-300 mb-3">
-                      Você consultou com <strong>{selectedSpecialists.length}</strong> especialista{selectedSpecialists.length > 1 ? 's' : ''}.
-                      Seus insights serão agregados no relatório final.
+                      Você consultou com{' '}
+                      <strong>
+                        {currentSpecialist === 'engineering' && 'Dr. Tech (Engenharia)'}
+                        {currentSpecialist === 'finance' && 'Dr. ROI (Finanças)'}
+                        {currentSpecialist === 'strategy' && 'Dr. Strategy (Estratégia)'}
+                      </strong>.
+                      Os insights serão incluídos no relatório final.
                     </p>
-                    <div className="flex gap-2 flex-wrap">
-                      {completedSpecialists.map(spec => (
-                        <span
-                          key={spec}
-                          className="text-xs px-2 py-1 rounded-full bg-neon-green/20 text-neon-green border border-neon-green/30 flex items-center gap-1"
-                        >
-                          <Check className="w-3 h-3" />
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
